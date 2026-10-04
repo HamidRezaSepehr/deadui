@@ -1,0 +1,140 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { TextFillAnimation } from "@/registry/pro/text-fill-animation"
+export const metadata = {
+  title: "Text Fill Animation",
+  description:
+    "Scroll-linked sticky text fill with a velocity-reactive gradient. Pro component.",
+}
+
+<div className="not-prose mt-2 inline-flex items-center gap-2 rounded-full border border-dead-red/40 bg-dead-red/10 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-dead-red">
+  <span aria-hidden="true">🔒</span>
+  <span>Pro Component</span>
+</div>
+
+# Text Fill Animation
+
+Scroll-linked sticky text fill with a velocity-reactive gradient.
+
+<div className="not-prose my-6 rounded-lg border border-dead-red/30 bg-dead-red/5 p-4 text-sm text-dead-200 [&_p]:m-0 [&_p]:leading-7">
+  <div className="mb-2 font-semibold text-dead-red">This is a Pro component.</div>
+  <div>
+    Installing it needs a license key. Run the command below and paste your key
+    when prompted, or pass it straight through with{" "}
+    <code className="rounded border border-dead-800 bg-dead-900 px-1.5 py-0.5 font-mono text-[0.85em] text-dead-50">
+      --token
+    </code>
+    . Everything on this page — the live preview, the props table, the code —
+    is public.
+  </div>
+</div>
+
+## Preview
+
+<ComponentCustomizer
+  component={TextFillAnimation}
+  defaultProps={{
+    text: "Dead simple animations for React.",
+    primaryColor: "#ef4444",
+    dimColor: "rgba(255,255,255,0.2)",
+    scrub: 0.25,
+    height: "200vh",
+  }}
+  controls={{
+    primaryColor: { type: "color" },
+    dimColor: { type: "color" },
+    scrub: { type: "slider", min: 0, max: 1, step: 0.1 },
+    height: { type: "select", options: ["150vh", "200vh", "250vh", "300vh"] },
+  }}
+  className="not-prose my-8"
+/>
+
+Scroll through the preview. Words fill left to right as the section passes,
+and the transition band between dim and filled text **widens with scroll
+velocity** — flick the page and the red band smears across several words at
+once. `scrub` is the easing: `0` tracks the scroll position exactly, higher
+lets the timeline lag behind it.
+
+`height` is the scroll range the fill is spread across, so a taller section
+means a slower, longer fill.
+
+## Installation
+
+<InstallTabs componentName="text-fill-animation" tier="pro" />
+
+## Usage
+
+```tsx
+import { TextFillAnimation } from "@/components/ui/text-fill-animation"
+
+export function Manifesto() {
+  return (
+    <TextFillAnimation
+      text="Dead simple animations for React."
+      primaryColor="#ef4444"
+      scrub={0.25}
+      height="250vh"
+      showDetails={false}
+    />
+  )
+}
+```
+
+With no props at all it renders a full section of default copy with the
+decorative corner labels on. `showDetails={false}` strips those for a clean
+placement inside a page.
+
+## Props
+
+| Prop                | Type                       | Default                                     | Description                                                                  |
+| ------------------- | -------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------- |
+| `text`              | `string`                   | A full sentence about Dead UI              | The copy that fills. Split into words and characters.                       |
+| `showDetails`       | `boolean`                  | `true`                                      | Corner labels: the "Scroll ↓" marker and the GSAP / SplitText / Velocity list. |
+| `textColor`         | `string`                   | `"var(--color-foreground)"`                | Colour of the fully filled text.                                            |
+| `primaryColor`      | `string`                   | `"#ff6b00"`                                | The velocity-reactive colour in the middle of the transition.               |
+| `dimColor`          | `string`                   | 20% of the foreground mixed with the background | Colour of the text before it fills.                                      |
+| `backgroundColor`   | `string`                   | `"var(--color-background)"`                | Section background.                                                         |
+| `velocityPrimary`   | `boolean`                  | `true`                                      | `false` drops the velocity response and maps `primaryColor` straight to the final state. |
+| `textSize` / `textWidth` | `string`              | `"5vw"` / `"80%"`                          | Desktop type size and measure.                                              |
+| `tabletTextSize` / `tabletTextWidth` | `string`     | `"6.5vw"` / `"88%"`                        | Overridden between 641px and 1024px.                                        |
+| `mobileTextSize` / `mobileTextWidth` | `string`     | `"8vw"` / `"95%"`                          | Overridden at 640px and below.                                              |
+| `start`             | `string`                   | `"top top"`                                | ScrollTrigger start.                                                        |
+| `end`               | `string`                   | `"bottom bottom"`                          | ScrollTrigger end.                                                          |
+| `scrub`             | `number \| boolean`        | `0.25`                                     | Scroll smoothing. `0` tracks exactly.                                       |
+| `height`            | `string \| number`         | `"250vh"`                                  | Scroll range the fill is spread across.                                     |
+| `viewportHeight`    | `string`                   | `"100vh"`                                  | Height of the sticky inner viewport.                                        |
+| `scroller`          | `HTMLElement \| Window \| RefObject` | —                              | Custom scroll container, for a nested scroller.                             |
+| `trigger`           | `HTMLElement \| RefObject` | —                                          | Override the ScrollTrigger element. Defaults to the section itself.         |
+
+## Dependencies
+
+- `gsap` — ScrollTrigger and SplitText, both required
+
+Ships two files: the component and `text-fill-animation.module.css`.
+
+## Performance
+
+- The section reserves its scroll range with a real height (`height`,
+  default `250vh`) and pins the visible viewport with `position: sticky`, so
+  nothing about the fill shifts the page as it runs. No cumulative layout
+  shift.
+- Only `color` is animated, per character, plus one blurred `radial-gradient`
+  glow behind the heading. Nothing touches layout, so there is no reflow on
+  any frame of the scrub.
+- The heading's layout space is established before the timeline starts — the
+  characters are always in the DOM and always occupy their box.
+- SplitText runs once per props change and is reverted through
+  `gsap.matchMedia().revert()` on cleanup, so remounting leaves no orphaned
+  spans and no second ScrollTrigger behind.
+
+## Accessibility
+
+- Under `prefers-reduced-motion: reduce` the whole timeline is skipped. The
+  CSS module collapses the section to `height: auto`, un-sticks the viewport
+  and removes the per-character transition, so the copy renders once, fully
+  filled and static — no scroll is required to read it.
+- `SplitText` is created with `aria: "auto"`, which keeps the split spans out
+  of the accessibility tree. The heading is read as the single sentence a
+  human wrote, not as one node per character.
+- The corner labels are real text, so they are announced; pass
+  `showDetails={false}` if they are decoration for your page.

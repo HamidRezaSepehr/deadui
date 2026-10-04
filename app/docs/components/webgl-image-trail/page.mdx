@@ -1,0 +1,189 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { WebGLImageTrailPreview } from "@/components/docs/preview-wrappers"
+export const metadata = {
+  title: "WebGL Image Trail",
+  description:
+    "React Three Fiber image trail that follows the cursor, with four switchable GLSL effects. Pro component.",
+}
+
+<div className="not-prose mt-2 inline-flex items-center gap-2 rounded-full border border-dead-red/40 bg-dead-red/10 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-dead-red">
+  <span aria-hidden="true">🔒</span>
+  <span>Pro Component</span>
+</div>
+
+# WebGL Image Trail
+
+React Three Fiber image trail that follows the cursor, with four switchable
+GLSL effects.
+
+<div className="not-prose my-6 rounded-lg border border-dead-red/30 bg-dead-red/5 p-4 text-sm text-dead-200 [&_p]:m-0 [&_p]:leading-7">
+  <div className="mb-2 font-semibold text-dead-red">This is a Pro component.</div>
+  <div>
+    Installing it needs a license key. Run the command below and paste your key
+    when prompted, or pass it straight through with{" "}
+    <code className="rounded border border-dead-800 bg-dead-900 px-1.5 py-0.5 font-mono text-[0.85em] text-dead-50">
+      --token
+    </code>
+    . The preview below is fully interactive — move your pointer through the
+    panel.
+  </div>
+</div>
+
+## Preview
+
+<ComponentCustomizer
+  component={WebGLImageTrailPreview}
+  defaultProps={{
+    effect: "liquid",
+    distortion: 0.5,
+    fadeDuration: 1.2,
+    trailSize: 8,
+    tintColor: "#ffffff",
+  }}
+  controls={{
+    effect: {
+      type: "select",
+      options: ["liquid", "distortion", "pixelate", "wave"],
+    },
+    distortion: { type: "slider", min: 0, max: 2, step: 0.1 },
+    fadeDuration: { type: "slider", min: 0.5, max: 3, step: 0.1 },
+    trailSize: { type: "slider", min: 2, max: 15, step: 1 },
+    tintColor: { type: "color" },
+  }}
+  className="not-prose my-8"
+/>
+
+Move the pointer through the panel — images spawn along its path and fade out.
+`trailSize` is the cap on how many are alive at once, and dragging it **down**
+shrinks a live trail immediately rather than on the next spawn.
+
+The control is labelled `distortion` because that is the name the effect has
+always had on this page; the component's prop is `distortionStrength`. Note
+that only `liquid` and `distortion` read it — `pixelate` and `wave` ignore it
+and use their own uniforms, which is why the slider appears to do nothing for
+those two.
+
+## Installation
+
+<InstallTabs componentName="webgl-image-trail" tier="pro" />
+
+## Usage
+
+```tsx
+"use client"
+
+import { WebGLImageTrail } from "@/components/ui/webgl-image-trail"
+
+const IMAGES = [
+  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+  "https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+]
+
+export function Trail() {
+  return (
+    <div className="h-[70vh] w-full">
+      <WebGLImageTrail images={IMAGES} effect="wave" trailSize={6} />
+    </div>
+  )
+}
+```
+
+The component is `h-full`, so **its parent must have a resolved height**. With
+an auto-height parent it collapses to zero and the canvas never gets a size
+to measure.
+
+Lazy-load it, since it pulls in `three` and R3F:
+
+```tsx
+import dynamic from "next/dynamic"
+
+const WebGLImageTrail = dynamic(
+  () => import("@/components/ui/webgl-image-trail").then((m) => m.WebGLImageTrail),
+  { ssr: false, loading: () => <div className="h-[70vh] bg-dead-900" /> },
+)
+```
+
+`ssr: false` matters for correctness, not just size. The component probes for
+WebGL while rendering and that probe answers `false` on the server, so a
+server-rendered tree emits the fallback text while the first client render
+emits a canvas — the two disagree and React throws away the markup.
+
+## Effects
+
+| Effect       | Reads                                        | Character                                                      |
+| ------------ | -------------------------------------------- | --------------------------------------------------------------- |
+| `liquid`     | `distortionStrength`                         | Warped UVs that flow into each other, clamped at the edges.    |
+| `distortion` | `distortionStrength`                         | Harder, sharper displacement with less flow.                   |
+| `pixelate`   | `pixelSize`                                  | Quantises the UV into blocks.                                  |
+| `wave`       | `waveFrequency`, `waveAmplitude`             | A sine displacement across the quad's width.                    |
+
+All four always accept the full uniform set and forward it; GLSL drops what
+it does not read, so you can set `pixelSize` long before switching to
+`pixelate` and it is already right.
+
+## Props
+
+| Prop                  | Type                                            | Default                              | Description                                                        |
+| --------------------- | ----------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------ |
+| `images`              | `string[]`                                      | —                                    | Image URLs, cycled in order. Loaded once, up front. Required.      |
+| `effect`              | `"liquid" \| "distortion" \| "pixelate" \| "wave"` | `"liquid"`                         | Which entry of the shader dictionary compiles.                     |
+| `distortionStrength`  | `number`                                        | `0.5`                                | Warp strength, `0` to `2`. Used by `liquid` and `distortion`.      |
+| `pixelSize`           | `number`                                        | `0.02`                               | Size of one pixel block, in UV. Used by `pixelate`.                |
+| `waveFrequency`       | `number`                                        | `10`                                 | Waves across the quad's width. Used by `wave`.                     |
+| `waveAmplitude`       | `number`                                        | `0.1`                                | Vertical displacement in UV. Used by `wave`.                       |
+| `tintColor`           | `string`                                        | `"#ffffff"`                          | Mixed into the sampled colour at a fixed 30%. Grades, never replaces. |
+| `distortionSpeed`     | `number`                                        | `2`                                  | Multiplier on the shader clock.                                    |
+| `trailSize`           | `number`                                        | `8`                                  | Max images visible at once.                                        |
+| `fadeDuration`        | `number`                                        | `1.2`                                | Seconds for an image to fade out. Also the item's lifetime.        |
+| `imageScale`          | `number`                                        | `0.4`                                | Scale of the images in the 3D scene.                               |
+| `velocityThreshold`   | `number`                                        | `0.1`                                | Min pointer speed, in px/ms, to spawn a new image.                 |
+| `fallbackText`        | `string`                                        | `"Move your cursor across this area"` | Shown without WebGL or under reduced motion.                    |
+
+## Dependencies
+
+- `three` ^0.170+
+- `@react-three/fiber` ^9+
+- `@react-three/drei` ^10+ (`OrthographicCamera`)
+- `class-variance-authority`
+- `clsx` + `tailwind-merge`
+
+Ships three files: the component, `webgl-image-trail/image-plane.tsx` and
+`webgl-image-trail/shaders.ts`. Budget roughly 150KB gzipped for `three` plus
+R3F before your own code.
+
+## Performance
+
+- **A fixed world-height orthographic camera**, not R3F's default. The default
+  puts canvas pixels in world units, which would make `imageScale` mean
+  something different on every screen. `manual` is what stops R3F overwriting
+  the frustum with the canvas pixel box on resize.
+- A single `THREE.TextureLoader` is a module-level singleton, so cycling
+  through images is one HTTP request each rather than one per plane, and no
+  per-frame allocation.
+- Textures are configured once with `generateMipmaps: false` and a
+  `LinearFilter`. Trail quads are small and always moving, so mip levels buy
+  nothing visible and cost a second decode of every image at load.
+- The expiry sweep returns the **previous array untouched** whenever nothing
+  expired, so a page whose pointer has not moved commits no render at all —
+  rather than a blind 10Hz `setState` forever.
+- Spawns are gated by a 16ms interval, so a fast flick cannot flood the scene
+  and `trailSize` is a hard cap in both directions.
+- Geometry, materials and textures are disposed in the effect cleanup, and the
+  one-off capability probe releases its context with `WEBGL_lose_context`
+  immediately rather than leaking a second one.
+
+## Accessibility
+
+- `prefers-reduced-motion: reduce` is tracked with `useSyncExternalStore` and
+  an explicit server snapshot, so there is no hydration mismatch. When it is
+  on, nothing spawns and the canvas is swapped for `fallbackText` — a bare
+  black rectangle with no explanation would be worse than a sentence.
+- If WebGL is unavailable the same fallback appears, after a one-off capability
+  probe that tries `webgl2`, `webgl` and `experimental-webgl` in three's own
+  order. The component degrades to text rather than throwing.
+- The fallback re-enables the pointer (`cursor-auto`), because `cursor-none`
+  exists to hand the cursor to the trail and there is no trail to hand it to.
+- The trail is decorative and duplicated from content already on the page. It
+  is not announced and it is not focusable.

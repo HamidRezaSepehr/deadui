@@ -1,0 +1,136 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { SpotlightCardPreview } from "@/components/docs/preview-wrappers"
+import { SpotlightCard } from "@/registry/spotlight-card"
+export const metadata = {
+  title: "Spotlight Hover Card",
+  description:
+    "Mouse-tracking radial spotlight with a border-masked glow and optional 3D tilt.",
+}
+
+# Spotlight Hover Card
+
+Mouse-tracking radial spotlight with a border-masked glow and optional 3D tilt.
+
+## Preview
+
+<ComponentCustomizer
+  component={SpotlightCardPreview}
+  defaultProps={{
+    children: "Move your mouse over this card",
+    glowType: "both",
+    enableTilt: true,
+    tiltIntensity: 10,
+    spotlightColor: "rgba(239, 68, 68, 0.15)",
+  }}
+  controls={{
+    glowType: {
+      type: "select",
+      options: ["border", "background", "both", "none"],
+    },
+    enableTilt: { type: "select", options: ["true", "false"] },
+    tiltIntensity: { type: "slider", min: 0, max: 30, step: 1 },
+    spotlightColor: { type: "color" },
+  }}
+  className="not-prose my-8"
+/>
+
+Move the pointer across the card: the radial gradient follows it, and the
+border ring lights up without the glow ever bleeding onto the card face.
+`glowType` decides which layers are painted — `border` is masked to the 1px
+ring, `background` fills the surface, `both` does each, `none` disables the
+spotlight entirely and leaves only the static hairline border.
+
+## Installation
+
+<InstallTabs componentName="spotlight-card" tier="free" />
+
+## Usage
+
+```tsx
+import { SpotlightCard } from "@/components/ui/spotlight-card"
+
+export function PricingCard() {
+  return (
+    <SpotlightCard glowType="both" enableTilt tiltIntensity={8}>
+      <h3 className="text-lg font-semibold text-dead-50">Pro</h3>
+      <p className="mt-2 text-dead-400">Everything in the library.</p>
+    </SpotlightCard>
+  )
+}
+```
+
+## Variants
+
+<div className="grid grid-cols-1 gap-6 not-prose my-8 sm:grid-cols-2">
+  <div className="bg-preview-grid flex min-h-[150px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <SpotlightCard glowType="border" className="w-full p-6 text-center font-mono text-xs text-dead-300">
+      glowType: border
+    </SpotlightCard>
+  </div>
+  <div className="bg-preview-grid flex min-h-[150px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <SpotlightCard glowType="background" className="w-full p-6 text-center font-mono text-xs text-dead-300">
+      glowType: background
+    </SpotlightCard>
+  </div>
+  <div className="bg-preview-grid flex min-h-[150px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <SpotlightCard glowType="both" className="w-full p-6 text-center font-mono text-xs text-dead-300">
+      glowType: both
+    </SpotlightCard>
+  </div>
+  <div className="bg-preview-grid flex min-h-[150px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <SpotlightCard glowType="none" className="w-full p-6 text-center font-mono text-xs text-dead-300">
+      glowType: none
+    </SpotlightCard>
+  </div>
+</div>
+
+Hover each card to see the difference. `shape` (`rounded` / `soft` / `sharp`)
+is a separate prop and defaults to `rounded`.
+
+## Props
+
+| Prop                 | Type                                                     | Default                       | Description                                                                |
+| -------------------- | -------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------- |
+| `children`           | `React.ReactNode`                                        | —                             | Card content, wrapped in a `p-6` layer above the glow. Required.            |
+| `glowType`           | `"border" \| "background" \| "both" \| "none"`           | `"both"`                      | Which glow layers to paint.                                                |
+| `enableTilt`         | `boolean`                                                | `false`                       | Track the pointer with a 3D rotation as well as the spotlight.              |
+| `tiltIntensity`      | `number`                                                 | `10`                          | Maximum rotation in degrees at a corner.                                   |
+| `spotlightColor`     | `string`                                                 | `"rgba(255, 255, 255, 0.15)"` | Any CSS colour for the radial gradient.                                    |
+| `spotlightSize`      | `number`                                                 | `300`                         | Gradient diameter in pixels.                                               |
+| `spotlightOpacity`   | `number`                                                 | `1`                           | Gradient alpha multiplier, `0` to `1`.                                    |
+| `shape`              | `"rounded" \| "soft" \| "sharp"`                         | `"rounded"`                   | Corner radius.                                                             |
+| `borderColor`        | `string`                                                 | `"rgba(255, 255, 255, 0.1)"` | Resting hairline border.                                                   |
+| `hoveredBorderColor` | `string`                                                 | `"rgba(255, 255, 255, 0.3)"` | Colour of the masked border glow.                                          |
+| `style`              | `React.CSSProperties`                                    | —                             | Merged last, so it wins per property over the generated CSS variables.      |
+
+## Dependencies
+
+- `class-variance-authority`
+- `clsx` + `tailwind-merge`
+
+No animation library. The tracking is a `mousemove` handler that writes CSS
+custom properties.
+
+## Performance
+
+- **Zero React re-renders while tracking.** The pointer handler writes
+  `--mouse-x`, `--mouse-y`, `--rotate-x` and `--rotate-y` straight onto the
+  DOM node — no `useState`, no `useReducer`. A `mousemove` costs one style
+  write on one element.
+- Only `opacity` and `transform` are animated, and the layer that fades in is
+  a `radial-gradient` background, so the card itself never re-lays-out.
+- With `enableTilt` the card gets `will-change-transform`, but only then — a
+  permanent layer promotion on a flat card is wasted GPU memory.
+- The 300ms glow fade is a CSS transition on a single absolutely positioned
+  layer, and it is suppressed under reduced motion.
+
+## Accessibility
+
+- The glow layers are `aria-hidden` decorative overlays; they are never
+  announced and they take no pointer events, so they cannot swallow a click.
+- Under `prefers-reduced-motion: reduce` the glow fade transitions are
+  removed (`motion-reduce:transition-none`) and the 3D tilt is skipped
+  entirely — the card stays flat and still tracks its border colour only.
+- The card is a plain `div` and adds nothing to the tab order. If you put a
+  link or button inside it, that child remains the focusable element.

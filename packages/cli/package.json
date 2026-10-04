@@ -1,0 +1,54 @@
+{
+  "name": "deadui",
+  "version": "0.1.0",
+  "description": "Dead simple animations for React. The Dead UI CLI — install Awwwards-grade animation components into your project in one command.",
+  "keywords": [
+    "deadui",
+    "dead-ui",
+    "cli",
+    "react",
+    "nextjs",
+    "animation",
+    "animations",
+    "gsap",
+    "scrolltrigger",
+    "framer-motion",
+    "webgl",
+    "threejs",
+    "tailwind",
+    "component-library",
+    "copy-paste",
+    "codegen"
+  ],
+  "author": "Dead UI",
+  "homepage": "https://deadui.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HamidRezaSepehr/deadui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HamidRezaSepehr/deadui/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "deadui": "./dist/index.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "prompts": "^2.4.2",
+    "chalk": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.0.0"
+  }
+}

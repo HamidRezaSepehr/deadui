@@ -1,0 +1,110 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { MagneticButton } from "@/registry/magnetic-button"
+
+export const metadata = {
+  title: "Magnetic Elastic Button",
+  description:
+    "Physics-based button that pulls toward the cursor and snaps back elastically.",
+}
+
+# Magnetic Elastic Button
+
+Physics-based button that pulls toward the cursor and snaps back elastically.
+
+## Preview
+
+<ComponentCustomizer
+  component={MagneticButton}
+  defaultProps={{
+    children: "Hover Me",
+    variant: "default",
+    size: "md",
+    shape: "rounded",
+    magneticStrength: 0.4,
+  }}
+  controls={{
+    variant: {
+      type: "select",
+      options: ["default", "outline", "glow", "ghost"],
+    },
+    size: { type: "select", options: ["sm", "md", "lg"] },
+    shape: { type: "select", options: ["rounded", "soft", "sharp"] },
+    magneticStrength: { type: "slider", min: 0, max: 1, step: 0.1 },
+  }}
+  className="not-prose my-8"
+/>
+
+Move the pointer across the button — it chases the cursor at
+`magneticStrength` and springs back when the pointer leaves. `elasticity`
+(a separate prop, not exposed above) scales the spring stiffness: lower is
+stiffer, higher is bouncier.
+
+## Installation
+
+<InstallTabs componentName="magnetic-button" tier="free" />
+
+## Usage
+
+```tsx
+import { MagneticButton } from "@/components/ui/magnetic-button"
+
+export function Cta() {
+  return (
+    <MagneticButton variant="glow" magneticStrength={0.6}>
+      Get started
+    </MagneticButton>
+  )
+}
+```
+
+## Variants
+
+<div className="grid grid-cols-1 gap-6 not-prose my-8 sm:grid-cols-2">
+  <div className="bg-preview-grid flex min-h-[120px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <MagneticButton variant="default">default</MagneticButton>
+  </div>
+  <div className="bg-preview-grid flex min-h-[120px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <MagneticButton variant="outline">outline</MagneticButton>
+  </div>
+  <div className="bg-preview-grid flex min-h-[120px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <MagneticButton variant="glow">glow</MagneticButton>
+  </div>
+  <div className="bg-preview-grid flex min-h-[120px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <MagneticButton variant="ghost">ghost</MagneticButton>
+  </div>
+</div>
+
+## Props
+
+| Prop               | Type                                                     | Default     | Description                                                        |
+| ------------------ | -------------------------------------------------------- | ----------- | ------------------------------------------------------------------ |
+| `children`         | `React.ReactNode`                                        | —           | Button label. Required.                                            |
+| `variant`          | `"default" \| "outline" \| "glow" \| "ghost"`           | `"default"` | Visual treatment.                                                  |
+| `size`             | `"sm" \| "md" \| "lg"`                                   | `"md"`      | Height and horizontal padding.                                     |
+| `shape`            | `"rounded" \| "soft" \| "sharp"`                         | `"rounded"` | Corner radius.                                                     |
+| `magneticStrength` | `number`                                                 | `0.4`       | How hard the button chases the cursor, `0` to `1`.                |
+| `elasticity`       | `number`                                                 | `0.2`       | Scales spring stiffness. `0.2` reproduces the default spring.      |
+| `className`        | `string`                                                 | —           | Merged after the variant classes, so it wins on conflicts.         |
+
+## Dependencies
+
+- `motion` — the springs and the `useMotionValue` pair behind the pull
+- `class-variance-authority`
+
+## Performance
+
+- Only `transform` is animated (Motion's `x` / `y` motion values), so the
+  pull stays on the compositor and never triggers layout.
+- `useReducedMotion` is read on every render; when motion is reduced the
+  button pins at `x: 0 / y: 0` and the pointer handlers return immediately,
+  so there is no spring work at all.
+
+## Accessibility
+
+- Renders a real `<button>`, so it is reachable with `Tab` and fires on
+  <kbd>Enter</kbd> / <kbd>Space</kbd>.
+- Under `prefers-reduced-motion: reduce` the magnetic offset is disabled
+  entirely — the label stays perfectly still and fully readable.
+- The button has no icon-only mode, so no `aria-label` is required; pass one
+  if you replace the label with an icon.

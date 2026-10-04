@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+@theme static {
+  --color-dead-950: #09090b;
+  --color-dead-900: #18181b;
+  --color-dead-800: #27272a;
+  --color-dead-700: #3f3f46;
+  --color-dead-600: #52525b;
+  --color-dead-400: #a1a1aa;
+  --color-dead-200: #e4e4e7;
+  --color-dead-50: #fafafa;
+  --color-dead-red: #dc2626;
+  --color-dead-red-hover: #ef4444;
+
+  --color-background: var(--color-dead-950);
+  --color-foreground: var(--color-dead-50);
+  --color-card: var(--color-dead-900);
+  --color-elevated: var(--color-dead-800);
+  --color-muted: var(--color-dead-400);
+  --color-accent: var(--color-dead-red);
+  --color-accent-hover: var(--color-dead-red-hover);
+  --color-border: var(--color-dead-800);
+  --color-glow: rgba(220, 38, 38, 0.15);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* Infinite Blur Marquee
+   Per-spec keyframes + animation utilities. Defined as plain CSS classes
+   (not `@theme` --animate-* tokens) so the nested var(--duration /
+   var(--direction) references resolve against the animated element itself:
+   Tailwind v4 emits theme tokens on :root, and a var() nested inside a
+   :root-declared custom property keeps the fallback instead of resolving
+   against the track (verified in Chrome). The longhand animation-*
+   composition also keeps `animation-play-state` from the pauseOnHover
+   hover variant independent of this block. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% / var(--repeat, 4)));
+  }
+}
+
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% / var(--repeat, 4)));
+  }
+}
+
+@layer utilities {
+  /* Component preview stage (ui-context.md: "Preview area has a subtle grid
+     pattern background for visual depth"). Kept as a real utility rather than
+     an inline `backgroundImage`, which code-standards.md forbids. */
+  .bg-preview-grid {
+    background-image:
+      linear-gradient(to right, rgba(161, 161, 170, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(161, 161, 170, 0.07) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .animate-marquee {
+    animation-name: marquee;
+    animation-duration: var(--duration, 30s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: var(--direction, normal);
+  }
+
+  .animate-marquee-vertical {
+    animation-name: marquee-vertical;
+    animation-duration: var(--duration, 30s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: var(--direction, normal);
+  }
+}
+
+/* Gradient Border Glow
+
+   THE ROTATING LAYER MUST BE LARGER THAN THE CARD.
+   A layer sized exactly like the card does NOT keep covering it once rotated:
+   a W x H rectangle only contains itself at multiples of 90deg, and even then
+   only when it is square. At 45deg the card's own corners fall outside the
+   rotated rectangle, so the border is painted only where the two still overlap
+   — the "disconnected arcs sliding around the card" artifact. The component
+   therefore sizes this layer to the card's DIAGONAL (measured in JS, since
+   sqrt(w^2 + h^2) is not expressible in CSS), whose inscribed circle contains
+   the card at every angle.
+
+   Do not "fix" this by adding `scale()` here. A pill at 10:1 would need a
+   factor of ~10.5 and a 19:1 bar ~19.2, i.e. up to ~370x the raster area,
+   whereas the diagonal square is exact for every aspect ratio and cheaper.
+
+   The size does not alter the look: a conic gradient's hue depends only on the
+   angle around its centre, not on the radius, and the square is centred on the
+   card. This is purely a coverage fix. */
+@keyframes gradient-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scaled by --gb-intensity so the `intensity` prop is not silently dead on
+   this variant. A CSS animation beats an inline `opacity` in the cascade, so
+   the spec's literal 0.4 -> 1 keyframes would have made `intensity` a no-op
+   for every pulsing card. The 0.4 floor is preserved, just multiplied. */
+@keyframes gradient-pulse {
+  0%,
+  100% {
+    opacity: calc(0.4 * var(--gb-intensity, 1));
+  }
+  50% {
+    opacity: var(--gb-intensity, 1);
+  }
+}
+
+@layer utilities {
+  .animate-gradient-rotate {
+    animation-name: gradient-rotate;
+    animation-duration: var(--gb-duration, 4s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .animate-gradient-pulse {
+    animation-name: gradient-pulse;
+    animation-duration: var(--gb-duration, 4s);
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+}
+
+/* Reduced motion (code-standards non-negotiable). Deliberately UNLAYERED: in
+   the cascade, unlayered declarations outrank declarations inside a layer, so
+   this beats the `@layer utilities` rules above without needing `!important`
+   (the marquee utilities needed `!important` because their reduced-motion
+   opt-out was itself a utility). With the animation off, each layer falls back
+   to its own `opacity: var(--gb-intensity)` — a still gradient border. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-gradient-rotate,
+  .animate-gradient-pulse {
+    animation: none;
+  }
+}

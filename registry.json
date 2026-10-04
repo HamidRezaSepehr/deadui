@@ -1,0 +1,221 @@
+{
+  "components": [
+    {
+      "name": "cinematic-text",
+      "title": "Cinematic Text Reveal",
+      "description": "GSAP SplitText + ScrollTrigger letter-by-letter reveal",
+      "tier": "free",
+      "dependencies": [
+        "gsap"
+      ],
+      "files": [
+        {
+          "path": "registry/cinematic-text/cinematic-text.tsx",
+          "target": "components/ui/cinematic-text.tsx"
+        }
+      ],
+      "variants": [
+        "blur-in",
+        "fade-up",
+        "slide-stagger",
+        "scale-pop"
+      ]
+    },
+    {
+      "name": "marquee",
+      "title": "Infinite Blur Marquee",
+      "description": "GPU-accelerated infinite marquee with edge blur, vertical mode, pause-on-hover, and reverse",
+      "tier": "free",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "registry/marquee/marquee.tsx",
+          "target": "components/ui/marquee.tsx"
+        }
+      ],
+      "variants": [
+        "horizontal",
+        "vertical"
+      ]
+    },
+    {
+      "name": "spotlight-card",
+      "title": "Spotlight Hover Card",
+      "description": "Mouse-tracking radial spotlight card with border-masked glow and optional 3D tilt, zero re-renders",
+      "tier": "free",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "registry/spotlight-card/spotlight-card.tsx",
+          "target": "components/ui/spotlight-card.tsx"
+        }
+      ],
+      "variants": [
+        "border",
+        "background",
+        "both",
+        "none"
+      ]
+    },
+    {
+      "name": "scroll-scrub",
+      "title": "Scroll-Linked Media Scrub",
+      "description": "Scroll-linked image sequence or video timeline scrubbing with preloading, GSAP proxy frames, and optional pinning",
+      "tier": "free",
+      "dependencies": [
+        "gsap",
+        "clsx",
+        "tailwind-merge",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "registry/scroll-scrub/scroll-scrub.tsx",
+          "target": "components/ui/scroll-scrub.tsx"
+        }
+      ],
+      "variants": [
+        "image-sequence",
+        "video"
+      ]
+    },
+    {
+      "name": "gradient-border",
+      "title": "Gradient Border Glow",
+      "description": "Animated gradient border with rotating, pulsing, static and mouse-tracking spotlight variants, pure CSS",
+      "tier": "free",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "registry/gradient-border/gradient-border.tsx",
+          "target": "components/ui/gradient-border.tsx"
+        }
+      ],
+      "variants": [
+        "rotating",
+        "pulsing",
+        "static",
+        "spotlight"
+      ]
+    },
+    {
+      "name": "magnetic-button",
+      "title": "Magnetic Elastic Button",
+      "description": "Physics-based button that pulls toward the cursor and snaps back elastically",
+      "tier": "free",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/magnetic-button/magnetic-button.tsx",
+          "target": "components/ui/magnetic-button.tsx"
+        }
+      ],
+      "variants": [
+        "default",
+        "outline",
+        "glow",
+        "ghost"
+      ]
+    },
+    {
+      "name": "image-trail",
+      "title": "CSS Image Trail",
+      "description": "Lightweight DOM image trail that follows the cursor, with six switchable Codrops-inspired effects and no WebGL",
+      "tier": "free",
+      "dependencies": [
+        "motion",
+        "clsx",
+        "tailwind-merge",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "registry/image-trail/image-trail.tsx",
+          "target": "components/ui/image-trail.tsx"
+        }
+      ],
+      "variants": [],
+      "effects": [
+        "fade-scale",
+        "rotate-scale",
+        "3d-rotate",
+        "blur-fade",
+        "clip-circle",
+        "skew-fade"
+      ]
+    },
+    {
+      "name": "webgl-image-trail",
+      "title": "WebGL Image Trail",
+      "description": "React Three Fiber image trail that follows the cursor, with four switchable GLSL effects (liquid, distortion, pixelate, wave), a tint colour, and a fade-out",
+      "tier": "pro",
+      "dependencies": [
+        "three",
+        "@react-three/fiber",
+        "@react-three/drei",
+        "clsx",
+        "tailwind-merge",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "registry/pro/webgl-image-trail/webgl-image-trail.tsx",
+          "target": "components/ui/webgl-image-trail/webgl-image-trail.tsx"
+        },
+        {
+          "path": "registry/pro/webgl-image-trail/image-plane.tsx",
+          "target": "components/ui/webgl-image-trail/image-plane.tsx"
+        },
+        {
+          "path": "registry/pro/webgl-image-trail/shaders.ts",
+          "target": "components/ui/webgl-image-trail/shaders.ts"
+        },
+        {
+          "path": "registry/pro/webgl-image-trail/index.ts",
+          "target": "components/ui/webgl-image-trail/index.ts"
+        }
+      ],
+      "variants": [],
+      "effects": [
+        "liquid",
+        "distortion",
+        "pixelate",
+        "wave"
+      ]
+    },
+    {
+      "name": "text-fill-animation",
+      "title": "Text Fill Animation",
+      "description": "Scroll-linked sticky text fill with velocity-reactive gradient",
+      "tier": "pro",
+      "dependencies": [
+        "gsap"
+      ],
+      "files": [
+        {
+          "path": "registry/pro/text-fill-animation/text-fill-animation.tsx",
+          "target": "components/ui/text-fill-animation.tsx"
+        },
+        {
+          "path": "registry/pro/text-fill-animation/text-fill-animation.module.css",
+          "target": "components/ui/text-fill-animation.module.css"
+        }
+      ],
+      "variants": []
+    }
+  ]
+}

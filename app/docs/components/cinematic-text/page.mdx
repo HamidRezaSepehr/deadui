@@ -1,0 +1,126 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { CinematicText } from "@/registry/cinematic-text"
+
+export const metadata = {
+  title: "Cinematic Text Reveal",
+  description:
+    "GSAP SplitText + ScrollTrigger letter-by-letter reveal with four variants.",
+}
+
+# Cinematic Text Reveal
+
+GSAP SplitText + ScrollTrigger letter-by-letter reveal with multiple variants.
+
+## Preview
+
+<ComponentCustomizer
+  component={CinematicText}
+  defaultProps={{
+    children: "Dead simple animations for React.",
+    variant: "blur-in",
+    duration: 0.8,
+    stagger: 0.05,
+    splitBy: "chars",
+    className: "text-center text-3xl font-bold text-dead-50 sm:text-5xl",
+  }}
+  controls={{
+    variant: {
+      type: "select",
+      options: ["blur-in", "fade-up", "slide-stagger", "scale-pop"],
+    },
+    duration: { type: "slider", min: 0.1, max: 2, step: 0.1, unit: "s" },
+    stagger: { type: "slider", min: 0, max: 0.3, step: 0.01, unit: "s" },
+    splitBy: { type: "select", options: ["chars", "words", "lines"] },
+  }}
+  className="not-prose my-8"
+/>
+
+Every control writes straight into the preview's props, so the slider value is
+the number the animation actually runs with.
+
+## Installation
+
+<InstallTabs componentName="cinematic-text" tier="free" />
+
+## Usage
+
+```tsx
+import { CinematicText } from "@/components/ui/cinematic-text"
+
+export function Hero() {
+  return (
+    <CinematicText variant="slide-stagger" splitBy="words" duration={1}>
+      Dead simple animations for React.
+    </CinematicText>
+  )
+}
+```
+
+## Variants
+
+<div className="grid grid-cols-1 gap-6 not-prose my-8 sm:grid-cols-2">
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText variant="blur-in" className="text-xl font-bold text-dead-50">
+      blur-in
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText variant="fade-up" className="text-xl font-bold text-dead-50">
+      fade-up
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="slide-stagger"
+      className="text-xl font-bold text-dead-50"
+    >
+      slide-stagger
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="scale-pop"
+      className="text-xl font-bold text-dead-50"
+    >
+      scale-pop
+    </CinematicText>
+  </div>
+</div>
+
+## Props
+
+| Prop            | Type                                                                  | Default            | Description                                                            |
+| --------------- | --------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------- |
+| `children`      | `string`                                                              | —                  | The text to split and reveal. Required.                               |
+| `variant`       | `"blur-in" \| "fade-up" \| "slide-stagger" \| "scale-pop"`            | `"blur-in"`        | Animation style.                                                      |
+| `duration`      | `number`                                                              | `0.8`              | Animation duration in seconds.                                        |
+| `delay`         | `number`                                                              | `0`                | Delay before the animation starts.                                    |
+| `stagger`       | `number`                                                              | `0.05`             | Delay between each split unit.                                        |
+| `splitBy`       | `"chars" \| "words" \| "lines"`                                       | `"chars"`          | How to split the text.                                                |
+| `start`         | `string`                                                              | `"top 85%"`        | ScrollTrigger start position.                                         |
+| `end`           | `string`                                                              | `"bottom top"`     | ScrollTrigger end position.                                           |
+| `once`          | `boolean`                                                             | `true`             | Set `false` to replay on every entry from either scroll direction.     |
+| `scrub`         | `boolean \| number`                                                   | `false`            | Link progress to scroll position. Wins over `once` and `toggleActions`. |
+| `toggleActions` | `string`                                                              | —                  | Raw GSAP `toggleActions`, e.g. `"play none none reverse"`.            |
+
+## Dependencies
+
+- `gsap` — includes SplitText and ScrollTrigger
+
+## Performance
+
+- Only `transform` and `opacity` (plus one `filter: blur` on the `blur-in`
+  variant) are animated, so the reveal stays on the compositor.
+- Splitting runs once per props change and is reverted through
+  `gsap.context()`, so remounting leaves nothing behind.
+- The element's layout space is established before the animation runs — no
+  cumulative layout shift.
+
+## Accessibility
+
+- `prefers-reduced-motion: reduce` is detected before the timeline is built. The
+  animation is skipped entirely and the text renders in its final, fully
+  readable state.
+- The reveal only decorates text that is already in the DOM as real text, so
+  screen readers and copy-paste are unaffected.

@@ -1,0 +1,104 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { MarqueePreview } from "@/components/docs/preview-wrappers"
+export const metadata = {
+  title: "Infinite Blur Marquee",
+  description:
+    "GPU-accelerated infinite marquee with edge blur, vertical mode, pause-on-hover and reverse.",
+}
+
+# Infinite Blur Marquee
+
+GPU-accelerated infinite marquee with edge blur, vertical mode, pause-on-hover
+and reverse.
+
+## Preview
+
+<ComponentCustomizer
+  component={MarqueePreview}
+  defaultProps={{
+    children: "★ Dead UI ★ Simple Animations ★ React Components",
+    direction: "horizontal",
+    blur: "edges",
+    speed: 30,
+    pauseOnHover: true,
+  }}
+  controls={{
+    direction: { type: "select", options: ["horizontal", "vertical"] },
+    blur: { type: "select", options: ["none", "edges", "left", "right"] },
+    speed: { type: "slider", min: 5, max: 60, step: 5 },
+    pauseOnHover: { type: "select", options: ["true", "false"] },
+  }}
+  className="not-prose my-8"
+/>
+
+Hover the strip to test `pauseOnHover`. `speed` is the duration of one full loop
+in seconds, so **lower is faster**.
+
+## Installation
+
+<InstallTabs componentName="marquee" tier="free" />
+
+## Usage
+
+```tsx
+import { Marquee } from "@/components/ui/marquee"
+
+const TAGS = ["Design", "Motion", "React", "GSAP", "Framer Motion"]
+
+export function TagStrip() {
+  return (
+    <Marquee blur="edges" speed={30} pauseOnHover>
+      {TAGS.map((tag) => (
+        <span key={tag} className="px-6 font-mono text-sm text-dead-200">
+          {tag}
+        </span>
+      ))}
+    </Marquee>
+  )
+}
+```
+
+## Props
+
+| Prop            | Type                                                   | Default       | Description                                                       |
+| --------------- | ------------------------------------------------------ | ------------- | ----------------------------------------------------------------- |
+| `children`      | `React.ReactNode`                                      | —             | The strip. Repeated `repeat` times. Required.                    |
+| `direction`     | `"horizontal" \| "vertical"`                           | `"horizontal"` | Axis of travel. `vertical` also fixes a `500px` height.           |
+| `blur`          | `"none" \| "edges" \| "left" \| "right"`               | `"edges"`     | Mask applied to the container. `edges` fades both ends.           |
+| `speed`         | `number`                                               | `30`          | Seconds for one full loop. **Lower is faster.**                  |
+| `gap`           | `number`                                               | `16`          | Pixels between items inside one copy.                            |
+| `pauseOnHover`  | `boolean`                                              | `false`       | Pause the animation while the pointer is over the strip.         |
+| `reverse`       | `boolean`                                              | `false`       | Play the animation backwards.                                    |
+| `repeat`        | `number`                                               | `4`           | How many copies of `children` are rendered.                      |
+| `scrollLinked`  | `boolean`                                              | `false`       | Disable autoplay and drive the offset from page scroll instead.  |
+| `className`     | `string`                                               | —             | Merged after the variant classes, so it wins on conflicts.        |
+
+## Dependencies
+
+- `class-variance-authority`
+- `clsx` + `tailwind-merge`
+
+No animation library: the loop is a CSS keyframe on a transform, declared in
+`app/globals.css` as `animate-marquee` / `animate-marquee-vertical`.
+
+## Performance
+
+- The track animates `transform` only, on a `will-change-transform` layer, so
+  the whole loop is one compositor pass and never touches layout.
+- Each copy is a self-contained period with its inter-item gap baked in, and
+  the keyframe translates exactly one copy's width — so the wrap point is
+  pixel-perfect and there is no visible jump.
+- `repeat` is the cost dial: each copy is a full render of `children`, so
+  `repeat={4}` on an expensive child is 4x the DOM.
+
+## Accessibility
+
+- The track carries `motion-reduce:[animation-none]!`, so under
+  `prefers-reduced-motion: reduce` the strip renders as static content
+  instead of moving.
+- The duplicate copies are decorative repetitions of real text. They are not
+  hidden from assistive tech, so a screen reader will read the strip
+  `repeat` times — lower `repeat` if that matters for your content.
+- The strip is not interactive and takes no focus, so it adds nothing to the
+  tab order.

@@ -1,0 +1,121 @@
+@keyframes obsidian-text-fill-color {
+  0% {
+    color: var(--tfa-dim-color);
+  }
+  30% {
+    color: var(--tfa-primary-color);
+  }
+  100% {
+    color: var(--tfa-text-color);
+  }
+}
+
+.root {
+  position: relative;
+  width: 100%;
+  overflow: clip;
+  --tfa-text-color: var(--color-foreground, #fafafa);
+  --tfa-primary-color: #ff6b00;
+  --tfa-dim-color: color-mix(
+    in srgb,
+    var(--tfa-text-color) 20%,
+    var(--color-background, #09090b)
+  );
+  --tfa-viewport-height: 100vh;
+  --tfa-text-size: 5vw;
+  --tfa-text-width: 80%;
+  --tfa-tablet-text-size: 6.5vw;
+  --tfa-tablet-text-width: 88%;
+  --tfa-mobile-text-size: 8vw;
+  --tfa-mobile-text-width: 95%;
+}
+
+.viewport {
+  position: sticky;
+  top: 0;
+  height: var(--tfa-viewport-height, 100vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+.glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: 55vw;
+  height: 55vh;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--tfa-primary-color) 16%, transparent) 0%,
+    transparent 68%
+  );
+  filter: blur(48px);
+  opacity: 0.7;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.wrapper {
+  position: relative;
+  z-index: 10;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.heading {
+  margin: 0;
+  color: var(--tfa-text-color);
+  width: var(--tfa-text-width, 80%);
+  font-size: var(--tfa-text-size, 5vw);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .heading {
+    width: var(--tfa-tablet-text-width, 88%);
+    font-size: var(--tfa-tablet-text-size, 6.5vw);
+  }
+}
+
+@media (max-width: 640px) {
+  .heading {
+    width: var(--tfa-mobile-text-width, 95%);
+    font-size: var(--tfa-mobile-text-size, 8vw);
+  }
+}
+
+.root :global(.split-chars) {
+  color: var(--tfa-dim-color);
+  transition: color 0.4s;
+  will-change: color;
+}
+
+.root :global(.split-chars.show) {
+  color: var(--tfa-text-color);
+  animation: obsidian-text-fill-color 0.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    height: auto !important;
+  }
+
+  .viewport {
+    position: relative;
+    top: auto;
+    height: auto;
+  }
+
+  .root :global(.split-chars),
+  .root :global(.split-chars.show) {
+    animation: none;
+    transition: none;
+    color: var(--tfa-text-color);
+  }
+}

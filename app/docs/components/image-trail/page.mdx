@@ -1,0 +1,151 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { ImageTrailPreview } from "@/components/docs/preview-wrappers"
+export const metadata = {
+  title: "CSS Image Trail",
+  description:
+    "Lightweight DOM image trail that follows the cursor, with six switchable effects and no WebGL.",
+}
+
+# CSS Image Trail
+
+The lightweight companion to the WebGL trail: a DOM image trail that follows
+the cursor, with six switchable Codrops-inspired effects and no WebGL, no
+canvas and no `AnimatePresence`.
+
+## Preview
+
+<ComponentCustomizer
+  component={ImageTrailPreview}
+  defaultProps={{
+    effect: "fade-scale",
+    trailSize: 6,
+    velocityThreshold: 15,
+    imageSize: 100,
+  }}
+  controls={{
+    effect: {
+      type: "select",
+      options: [
+        "fade-scale",
+        "rotate-scale",
+        "3d-rotate",
+        "blur-fade",
+        "clip-circle",
+        "skew-fade",
+      ],
+    },
+    trailSize: { type: "slider", min: 2, max: 15, step: 1 },
+    velocityThreshold: { type: "slider", min: 5, max: 50, step: 5 },
+    imageSize: { type: "slider", min: 50, max: 200, step: 10 },
+  }}
+  className="not-prose my-8"
+/>
+
+Move the pointer across the panel. `velocityThreshold` is the minimum pointer
+travel in pixels between spawns, so raising it makes the trail sparser.
+`trailSize` is the cap on how many are alive at once — dragging it **down**
+shrinks a live trail immediately rather than on the next spawn.
+
+## Installation
+
+<InstallTabs componentName="image-trail" tier="free" />
+
+## Usage
+
+```tsx
+"use client"
+
+import { ImageTrail } from "@/components/ui/image-trail"
+
+const IMAGES = [
+  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+  "https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+]
+
+export function Trail() {
+  return (
+    <div className="h-[70vh] w-full overflow-hidden">
+      <ImageTrail images={IMAGES} effect="rotate-scale" trailSize={6} imageSize={120} />
+    </div>
+  )
+}
+```
+
+The container is `h-full`, so **its parent must have a resolved height**.
+Overflow is hidden by the component, which is what clips the trail to the
+panel.
+
+## Effects
+
+| Effect        | Animation                                                       |
+| ------------- | --------------------------------------------------------------- |
+| `fade-scale`  | Full size and opacity, shrinking to 40% while fading out.        |
+| `rotate-scale`| Shrinks and rotates 45° on the way out.                          |
+| `3d-rotate`   | Rotates 90° on X and 45° on Y, under an 800px perspective.      |
+| `blur-fade`   | Cross-fades through an 8px blur.                                 |
+| `clip-circle` | A circular clip shrinks from `50%` to `0%`.                      |
+| `skew-fade`   | Skews 20° on X and 10° on Y while fading.                        |
+
+Only `3d-rotate` asks for a perspective. The number lives on the effect
+definition and the component promotes it to the container, which is the half
+of the CSS Transforms 2 `transform-perspective` property that browsers
+actually implement — on the element it is inert, and Motion would drop the
+plain value anyway.
+
+## Props
+
+| Prop                | Type                                                                        | Default         | Description                                                    |
+| ------------------- | --------------------------------------------------------------------------- | --------------- | -------------------------------------------------------------- |
+| `images`            | `string[]`                                                                  | —               | Image URLs, cycled in order. Required.                         |
+| `effect`            | `"fade-scale" \| "rotate-scale" \| "3d-rotate" \| "blur-fade" \| "clip-circle" \| "skew-fade"` | `"fade-scale"` | Which style plays. |
+| `trailSize`         | `number`                                                                    | `6`             | Max images visible at once.                                    |
+| `velocityThreshold` | `number`                                                                    | `15`            | Min pointer travel in px between spawns.                       |
+| `spawnRate`         | `number`                                                                    | `50`            | Min ms between spawns, so a fast flick cannot flood the trail. |
+| `imageSize`         | `number`                                                                    | `120`           | Width and height of each trail image, in pixels.               |
+| `duration`          | `number`                                                                    | `0.8`           | Animation duration in seconds. Also the item's lifetime.       |
+| `borderRadius`      | `string`                                                                    | `"rounded-lg"`  | Tailwind radius class applied to each item.                     |
+| `onMouseMove`       | `React.MouseEventHandler`                                                   | —               | Composed with the built-in handler, not replaced by it.         |
+
+## Dependencies
+
+- `motion` — `motion/react` and CSS transforms only
+- `class-variance-authority`
+- `clsx` + `tailwind-merge`
+
+No WebGL, no canvas, no `AnimatePresence`. If the WebGL trail is too heavy
+for your page, this is the same idea at a fraction of the cost.
+
+## Performance
+
+- **No `AnimatePresence`, on purpose.** It would have to diff the children list
+  on every commit and hold a removed node alive while its exit animation plays.
+  On a list that gains and loses an entry up to 20 times a second that is the
+  most expensive thing on the page, for a node whose animation already
+  finished. Each item runs its animation to completion and the sweep unmounts
+  it once it is *older* than the animation, so an exit always costs nothing.
+- The sweep returns the **previous array untouched** when nothing expired, so a
+  page whose pointer has not moved commits no render at all — measured at zero
+  new work over 700ms.
+- The filter runs over at most `trailSize` elements, so the per-tick cost is
+  bounded by the prop you set, not by how long the page has been open.
+- `getBoundingClientRect()` is read *after* the cheap gates. It is the only
+  layout read on the hot path and there is no reason to pay for it on an event
+  that cannot spawn.
+- Item ids come from a monotonic counter rather than `performance.now()`, which
+  collides at sub-millisecond spawn rates.
+- Only `transform`, `opacity`, `filter` and `clip-path` are animated, so the
+  trail stays on the compositor.
+
+## Accessibility
+
+- Under `prefers-reduced-motion: reduce` nothing spawns and a plain message
+  replaces the trail. A follow-the-cursor effect has no reduced-motion form,
+  so it is a hard stop rather than a slower version.
+- The trail images are `aria-hidden` and carry `alt=""`. They repeat photos
+  already on the page, potentially up to `trailSize` times and 20 spawns a
+  second, so announcing them would be pure noise.
+- Every item is `pointer-events-none`, so the trail can never swallow a click
+  on the content underneath it.
+- The trail is decorative and adds nothing to the tab order.

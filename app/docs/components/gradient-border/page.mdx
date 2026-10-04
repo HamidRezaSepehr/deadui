@@ -1,0 +1,153 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GradientBorderPreview } from "@/components/docs/preview-wrappers"
+import { GradientBorder } from "@/registry/gradient-border"
+export const metadata = {
+  title: "Gradient Border Glow",
+  description:
+    "Animated gradient border with rotating, pulsing, static and mouse-tracking spotlight variants. Pure CSS.",
+}
+
+# Gradient Border Glow
+
+Animated gradient border with rotating, pulsing, static and mouse-tracking
+spotlight variants. Pure CSS — no animation library.
+
+## Preview
+
+<ComponentCustomizer
+  component={GradientBorderPreview}
+  defaultProps={{
+    children: "Glowing Content",
+    variant: "rotating",
+    radius: "md",
+    speed: 4,
+    width: 2,
+    blur: 0,
+  }}
+  controls={{
+    variant: {
+      type: "select",
+      options: ["rotating", "pulsing", "static", "spotlight"],
+    },
+    radius: { type: "select", options: ["sm", "md", "lg", "full"] },
+    speed: { type: "slider", min: 1, max: 10, step: 1 },
+    width: { type: "slider", min: 1, max: 10, step: 1 },
+    blur: { type: "slider", min: 0, max: 30, step: 5 },
+  }}
+  className="not-prose my-8"
+/>
+
+Move the pointer across the panel to drive the `spotlight` variant. `speed` is
+the animation duration in seconds, so **lower is faster**, and `blur` adds an
+ambient halo outside the ring.
+
+## Installation
+
+<InstallTabs componentName="gradient-border" tier="free" />
+
+## Usage
+
+```tsx
+import { GradientBorder } from "@/components/ui/gradient-border"
+
+export function GlowingCard() {
+  return (
+    <GradientBorder
+      variant="rotating"
+      radius="lg"
+      width={2}
+      speed={5}
+      blur={12}
+      colors={["#ef4444", "#f97316", "#a855f7"]}
+    >
+      <div className="p-8 text-center">
+        <h3 className="text-xl font-semibold text-dead-50">Ship it</h3>
+      </div>
+    </GradientBorder>
+  )
+}
+```
+
+`children` is rendered inside an opaque `bg-dead-950` layer, so give it its
+own padding — the border ring sits flush against the content box.
+
+## Variants
+
+<div className="grid grid-cols-1 gap-6 not-prose my-8 sm:grid-cols-2">
+  <GradientBorder variant="rotating" width={2} className="p-1">
+    <div className="p-6 text-center font-mono text-xs uppercase tracking-widest text-dead-300">
+      rotating
+    </div>
+  </GradientBorder>
+  <GradientBorder variant="pulsing" width={2} blur={10} className="p-1">
+    <div className="p-6 text-center font-mono text-xs uppercase tracking-widest text-dead-300">
+      pulsing
+    </div>
+  </GradientBorder>
+  <GradientBorder variant="static" width={3} className="p-1">
+    <div className="p-6 text-center font-mono text-xs uppercase tracking-widest text-dead-300">
+      static
+    </div>
+  </GradientBorder>
+  <GradientBorder variant="spotlight" width={2} className="p-1">
+    <div className="p-6 text-center font-mono text-xs uppercase tracking-widest text-dead-300">
+      spotlight
+    </div>
+  </GradientBorder>
+</div>
+
+Hover each card. `static` is a `linear-gradient` at 135° and never animates;
+`spotlight` is a `radial-gradient` that follows the pointer.
+
+## Props
+
+| Prop       | Type                                        | Default                          | Description                                                       |
+| ---------- | ------------------------------------------- | -------------------------------- | ----------------------------------------------------------------- |
+| `children` | `React.ReactNode`                           | —                                | Content, painted over the opaque inner layer. Required.           |
+| `variant`  | `"rotating" \| "pulsing" \| "static" \| "spotlight"` | `"rotating"`             | Gradient shape and animation.                                    |
+| `radius`   | `"sm" \| "md" \| "lg" \| "full"`            | `"md"`                           | Corner radius. Each value also publishes `--gb-radius`.          |
+| `speed`    | `number`                                    | `4`                              | Animation duration in seconds. **Lower is faster.**              |
+| `width`    | `number`                                    | `1`                              | Border thickness in pixels.                                       |
+| `blur`     | `number`                                    | `0`                              | Ambient glow spread in pixels outside the ring. `0` disables it. |
+| `colors`   | `string[]`                                  | `["#ff0080", "#7928ca", "#00dfd8"]` | Gradient stops. Two or more.                                  |
+| `intensity` | `number`                                   | `1`                              | Gradient opacity multiplier, `0` to `1`.                         |
+| `style`    | `React.CSSProperties`                       | —                                | Merged last, so it wins per property.                             |
+| `className` | `string`                                    | —                                | Merged after the variant classes.                                 |
+
+## Dependencies
+
+- `class-variance-authority`
+- `clsx` + `tailwind-merge`
+
+The two animations are CSS keyframes declared in `app/globals.css` as
+`animate-gradient-rotate` and `animate-gradient-pulse`.
+
+## Performance
+
+- Only `transform` and `opacity` are animated, on a single absolutely
+  positioned gradient layer — the compositor handles the whole thing and the
+  card never re-lays-out.
+- The rotating layer is sized to the card's **diagonal**
+  (`sqrt(w² + h²) × 1.02`), measured once and tracked with a
+  `ResizeObserver`. That is what keeps the gradient covering the box at every
+  angle. A `scale()` factor is the tempting alternative and it is the wrong
+  tool: a 19:1 pill would need a ~19× scale, up to ~370× the raster area,
+  where the diagonal square is exact for every aspect ratio.
+- `will-change` is applied only to the variant that actually animates — a
+  permanent layer promotion on a static gradient is wasted GPU memory.
+- The content is masked out by an opaque `bg-dead-950` layer rather than by a
+  second gradient, so there is no extra composited layer per card.
+- `colors` is memoised, so the gradient string is rebuilt only when the
+  palette or the variant changes.
+
+## Accessibility
+
+- Every layer except the one holding `children` is `aria-hidden` and
+  `pointer-events-none`, so the decorative ring and halo never intercept a
+  click and are never announced.
+- Under `prefers-reduced-motion: reduce` the two animation utilities resolve
+  to no animation at all, so the gradient renders as a still border. The
+  effect stays visible and the content stays readable.
+- The component renders a `div` and adds nothing to the tab order; pass
+  `asChild`-style composition yourself if you need a focusable root.

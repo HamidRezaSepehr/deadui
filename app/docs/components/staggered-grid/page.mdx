@@ -1,0 +1,205 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { StaggeredGridPreview } from "@/components/docs/preview-wrappers"
+import { StaggeredGrid, StaggeredItem } from "@/registry/staggered-grid"
+export const metadata = {
+  title: "Staggered Grid Reveal",
+  description:
+    "Container-and-item pair that reveals a grid of children one after another as it scrolls into view.",
+}
+
+# Staggered Grid Reveal
+
+Container-and-item pair that reveals a grid of children one after another as
+it scrolls into view.
+
+## Preview
+
+<ComponentCustomizer
+  component={StaggeredGridPreview}
+  defaultProps={{
+    variant: "fade-up",
+    stagger: 0.1,
+    duration: 0.6,
+    once: true,
+  }}
+  controls={{
+    variant: {
+      type: "select",
+      options: [
+        "fade-up",
+        "scale-in",
+        "blur-in",
+        "slide-left",
+        "slide-right",
+        "flip-x",
+        "flip-y",
+      ],
+    },
+    stagger: { type: "slider", min: 0, max: 0.5, step: 0.05 },
+    duration: { type: "slider", min: 0.2, max: 1.5, step: 0.1 },
+    once: { type: "select", options: ["true", "false"] },
+  }}
+  className="not-prose my-8"
+/>
+
+The animation belongs to the **children**, not the container: `StaggeredGrid`
+owns the timing and the variant, `StaggeredItem` picks it up through context
+and supplies its own initial and target state. The playground renders a 3×3
+mock grid so you can watch the sequence; the real usage below shows the same
+pair wrapping real content.
+
+## Installation
+
+<InstallTabs componentName="staggered-grid" tier="free" />
+
+## Usage
+
+```tsx
+import { StaggeredGrid, StaggeredItem } from "@/components/ui/staggered-grid"
+
+const TILES = ["Design", "Motion", "React", "GSAP", "Framer Motion", "WebGL"]
+
+export function FeatureGrid() {
+  return (
+    <StaggeredGrid
+      variant="scale-in"
+      stagger={0.08}
+      containerClassName="grid grid-cols-2 gap-4 md:grid-cols-3"
+    >
+      {TILES.map((tile) => (
+        <StaggeredItem
+          key={tile}
+          className="rounded-xl border border-dead-800 bg-dead-900 p-6"
+        >
+          {tile}
+        </StaggeredItem>
+      ))}
+    </StaggeredGrid>
+  )
+}
+```
+
+`containerClassName` is how you make the container a grid — the container
+itself carries no layout classes beyond `w-full`, so your grid definition
+reaches it unmerged. Putting the grid on `containerClassName` rather than
+`className` also means the two never collide in `tailwind-merge`.
+
+## Variants
+
+<div className="space-y-4 not-prose my-8">
+  <StaggeredGrid variant="fade-up" stagger={0.05} containerClassName="grid grid-cols-4 gap-2">
+    {["fade-up", "fade-up", "fade-up", "fade-up"].map((label, i) => (
+      <StaggeredItem key={i} className="flex min-h-[64px] items-center justify-center rounded-lg border border-dead-800 bg-dead-900 font-mono text-[10px] uppercase tracking-widest text-dead-400">
+        {label}
+      </StaggeredItem>
+    ))}
+  </StaggeredGrid>
+  <StaggeredGrid variant="scale-in" stagger={0.05} containerClassName="grid grid-cols-4 gap-2">
+    {["scale-in", "scale-in", "scale-in", "scale-in"].map((label, i) => (
+      <StaggeredItem key={i} className="flex min-h-[64px] items-center justify-center rounded-lg border border-dead-800 bg-dead-900 font-mono text-[10px] uppercase tracking-widest text-dead-400">
+        {label}
+      </StaggeredItem>
+    ))}
+  </StaggeredGrid>
+  <StaggeredGrid variant="blur-in" stagger={0.05} containerClassName="grid grid-cols-4 gap-2">
+    {["blur-in", "blur-in", "blur-in", "blur-in"].map((label, i) => (
+      <StaggeredItem key={i} className="flex min-h-[64px] items-center justify-center rounded-lg border border-dead-800 bg-dead-900 font-mono text-[10px] uppercase tracking-widest text-dead-400">
+        {label}
+      </StaggeredItem>
+    ))}
+  </StaggeredGrid>
+  <StaggeredGrid variant="slide-left" stagger={0.05} containerClassName="grid grid-cols-4 gap-2">
+    {["slide-left", "slide-left", "slide-left", "slide-left"].map((label, i) => (
+      <StaggeredItem key={i} className="flex min-h-[64px] items-center justify-center rounded-lg border border-dead-800 bg-dead-900 font-mono text-[10px] uppercase tracking-widest text-dead-400">
+        {label}
+      </StaggeredItem>
+    ))}
+  </StaggeredGrid>
+  <StaggeredGrid variant="slide-right" stagger={0.05} containerClassName="grid grid-cols-4 gap-2">
+    {["slide-right", "slide-right", "slide-right", "slide-right"].map((label, i) => (
+      <StaggeredItem key={i} className="flex min-h-[64px] items-center justify-center rounded-lg border border-dead-800 bg-dead-900 font-mono text-[10px] uppercase tracking-widest text-dead-400">
+        {label}
+      </StaggeredItem>
+    ))}
+  </StaggeredGrid>
+  <StaggeredGrid variant="flip-x" stagger={0.05} containerClassName="grid grid-cols-4 gap-2">
+    {["flip-x", "flip-x", "flip-x", "flip-x"].map((label, i) => (
+      <StaggeredItem key={i} className="flex min-h-[64px] items-center justify-center rounded-lg border border-dead-800 bg-dead-900 font-mono text-[10px] uppercase tracking-widest text-dead-400">
+        {label}
+      </StaggeredItem>
+    ))}
+  </StaggeredGrid>
+  <StaggeredGrid variant="flip-y" stagger={0.05} containerClassName="grid grid-cols-4 gap-2">
+    {["flip-y", "flip-y", "flip-y", "flip-y"].map((label, i) => (
+      <StaggeredItem key={i} className="flex min-h-[64px] items-center justify-center rounded-lg border border-dead-800 bg-dead-900 font-mono text-[10px] uppercase tracking-widest text-dead-400">
+        {label}
+      </StaggeredItem>
+    ))}
+  </StaggeredGrid>
+</div>
+
+`flip-x` and `flip-y` rotate on an axis with no `perspective` set, so they
+read as a flat squash. Add `perspective-[800px]` to `containerClassName` if you
+want the card-turn.
+
+## Props
+
+### `StaggeredGrid`
+
+| Prop                | Type                                                                       | Default      | Description                                                             |
+| ------------------- | -------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------- |
+| `children`          | `React.ReactNode`                                                          | —            | The items, each wrapped in a `StaggeredItem`. Required.                |
+| `variant`           | `"fade-up" \| "scale-in" \| "blur-in" \| "slide-left" \| "slide-right" \| "flip-x" \| "flip-y"` | `"fade-up"` | Animation handed to every descendant item through context. |
+| `stagger`           | `number`                                                                   | `0.1`        | Delay between each item, in seconds.                                   |
+| `duration`          | `number`                                                                   | `0.6`        | Duration of each item's animation, in seconds.                         |
+| `delay`             | `number`                                                                   | `0`          | Delay before the first item starts.                                    |
+| `ease`              | `string`                                                                   | `"easeOut"`  | Easing for each item.                                                  |
+| `once`              | `boolean`                                                                  | `true`       | `false` replays the sequence on every entry into view.                 |
+| `threshold`         | `number`                                                                   | `0.1`        | Fraction of the container that must be visible to trigger.             |
+| `rootMargin`        | `string`                                                                   | `"0px"`      | `IntersectionObserver` root margin.                                    |
+| `containerClassName` | `string`                                                                  | —            | Layout classes for the grid itself.                                    |
+
+### `StaggeredItem`
+
+| Prop       | Type              | Default | Description                                                                |
+| ---------- | ----------------- | ------- | -------------------------------------------------------------------------- |
+| `children` | `React.ReactNode` | —       | The item's content. Required.                                             |
+| `className` | `string`         | —       | Merged last, so it wins. `col-span-2` / `row-span-2` land here.            |
+
+Plus every `motion.div` prop, since `StaggeredItem` extends
+`HTMLMotionProps<"div">`.
+
+## Dependencies
+
+- `motion` — `whileInView` with `staggerChildren`
+- `class-variance-authority`
+- `clsx` + `tailwind-merge`
+
+## Performance
+
+- The stagger is a single orchestrating transition
+  (`staggerChildren`) on the container, not one timer per item, so the
+  browser interpolates the whole sequence on the compositor.
+- Items animate `transform`, `opacity` and one `filter: blur()` on the
+  `blur-in` variant — no layout-affecting properties, so nothing reflows.
+- Items hold their layout space at all times: the variant is expressed as a
+  Motion `initial` transform, not as a class that changes the box, so there is
+  no cumulative layout shift as the grid appears.
+- Grid spans (`col-span-2`, `row-span-2`) come from `className` on the item
+  and are resolved before the animation starts, so a mixed-size grid keeps
+  its exact layout.
+- Cost scales with the number of items. Each `StaggeredItem` is its own Motion
+  node; a hundred-cell grid is a hundred animated elements even though they
+  share one transition.
+
+## Accessibility
+
+- Motion is honoured through `useReducedMotion` inside `motion/react`: with
+  reduced motion the items render in their target state rather than animating
+  from an offset, so nothing moves and nothing is left invisible.
+- Every item is in the DOM in its final, readable state from the first frame.
+  The reveal is a transition on real content, not content that appears late.
+- Grid items add nothing to the tab order; any links or buttons inside them
+  are the focusable elements, and focus is visible because the items never
+  animate `outline`.

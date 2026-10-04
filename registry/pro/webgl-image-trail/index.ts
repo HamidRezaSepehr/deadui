@@ -1,0 +1,6 @@
+export { WebGLImageTrail, webglImageTrailVariants } from './webgl-image-trail'
+export type { WebGLImageTrailProps } from './webgl-image-trail'
+export { ImagePlane } from './image-plane'
+export type { ImagePlaneProps } from './image-plane'
+export { shaders, TRAIL_EFFECTS } from './shaders'
+export type { TrailEffect, TrailShader } from './shaders'

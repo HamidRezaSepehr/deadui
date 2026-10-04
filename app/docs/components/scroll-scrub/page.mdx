@@ -1,0 +1,127 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { ScrollScrubPreview } from "@/components/docs/preview-wrappers"
+export const metadata = {
+  title: "Scroll-Linked Media Scrub",
+  description:
+    "Scroll-linked image sequence or video timeline scrubbing with preloading and optional pinning.",
+}
+
+# Scroll-Linked Media Scrub
+
+Scroll-linked image sequence or video timeline scrubbing with preloading and
+optional pinning.
+
+## Preview
+
+<ComponentCustomizer
+  component={ScrollScrubPreview}
+  defaultProps={{
+    aspectRatio: "video",
+    objectFit: "cover",
+    pin: true,
+    scrub: 1,
+  }}
+  controls={{
+    aspectRatio: {
+      type: "select",
+      options: ["video", "square", "portrait", "auto"],
+    },
+    objectFit: { type: "select", options: ["cover", "contain", "fill", "none"] },
+    pin: { type: "select", options: ["true", "false"] },
+    scrub: { type: "slider", min: 0, max: 3, step: 0.5 },
+  }}
+  className="not-prose my-8"
+/>
+
+**The preview really is 300vh tall — that is the component, not a styling
+quirk.** `ScrollScrub` reserves its scroll range up front: the section is
+`h-[300vh]` and the short media stage is pinned inside it, so scrolling the
+page scrubs the timeline. Shrink it for a demo with
+`className="h-[150vh]"`, or pass `pin={false}` to let the media scroll away
+normally.
+
+Scroll down through this page to drive it. With `scrub` above `0` the timeline
+eases toward the scroll position instead of tracking it exactly — higher is
+smoother and laggier.
+
+## Installation
+
+<InstallTabs componentName="scroll-scrub" tier="free" />
+
+## Usage
+
+```tsx
+import { ScrollScrub } from "@/components/ui/scroll-scrub"
+
+const FRAMES = Array.from(
+  { length: 24 },
+  (_, i) => `https://picsum.photos/seed/frame${i}/1600/900`,
+)
+
+export function ProductScrub() {
+  return (
+    <ScrollScrub
+      images={FRAMES}
+      aspectRatio="video"
+      objectFit="cover"
+      pin
+      scrub={1}
+      className="h-[250vh]"
+    />
+  )
+}
+```
+
+Image mode is the default and needs no configuration: with no `images` and no
+`videoSrc` the component falls back to ten Picsum frames so it demos itself
+the moment it is installed. Pass `videoSrc` instead and it scrubs
+`video.currentTime` on the same range.
+
+## Props
+
+| Prop             | Type                                              | Default            | Description                                                              |
+| ---------------- | ------------------------------------------------- | ------------------ | ------------------------------------------------------------------------ |
+| `images`         | `string[]`                                        | 10 Picsum frames   | Frame URLs, painted onto a canvas. Mutually exclusive with `videoSrc`.   |
+| `videoSrc`       | `string`                                          | MDN `flower.mp4`   | A video file, scrubbed by `currentTime`.                                 |
+| `aspectRatio`    | `"video" \| "square" \| "portrait" \| "auto"`     | `"video"`          | Shape of the media stage. `auto` hands the box to the frame's own ratio. |
+| `objectFit`      | `"cover" \| "contain" \| "fill" \| "none"`        | `"cover"`          | How the frame or video fills the stage.                                 |
+| `pin`            | `boolean`                                         | `true`             | Pin the media stage in place while the section scrolls.                 |
+| `scrub`          | `boolean \| number`                               | `1`                | Scroll smoothing. `0` tracks exactly; higher eases toward the position. |
+| `start`          | `string`                                          | `"top top"`        | ScrollTrigger start.                                                     |
+| `end`            | `string`                                          | `"bottom bottom"`  | ScrollTrigger end.                                                       |
+| `fallbackImage`  | `string`                                          | —                  | Shown until the first frame decodes.                                     |
+| `className`      | `string`                                          | `h-[300vh]`        | Merged after the default section height, so it wins.                     |
+
+## Dependencies
+
+- `gsap` — ScrollTrigger, plus the `ScrollTrigger.matchMedia` reduced-motion branch
+- `class-variance-authority`
+- `clsx` + `tailwind-merge`
+
+## Performance
+
+- **Scrolling never re-renders React.** Decoded frames live in refs and the
+  scrub tween owns a GSAP proxy object whose `onUpdate` paints the canvas
+  directly. There is no state write anywhere on the scroll path.
+- Every frame is preloaded up front, in array order, and the scrub only opens
+  once all of them have settled — so no frame is decoded mid-scrub and the
+  timeline never stutters. Frame 0 paints the moment it arrives, so the stage
+  is never an empty box while the rest downloads.
+- A frame that fails inherits its nearest good neighbour instead of punching a
+  hole in the sequence, and the same walk runs backwards on every draw.
+- The canvas backing store is matched to the stage box at
+  `min(devicePixelRatio, 2)`, so a DPR-scaled draw is never resampled.
+- Pinning uses `pinSpacing: false`, because the 300vh trigger already reserves
+  the scroll length and a spacer would double it.
+
+## Accessibility
+
+- `prefers-reduced-motion: reduce` is honoured through
+  `gsap.matchMedia`: no pin, no scrub, no tween. The media jumps straight to
+  its end state — the last frame, or the video's final `currentTime` — and
+  stays there.
+- The canvas carries `role="img"` and an `aria-label`, and the video an
+  `aria-label`, so the media is described rather than silent.
+- The video is `muted` and `playsInline`, which is what lets a browser autoplay
+  it at all; add captions in your own markup if the video carries speech.
