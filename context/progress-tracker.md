@@ -10,19 +10,18 @@ Phase 1: Component Implementation
 ## Current Goal
 
 Feature 24 (NPM Publishing & CI/CD Pipeline) is verified and
-complete. The two-repo architecture is final: the public
-`HamidRezaSepehr/deadui` repo serves `registry.json` and every
-Free source, the private `HamidRezaSepehr/deadui-pro` repo serves
-`registry/pro/**`, and the CLI now switches repository by tier and
-attaches `Authorization: token <PAT>` on Pro fetches after
-prompting for a masked GitHub PAT. All six `yourusername/deadui`
-placeholders are replaced with the real coordinates. New
-`.github/workflows/publish-cli.yml` (release-triggered, OIDC-ready)
-and root `vercel.json`. One commit created locally; the exact push
-commands for both remotes are handed to the user.
-Remaining launch work is manual: create the two repos, publish the
-first npm release, and decide what to do about the Pro sources
-being present in the local commit (see Next Up).
+complete, and the licensing posture of the public repo has been
+made explicit on the owner's instruction: the Pro sources ARE
+committed to `HamidRezaSepehr/deadui` (the docs site cannot
+build without them), so `registry/pro/README.md`, both READMEs
+and a `🔒 PRO COMPONENT` header on all 7 Pro source files now
+state that visibility is not a license. The CLI still refuses to
+install a Pro component without a key validated against the
+Dead UI API — verified, not assumed. One more commit sits on top
+of the Feature 24 commit; the push commands for both repos are
+handed to the user.
+Remaining launch work is manual: create the two repos, publish
+the first npm release (see Next Up #10 and #11).
 
 ## Completed
 
@@ -390,6 +389,21 @@ both packages, 7 curl cases against the live route, and
      placeholders replaced with `HamidRezaSepehr/deadui`;
      `context/architecture.md` updated for the new Pro
      delivery model. Full verification in the Session Notes.
+28. **Feature 24 part 2: Pro licensing disclosure** — the
+     owner decided the Pro sources stay in the public repo and
+     that their visibility is NOT a license. New
+     `registry/pro/README.md` (GitHub renders it when the
+     folder is browsed) carries the notice plus the two-
+     credential explanation; the root `README.md` gains the
+     notice as a callout under the banner and an expanded
+     `📄 License` section; and all 7 `registry/pro/**` source
+     files gain a `🔒 PRO COMPONENT - Commercial License
+     Required` header (block-comment form in the one CSS
+     module, since `//` is not a CSS comment). The CLI Pro
+     gate is unchanged functionally — it already validated
+     the key server-side before any fetch — and gains three
+     disclosure lines plus an `INVARIANT` comment forbidding
+     a skip flag. Full verification in the Session Notes.
 
 ## In Progress
 
@@ -460,39 +474,44 @@ verified and complete.
    entry (out of scope here — a registry structure change
    must not share a step with docs) or a README trim.
    See Open Questions.
-10. **THE TWO REPOS DO NOT EXIST YET, and the local
-   commit CONTAINS THE PRO SOURCES.** Everything needed to
-   push is staged, but three manual steps remain, in this
-   order: (a) create `HamidRezaSepehr/deadui` (public) and
-   `HamidRezaSepehr/deadui-pro` (private) on GitHub;
-   (b) push — the exact commands are in the Feature 24
-   handoff; (c) add your own account as a collaborator on
-   `deadui-pro` for every paying customer, since the CLI
-   reads that repo with the user's own PAT.
-   **The leak, stated plainly:** the local commit contains
-   `registry/pro/**`, so `git push origin main` to the
-   PUBLIC remote publishes the Pro source. It is there
-   because the docs site imports it in six places
-   (`components/landing/hero.tsx`,
-   `components/docs/preview-wrappers.tsx`, the two Pro
-   `page.mdx` files, and two `/test-*` pages), so a bare
-   clone of a Pro-free `deadui` would not build and Vercel
-   could not deploy. Feature 24 committed everything and
-   flagged this rather than shipping a repo that cannot
-   build. The real fix is a public stub of the two Pro
-   components for the docs preview, or deploying the site
-   from a repo that legitimately holds the sources. See
-   Open Questions.
+10. **THE TWO REPOS DO NOT EXIST YET.** The full tree —
+    including `registry/pro/**` — is committed locally and the
+    exact push commands are in the Feature 24 handoff. Three
+    manual steps remain, in this order: (a) create
+    `HamidRezaSepehr/deadui` (public) and
+    `HamidRezaSepehr/deadui-pro` (private) on GitHub;
+    (b) push the full tree to the public repo, then
+    `registry/pro/` to the private one as a backup/mirror; and
+    (c) add each paying customer's GitHub account as a
+    collaborator on `deadui-pro`, since the CLI reads that repo
+    with the user's own PAT.
+    **RESOLVED: the Pro sources STAY in the public repo.** They
+    are there because the docs site imports them in six places
+    (`components/landing/hero.tsx`,
+    `components/docs/preview-wrappers.tsx`, the two Pro
+    `page.mdx` files, and two `/test-*` pages), so a Pro-free
+    public repo would not build and Vercel could not deploy it.
+    The owner chose to disclose rather than stub: see
+    Completed #28 and Open Questions.
 11. **The npm release itself.** The workflow fires on
-   `release: created`, and `npm publish` publishes the
-   version in `packages/cli/package.json` — it does NOT
-   read the tag. Bump `version` there before cutting a
-   release, or every tag publishes `0.1.0` again. Also
-   confirm the `deadui` name on npm is unclaimed, and add
-   the `NPM_TOKEN` repository secret (a **granular**
-   automation token — the 2FA-bypass token type is
-   deprecated) until "Trusted Publisher" / OIDC is enabled
-   for the package.
+    `release: created`, and `npm publish` publishes the
+    version in `packages/cli/package.json` — it does NOT
+    read the tag. Bump `version` there before cutting a
+    release, or every tag publishes `0.1.0` again. Also
+    confirm the `deadui` name on npm is unclaimed, and add
+    the `NPM_TOKEN` repository secret (a **granular**
+    automation token — the 2FA-bypass token type is
+    deprecated) until "Trusted Publisher" / OIDC is enabled
+    for the package.
+12. **There is still no commercial licence text.** Feature 24
+    part 2 added notice (a folder README, two README callouts
+    and a header on every Pro file) but not terms: no
+    `LICENSE`/`EULA` for the Pro tier, no `license` field on
+    the Pro components in `registry.json`, and no
+    `LICENSE.md` in `registry/pro/`. A header that asserts a
+    commercial licence without one having been granted is a
+    weak position, and it should exist before the first Pro
+    sale.
 
 
 ## Component Status
@@ -568,6 +587,15 @@ verified and complete.
   it is a product/architecture call, not a CLI change, and
   Feature 24's mandate was the CLI, the workflow and
   `vercel.json`. Recorded as Next Up #10.
+  **RESOLVED in Feature 24 part 2: (c), by disclosure.** The
+  owner chose to keep the sources public and make the
+  licensing explicit instead — `registry/pro/README.md`, two
+  README callouts, and a header on every Pro file. The
+  consequence to live with is that the CLI gate is now an
+  honour system with no technical enforcement on the source
+  itself, so it stays mandatory and unskippable; Next Up #12
+  tracks the missing commercial licence text that the
+  headers currently only assert.
 - **Should `init` ship `lib/animations.ts`?** (Feature 21)
   `registry/cinematic-text/cinematic-text.tsx` imports
   `GSAP_DEFAULTS` from `@/lib/animations`, and no registry
@@ -653,6 +681,100 @@ verified and complete.
 - Zero CLS invariant for all components.
 
 ## Session Notes
+
+- Feature 24, part 2 (Pro licensing pass, on the owner's
+  instruction): the public repo keeps `registry/pro/**`, and
+  visibility is now explicitly NOT a license. Files: new
+  `registry/pro/README.md`; modified `README.md`,
+  all 7 `registry/pro/**` source files,
+  `packages/cli/src/commands/add.ts`, this file.
+
+  **THE FEATURE-24 COMMIT ALREADY CONTAINED
+  `registry/pro/**` — PART 2 DOES NOT MOVE ANY FILE.** The
+  decision the owner made was "commit everything including
+  `registry/pro/` to the public repository", which the Feature 24
+  commit had already done (Next Up #10 flagged it, and the
+  handoff offered it as option B). What part 2 adds is the
+  *disclosure*: a folder-level `README.md` (GitHub renders it
+  when the folder is browsed), a callout directly under the
+  banner in the root `README.md` plus an expanded `📄 License`
+  section, and a header comment on every Pro source file.
+
+  **`registry/pro/README.md` IS A FILE, NOT A COMMENT.** "Add a
+  comment in the folder" has no mechanism in a directory — a
+  folder holds no text. `README.md` is the convention GitHub
+  itself renders for a directory, so the notice is in the one
+  place a human opening `registry/pro` will actually see it.
+  It also documents the second half of the story (that the CLI
+  validates a key before fetching anything, and that two
+  credentials are needed), which a bare notice would not.
+
+  **THE CSS MODULE GOT A BLOCK COMMENT, NOT `//`.**
+  `text-fill-animation.module.css` is the one non-`.ts` file in
+  the folder, and `//` is not a CSS comment — it would have been
+  parsed as an invalid selector and silently dropped, leaving the
+  only Pro file *without* a header. Same three lines, `/* */`
+  form. Verified the module still emits: `grep` of the
+  production CSS chunk finds both `obsidian-text-fill-color` and
+  `tfa-dim-color`.
+
+  **`'use client'` IS STILL THE FIRST STATEMENT AFTER THE
+  HEADER**, which is what matters — the directive has to be in
+  the module prologue, and leading comments are allowed there.
+  Confirmed by the build, not by reading: both Pro docs pages
+  and both `/test-*` routes still prerender `○ (Static)`.
+
+  **THE LICENCE GATE NEEDED NO FUNCTIONAL CHANGE, AND THE
+  OWNER ASKED FOR ONE ANYWAY — SO THE CHANGE IS WORDING PLUS
+  AN INVARIANT COMMENT.** The gate was already server-side and
+  already ran before any fetch; the new comment above step 4 in
+  `add.ts` records WHY, so the next contributor does not "fix"
+  it: `// INVARIANT: … Do not add a skip flag, an env-var
+  bypass, or an "install without a key" path.` Three new output
+  lines make it visible to the user instead: the Pro warning now
+  says the source is public but that is not a license, the
+  no-key error says reading it does not grant one, and a
+  successful Pro install prints a do-not-redistribute line.
+  **An env-var bypass was deliberately NOT added.** "Only
+  paying users get easy installation" is a statement about the
+  gate being the only supported path; a `DEADUI_SKIP_LICENSE`
+  would be the opposite, and it is not requested.
+
+  **VERIFIED, NOT ASSUMED — 36/36 e2e assertions** against the
+  rebuilt `dist/index.js`, two Python stub servers (all since
+  deleted). The registry stub treats `registry/pro/**` as
+  private content (200 only for the exact PAT, else 404) and
+  logs every path with its `Authorization` header, so the
+  routing claims come from the server's own log.
+    - **THE ACTUAL CLAIM, TESTED:** `add text-fill-animation`
+      with a valid PAT and **no license key** → exit 1, **0**
+      files, **0** Pro requests (one request total, for
+      `registry.json`), and all three disclosure lines present.
+      The source is sitting in the same repo the CLI is
+      installing from, and it still will not hand it over.
+    - Invalid key → exit 1, PAT prompt never rendered, 0 fetches.
+    - Valid key + PAT → 4 Pro fetches all carrying the header,
+      4 files written **byte-identical** to source, and the
+      installed file **starts with** the `🔒 PRO COMPONENT`
+      header (so the notice travels into the user's project, not
+      just into GitHub).
+    - Valid key, no PAT → exit 1, 0 fetches. Wrong PAT → exit 1,
+      0 files, one request, 404 explained as an access problem.
+    - Free regression: `add marquee` → 2 unauthenticated
+      requests, **0** license-server calls, file written, and no
+      Pro header leaked into a Free file.
+    - Tier→URL mapping unchanged: Free → `…/deadui/main`, Pro →
+      `…/deadui-pro/main`.
+  Also `npm run build` in `packages/cli`, root `npx tsc
+  --noEmit`, root `npm run lint`, and root `npm run build` after
+  deleting `.next` — all clean, all 25 routes prerendered.
+
+  **THE COMMERCIAL TERMS ARE STILL PROSE.** A header comment
+  and two READMEs are notice, not a licence: there is still no
+  `LICENSE` file, no EULA, and no `LICENSE` field on the Pro
+  tier. A header that claims a commercial licence without one
+  being granted is a weak position to enforce, so this is worth
+  writing before the first Pro sale.
 
 - Feature 24 (feature spec `24-npm-publishing-and-cicd.md`):
   two-repo fetch, npm publish workflow, `vercel.json`.

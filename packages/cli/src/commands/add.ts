@@ -155,17 +155,29 @@ export async function addCommand(
   // 4. Tier check — Pro components need a validated license key AND a GitHub
   //    PAT, because they are served from a private repository rather than the
   //    public one. Both gates run before any file is fetched or written.
+  //
+  //    INVARIANT: the Pro sources are also committed to the PUBLIC repository
+  //    under `registry/pro/`, because this repository's own docs site imports
+  //    them and cannot build without them. Their visibility is NOT a licence
+  //    and must never be treated as one: this gate is an honour system, and the
+  //    only supported way to obtain a Pro component is a validated key. Do not
+  //    add a skip flag, an env-var bypass, or an "install without a key" path.
   let githubToken: string | undefined
   if (component.tier === 'pro') {
     console.log(
       chalk.yellow('⚠') + ` ${component.title} is a Pro component and requires a license key.`
     )
     console.log(chalk.dim(`  Purchase at: ${PRO_PURCHASE_URL}`))
+    console.log(
+      chalk.dim('  Its source is public so the docs site can build, but that is not a')
+    )
+    console.log(chalk.dim('  license — a valid license key is still required.'))
 
     const key = await resolveLicenseKey(options.token)
 
     if (!key) {
       console.error(chalk.red('✗') + ' No license key provided.')
+      console.log(chalk.dim('  Reading the source in the public repo does not grant one.'))
       console.log(chalk.dim('  Re-run with --token <key> to skip this prompt.'))
       process.exit(1)
     }
@@ -250,5 +262,10 @@ export async function addCommand(
   console.log(
     chalk.dim(`\n📖 Documentation: https://deadui.dev/docs/components/${component.name}`)
   )
+  if (component.tier === 'pro') {
+    console.log(
+      chalk.dim('🔒 Licensed commercially — installed under your license key. Do not redistribute.')
+    )
+  }
   console.log('')
 }

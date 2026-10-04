@@ -14,6 +14,14 @@ Dead UI is a CLI-driven, copy-paste animation component library for React and Ne
 
 ![Dead UI Banner](https://via.placeholder.com/1200x400/050505/ef4444?text=Dead+UI+Banner)
 
+> **🔒 Pro components are visible in this repository for build/deployment purposes.
+> However, they are licensed under a commercial license. Usage requires a valid
+> license key. See [deadui.dev/pro](https://deadui.dev/pro) for details.**
+>
+> Reading the source is not a license. `npx deadui add <pro-component>` validates
+> a license key against the Dead UI API before it downloads anything. See
+> [📄 License](#-license).
+
 ## ✨ Features
 
 - **Dead Simple DX**: One command to install. No config files.
@@ -86,6 +94,17 @@ export default function Page() {
 
 Dead UI Free components are open source under the MIT License.
 Pro components require a commercial license. See [deadui.dev/pro](https://deadui.dev/pro) for details.
+
+> **🔒 Pro components are visible in this repository for build/deployment purposes.
+> However, they are licensed under a commercial license. Usage requires a valid
+> license key. See [deadui.dev/pro](https://deadui.dev/pro) for details.**
+>
+> The Pro sources live in [`registry/pro/`](./registry/pro) because this
+> repository's documentation site imports them and therefore cannot build
+> without them. **Being able to read the source is not a license.** Every Pro
+> file carries a `🔒 PRO COMPONENT` header, and `npx deadui add <pro-component>`
+> still validates a license key against the Dead UI API before it fetches or
+> writes a single file. If you did not buy a license, do not use the code.
 
 ## 🤝 Contributing
 

@@ -1,3 +1,7 @@
+// 🔒 PRO COMPONENT - Commercial License Required
+// This component requires a valid Dead UI Pro license.
+// Purchase at: https://deadui.dev/pro
+
 export { WebGLImageTrail, webglImageTrailVariants } from './webgl-image-trail'
 export type { WebGLImageTrailProps } from './webgl-image-trail'
 export { ImagePlane } from './image-plane'
