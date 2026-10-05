@@ -8,7 +8,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write # Required for OIDC Trusted Publishing
+      id-token: write
       contents: read
     steps:
       - uses: actions/checkout@v4
@@ -24,23 +24,24 @@ jobs:
       - name: Build CLI
         run: cd packages/cli && npm run build
       
-      - name: Debug & Configure npm Auth
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "--- Checking OIDC Authentication ---"
-          npm whoami || echo "OIDC Not Authenticated."
+          cd packages/cli
           
-          echo "--- Checking for NPM_TOKEN Fallback ---"
-          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
-            echo "NPM_TOKEN found. Injecting into ~/.npmrc..."
-            echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-            echo "Verifying fallback auth:"
-            npm whoami
-          else
-            echo "No NPM_TOKEN secret found. Relying entirely on OIDC."
+          echo "🔍 Checking if NPM_TOKEN is present..."
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "❌ ERROR: NPM_TOKEN secret is empty or missing!"
+            exit 1
           fi
           
-          echo "--- Final .npmrc contents ---"
-          cat ~/.npmrc | sed 's/:_authToken=.*/:_authToken=***MASKED***/'
-
-      - name: Publish to npm
-        run: cd packages/cli && npm publish --access public
+          echo "✅ NPM_TOKEN found. Configuring npm..."
+          # Force npm to use this token for the registry
+          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
+          
+          echo "🔍 Verifying authentication..."
+          npm whoami
+          
+          echo "🚀 Publishing..."
+          npm publish --access public
