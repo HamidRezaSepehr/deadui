@@ -1,8 +1,5 @@
 name: Publish CLI to npm
 
-# Publishing is gated on a GitHub Release, never on a push to main: the release
-# tag (v0.1.0, v0.2.0, …) is the version, so a commit cannot reach npm without
-# a human deciding it should.
 on:
   release:
     types: [created]
