@@ -1,6 +1,6 @@
 {
   "name": "deadui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Dead simple animations for React. The Dead UI CLI — install Awwwards-grade animation components into your project in one command.",
   "keywords": [
     "deadui",
