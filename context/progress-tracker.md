@@ -404,6 +404,15 @@ both packages, 7 curl cases against the live route, and
      the key server-side before any fetch — and gains three
      disclosure lines plus an `INVARIANT` comment forbidding
      a skip flag. Full verification in the Session Notes.
+29. **Feature 24 part 3: Pro commercial licence terms** —
+     `LICENSE.md` (Dead UI Pro — Commercial License: grant of
+     licence, the three restrictions, termination, support and
+     updates, as-is disclaimer) added to the root of the
+     PRIVATE `HamidRezaSepehr/deadui-pro` repo and pushed
+     (`dc83627`). No source, component, registry or CLI file
+     changed — the headers written in part 2 now refer to
+     text that actually exists. Full verification in the
+     Session Notes.
 
 ## In Progress
 
@@ -503,15 +512,13 @@ verified and complete.
     automation token — the 2FA-bypass token type is
     deprecated) until "Trusted Publisher" / OIDC is enabled
     for the package.
-12. **There is still no commercial licence text.** Feature 24
-    part 2 added notice (a folder README, two README callouts
-    and a header on every Pro file) but not terms: no
-    `LICENSE`/`EULA` for the Pro tier, no `license` field on
-    the Pro components in `registry.json`, and no
-    `LICENSE.md` in `registry/pro/`. A header that asserts a
-    commercial licence without one having been granted is a
-    weak position, and it should exist before the first Pro
-    sale.
+12. ~~**There is still no commercial licence text.**~~ —
+    DONE, see Completed #29 and the Session Notes.
+    `LICENSE.md` (Dead UI Pro — Commercial License: grant,
+    restrictions, termination, support, as-is disclaimer) now
+    sits in the private repo. One residual gap is recorded as
+    an Open Question: no clause states how the terms reach a
+    licensee at purchase time.
 
 
 ## Component Status
@@ -567,8 +574,33 @@ verified and complete.
   `HamidRezaSepehr/deadui` (public) and
   `HamidRezaSepehr/deadui-pro` (private), and all six
   placeholder sites now say so. The README footer is
-  `[HamidRezaSepehr]`. Still open from the original
-  question: the missing `LICENSE` file.
+  `[HamidRezaSepehr]`.
+  **Both halves now RESOLVED.** The MIT `LICENSE` was
+  already on the remote (it seeded the repo's `Initial
+  commit`) and the push rebased on top of it, so the Free
+  tier's licence claim is no longer prose. The Pro
+  commercial terms were added as `LICENSE.md` in
+  `deadui-pro` — see Completed #29.
+- **How does a licensee RECEIVE these terms, and does the
+  commercial licence survive contact with the public repo?**
+  (Feature 24 part 3) `LICENSE.md` exists and is visible on
+  the `deadui-pro` landing page, but a licensee only ever
+  reaches it if someone sends them there: the CLI prints a
+  `deadui.dev/pro` purchase link, not the terms, and the
+  `/api/validate-license` route returns a bare
+  `{ valid: boolean }`. Meanwhile §2.3 of the licence forbids
+  a licensee from open-sourcing the Pro source, while the
+  licensor keeps that source committed to the PUBLIC
+  `deadui` repo (Next Up #10, Feature 24 part 2) — the
+  restriction binds one side of the relationship only. None
+  of this is a drafting bug; it is a distribution question
+  with no obvious right answer. Candidates: print the terms
+  in the CLI Pro gate on first install, host the terms at
+  `deadui.dev/pro/terms` and link them from both READMEs and
+  every Pro file header, and/or add an explicit carve-out to
+  §2 stating that the licensor may publish the source. Not
+  decided here — it changes what the CLI prints and what a
+  purchase flow must serve.
 - **Should the public repo ship a Pro STUB so it can build
   without the Pro sources?** (Feature 24) The CLI now
   fetches `registry/pro/**` from the private repo, which is
@@ -681,6 +713,58 @@ verified and complete.
 - Zero CLS invariant for all components.
 
 ## Session Notes
+
+- Feature 24, part 3 (Pro commercial licence): `LICENSE.md`
+  added to the private `deadui-pro` repo. One new file, 27
+  lines, pushed as `dc83627`. Nothing else changed — the
+  public repo's only edit is this tracker.
+
+  **THE TERMS WENT IN THE PRIVATE REPO, WHICH IS THE RIGHT
+  PLACE AND IS ALSO THE REASON THE DISTRIBUTION QUESTION IS
+  STILL OPEN.** A licence has to be *given* to a licensee to
+  bind them, and the private repo is the one artefact a
+  licensee cannot be assumed to have read: the CLI prints a
+  `deadui.dev/pro` purchase link, never the terms, and
+  `/api/validate-license` answers `{ valid: boolean }`.
+  Raised as an Open Question with the candidates (print the
+  terms on first Pro install, host them at a public URL and
+  link from both READMEs and the file headers, add a
+  carve-out to §2.3).
+
+  **CLAUSE §2.3 AS WRITTEN BINDS ONLY THE LICENSEE.** "You
+  may not include the source code of Dead UI Pro components
+  in any open-source project where the source code is made
+  publicly available" is exactly what Feature 24 part 2
+  shipped *in the licensor's own public repo* — deliberately,
+  because the docs site cannot build without those six
+  imports. The asymmetry is not a drafting mistake: a licence
+  only constrains the grantee. But it does mean the clause
+  currently protects nothing that the licensor is not
+  already giving away, so it should be read as a commitment
+  about *licensees* rather than as a technical control. Worth
+  stating plainly so nobody later assumes §2.3 is the
+  enforcement mechanism. The enforcement mechanism is the
+  CLI gate, which is why part 2 added an `INVARIANT`
+  forbidding a bypass.
+
+  **THE YEAR AND THE CONTACT ADDRESS ARE BOTH UNVERIFIED
+  AND WERE COPIED VERBATIM, AS INSTRUCTED.** The text says
+  `Copyright (c) 2024`, while the repo's MIT `LICENSE` says
+  `2026` — the same repository now carries two different
+  copyright years, which is the kind of detail that gets
+  quoted back. And the contact address is
+  `me@hamidrezasepehr.com`, which is a different domain from
+  the GitHub account's committed email. Both are the owner's
+  to set; flagged rather than silently "corrected", because
+  guessing a year or rewriting a legal contact address is
+  worse than an inconsistency.
+
+  **NO `registry.json` CHANGE, DELIBERATELY.** It would be
+  easy to add a `license: "commercial"` field to the two Pro
+  entries. Not done: it is a registry structure change (the
+  ai-workflow-rules split), the CLI ignores unknown fields so
+  it would change nothing functionally, and the headers
+  already carry the notice into every installed file.
 
 - Feature 24, part 2 (Pro licensing pass, on the owner's
   instruction): the public repo keeps `registry/pro/**`, and
