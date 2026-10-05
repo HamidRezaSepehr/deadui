@@ -28,5 +28,15 @@ jobs:
       - name: Build CLI
         run: cd packages/cli && npm run build
 
+      - name: Debug npm identity & package
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y jq
+          echo "=== npm whoami ==="
+          npm whoami || true
+          echo "=== npm view (package) ==="
+          npm view deadui --json || true
+          echo "=== npm owner ls (if allowed) ==="
+          npm owner ls deadui || true
+
       - name: Publish to npm
         run: cd packages/cli && npm publish --provenance --access public
