@@ -132,6 +132,29 @@
       ]
     },
     {
+      "name": "rainbow-button",
+      "title": "Rainbow Button",
+      "description": "An animated button with a customizable rainbow effect.",
+      "tier": "free",
+      "dependencies": [
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "registry/rainbow-button/rainbow-button.tsx",
+          "target": "components/ui/rainbow-button.tsx"
+        }
+      ],
+      "variants": [
+        "default",
+        "outline",
+        "gradient-text",
+        "glow"
+      ]
+    },
+    {
       "name": "image-trail",
       "title": "CSS Image Trail",
       "description": "Lightweight DOM image trail that follows the cursor, with six switchable Codrops-inspired effects and no WebGL",

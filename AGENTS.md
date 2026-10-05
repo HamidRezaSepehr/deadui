@@ -42,3 +42,21 @@ Note: This project is a single Next.js application
 serving as both the documentation/landing page site
 and the component registry source. The CLI is a
 separate Node.js package published to npm.
+
+
+## Release & Publishing Workflow
+
+When preparing the CLI for a new npm release, you MUST follow this exact 4-step sequence to prevent version mismatch errors in GitHub Actions. GitHub Actions triggers on GitHub Releases and checks out the code at that specific tag, so the `package.json` version MUST match the tag.
+
+1. **Bump the Version:** Update the `"version"` field in `packages/cli/package.json` (e.g., from `0.1.0` to `0.1.1`).
+2. **Commit and Push:** Stage the change, commit it, and push to main.
+   ```bash
+   git add packages/cli/package.json
+   git commit -m "chore: bump cli version to [NEW_VERSION]"
+   git push origin main
+3. **Create Git Tag:** Create a tag that exactly matches the new version and push it.
+   git tag v[NEW_VERSION]
+   git push origin v[NEW_VERSION]
+4. **Prompt the User:** Instruct the user to go to the GitHub UI, draft a new Release, select the newly pushed tag (v[NEW_VERSION]), and publish it. This triggers the GitHub Action to publish to npm.
+
+**CRITICAL:** Never attempt to publish to npm directly from the AI environment. Always rely on the GitHub Actions workflow triggered by the GitHub Release.

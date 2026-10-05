@@ -145,6 +145,40 @@ body {
   }
 }
 
+/* Rainbow Button
+
+   A plain `:root` block rather than `@theme` on purpose. `--color-1` … `--color-5`
+   are consumed only as `var(--color-1)` inside arbitrary Tailwind values on the
+   component's own decorative layers; declaring them in `@theme` would register
+   them as theme colours and generate a family of nonsensical `bg-color-1`
+   utilities that could collide with a user's own numbering. `deadui init` writes
+   this same block into a consumer's stylesheet. */
+:root {
+  --color-1: hsl(0 100% 63%);
+  --color-2: hsl(270 100% 63%);
+  --color-3: hsl(210 100% 63%);
+  --color-4: hsl(195 100% 63%);
+  --color-5: hsl(90 100% 63%);
+}
+
+/* Moves the paint box, not the element: `background-size: 200% auto` plus a
+   gradient that begins and ends on the same colour means 0% -> 200% is exactly
+   one gradient width, so the loop is seamless. */
+@keyframes rainbow {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+
+@layer utilities {
+  .animate-rainbow {
+    animation: rainbow var(--speed, 2s) infinite linear;
+  }
+}
+
 /* Reduced motion (code-standards non-negotiable). Deliberately UNLAYERED: in
    the cascade, unlayered declarations outrank declarations inside a layer, so
    this beats the `@layer utilities` rules above without needing `!important`
@@ -153,7 +187,8 @@ body {
    to its own `opacity: var(--gb-intensity)` — a still gradient border. */
 @media (prefers-reduced-motion: reduce) {
   .animate-gradient-rotate,
-  .animate-gradient-pulse {
+  .animate-gradient-pulse,
+  .animate-rainbow {
     animation: none;
   }
 }

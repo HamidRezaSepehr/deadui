@@ -96,6 +96,12 @@ const CN_EXPORT_PATTERNS = [
  *    so the spec's flat `var(--duration, 4s)` would leave both props dead — a
  *    CSS animation outranks the inline `opacity` the component sets. With those
  *    two variables unset the emitted strings are identical to the spec's.
+ * 4. `rainbow` keyframes + animation. `registry/rainbow-button` draws its
+ *    border ring with `animate-rainbow`, which is a class Tailwind only emits
+ *    from a configured `theme.extend.animation` — a user with no animation entry
+ *    gets a button whose gradient never moves. The matching `--color-1`…`-5`
+ *    custom properties are a SEPARATE write into the stylesheet, because they are
+ *    not theme colours; see `setupRainbowColors`.
  */
 const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
   {
@@ -170,6 +176,15 @@ const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
           '},',
         ],
       },
+      {
+        key: 'rainbow',
+        lines: [
+          'rainbow: {',
+          "  '0%': { 'background-position': '0%' },",
+          "  '100%': { 'background-position': '200%' },",
+          '},',
+        ],
+      },
     ],
   },
   {
@@ -199,6 +214,10 @@ const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
           "'gradient-pulse':",
           "  'gradient-pulse var(--duration, var(--gb-duration, 4s)) ease-in-out infinite',",
         ],
+      },
+      {
+        key: 'rainbow',
+        lines: ["rainbow: 'rainbow var(--speed, 2s) infinite linear',"],
       },
     ],
   },
@@ -276,6 +295,15 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
   }
 }
 
+@keyframes rainbow {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+
 @layer utilities {
   .animate-marquee {
     animation-name: marquee;
@@ -306,13 +334,21 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
   }
+
+  .animate-rainbow {
+    animation-name: rainbow;
+    animation-duration: var(--speed, 2s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-marquee-vertical,
   .animate-gradient-rotate,
-  .animate-gradient-pulse {
+  .animate-gradient-pulse,
+  .animate-rainbow {
     animation: none;
   }
 }
@@ -815,6 +851,69 @@ function injectPathAlias(
   }
 }
 
+/**
+ * Index of the `{` opening a TOP-LEVEL `:root { … }` selector, or -1.
+ *
+ * `findPropertyObject` cannot serve here: it matches `name: {`, and `:root {` has
+ * no colon-name pair. It is also string- and comment-aware for the same reason
+ * the rest of this file is — `:root` shows up inside comments often enough that
+ * a blind scan would write the variables into prose.
+ *
+ * TOP-LEVEL is load-bearing. A project that themes with
+ * `@media (prefers-color-scheme: dark) { :root { --… } }` has a perfectly valid
+ * `:root` at depth 1, and injecting into that one would confine the rainbow
+ * colours to dark mode — the button would render with no gradient at all in
+ * light mode, with no error anywhere.
+ */
+function findTopLevelRootSelector(source: string): number {
+  let depth = 0
+  let i = 0
+
+  while (i < source.length) {
+    const char = source[i]
+
+    if (char === '/' && source[i + 1] === '/') {
+      i = skipLineComment(source, i)
+      continue
+    }
+    if (char === '/' && source[i + 1] === '*') {
+      i = skipBlockComment(source, i)
+      continue
+    }
+    if (char === '"' || char === "'" || char === '`') {
+      i = skipQuoted(source, i)
+      continue
+    }
+    if (char === '{') {
+      depth++
+      i++
+      continue
+    }
+    if (char === '}') {
+      depth--
+      i++
+      continue
+    }
+
+    if (depth === 0 && source.startsWith(':root', i)) {
+      const before = i === 0 ? '' : source[i - 1]
+      const after = source.slice(i + 5, i + 6)
+      const startsClean = before === '' || !/[A-Za-z0-9_-]/.test(before)
+      const endsClean = after === '' || /[\s{,:]/.test(after)
+
+      if (startsClean && endsClean) {
+        let k = i + 5
+        while (k < source.length && /\s/.test(source[k])) k++
+        return source[k] === '{' ? k : -1
+      }
+    }
+
+    i++
+  }
+
+  return -1
+}
+
 async function firstExistingFile(cwd: string, candidates: string[]): Promise<string | undefined> {
   for (const candidate of candidates) {
     try {
@@ -985,6 +1084,94 @@ async function setupTailwind(cwd: string, packageJson: UserPackageJson): Promise
   await writeNewTailwindConfig(cwd, (await firstExistingFile(cwd, ['src'])) !== undefined, isV4)
 }
 
+/**
+ * The `--color-1` … `--color-5` gradient stops `registry/rainbow-button` reads.
+ *
+ * These are plain custom properties, NOT Tailwind theme colours: the component
+ * only ever uses them as `var(--color-1)` inside arbitrary values on its own
+ * decorative layers. Declaring them in `theme.colors` or `@theme` would register
+ * them as a colour scale and generate a family of `bg-color-1`-style utilities
+ * that could collide with a project's own numbering — hence a `:root` block.
+ *
+ * Deliberately flat (no leading indentation): `insertIntoObject` indents relative
+ * to the anchor it inserts into, and baking spaces in here would double them.
+ */
+const RAINBOW_COLOR_VARIABLES = [
+  '--color-1: hsl(0 100% 63%);',
+  '--color-2: hsl(270 100% 63%);',
+  '--color-3: hsl(210 100% 63%);',
+  '--color-4: hsl(195 100% 63%);',
+  '--color-5: hsl(90 100% 63%);',
+]
+
+/**
+ * The presence probe, and the reason `init` stays idempotent here. Checking the
+ * first variable rather than all five means a half-finished block from an
+ * interrupted write is detected instead of topped up into a duplicate.
+ */
+const RAINBOW_COLOR_PROBE = '--color-1'
+
+/**
+ * Write the rainbow gradient stops into the project's stylesheet.
+ *
+ * Unprompted, and that is a deliberate difference from the Tailwind step: there
+ * is no decision for the user to make here (the variables are required by a
+ * shipped component and inert otherwise), and every new `confirm` is a chance to
+ * hit the stdin-EOF race that `install-deps.ts` and the Feature 18 license prompt
+ * already fall into on piped input — a prompt that never settles exits 0 having
+ * written nothing.
+ */
+async function setupRainbowColors(cwd: string): Promise<void> {
+  const cssEntry = await firstExistingFile(cwd, TAILWIND_CSS_FILES)
+
+  if (cssEntry === undefined) {
+    console.log(chalk.yellow('⚠') + ' No stylesheet found. Add the rainbow variables yourself:')
+    console.log(chalk.dim(RAINBOW_COLOR_VARIABLES.join('\n').replace(/^/gm, '  ')))
+    return
+  }
+
+  const cssPath = path.join(cwd, cssEntry)
+
+  let source: string
+  try {
+    source = await fs.readFile(cssPath, 'utf-8')
+  } catch {
+    source = ''
+  }
+
+  if (source.includes(RAINBOW_COLOR_PROBE)) {
+    console.log(
+      chalk.dim('•') + ` Rainbow colour variables already present in ${chalk.cyan(cssEntry)}.`
+    )
+    return
+  }
+
+  const eol = detectEol(source)
+  const rootOpen = findTopLevelRootSelector(source)
+  let content: string
+
+  if (rootOpen !== -1) {
+    // Insert as the first children of the user's own `:root`, so their
+    // formatting, comments and existing custom properties survive byte-for-byte.
+    content = insertIntoObject(
+      source,
+      rootOpen,
+      RAINBOW_COLOR_VARIABLES,
+      indentAt(source, rootOpen)
+    )
+  } else {
+    const separator = source.length === 0 || source.endsWith(eol) ? '' : eol
+    const block = [':root {', ...RAINBOW_COLOR_VARIABLES.map((line) => `  ${line}`), '}']
+    content = source + separator + block.join(eol) + eol
+  }
+
+  await fs.writeFile(cssPath, content, 'utf-8')
+  console.log(
+    chalk.green('✓') +
+      ` Added --color-1…--color-5 to ${chalk.cyan(cssEntry)} (used by rainbow-button).`
+  )
+}
+
 async function setupUtils(cwd: string, libDir: string): Promise<void> {
   const utilsDir = path.join(cwd, libDir)
   const utilsPath = path.join(utilsDir, 'utils.ts')
@@ -1091,10 +1278,17 @@ export async function initCommand(): Promise<void> {
   // 2. lib/utils.ts
   await setupUtils(cwd, framework.libDir)
 
-  // 3. Tailwind theme tokens
+  // 3. Tailwind theme tokens (keyframes, animations, palette)
   await setupTailwind(cwd, packageJson)
 
-  // 4. @/* path alias
+  // 4. Rainbow gradient stops — plain CSS variables, so this is a stylesheet
+  //    write rather than a config write, and it is independent of step 3: a
+  //    project with a Tailwind config still needs the variables, and a Tailwind
+  //    v4 project may have just had both the theme block and nothing else
+  //    written into the same file.
+  await setupRainbowColors(cwd)
+
+  // 5. @/* path alias
   await setupPathAlias(cwd, framework.hasSrc)
 
   console.log('')

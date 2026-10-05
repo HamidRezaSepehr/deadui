@@ -9,21 +9,16 @@ Phase 1: Component Implementation
 
 ## Current Goal
 
-**Feature 24: 100% COMPLETE.** Every deliverable in the spec
-is built, verified and pushed: the two-repo fetch with PAT
-prompting, the release-triggered npm workflow with
-`id-token: write`, `vercel.json`, and all six
-`yourusername/deadui` placeholders replaced with the real
-coordinates. Release `v0.1.0` was cut by the owner and the
-workflow **did** trigger and **did** run — steps 1–5 green
-(`npm ci` + `tsc` on the real runner), step 6 `npm publish`
-failed, and the cause is isolated: the `NPM_TOKEN` repository
-secret does not exist yet. The npm name `deadui` is
-confirmed free (404), the manifest version matches the tag,
-and a Free component installs **byte-identically from the
-live public GitHub repo** with no override. What remains is
-one manual click-and-paste in GitHub's UI (add the secret,
-re-run the failed job), tracked as Next Up #11.
+**Feature 25: Rainbow Button + the v0.1.2 release — implemented and
+verified, awaiting one GitHub-UI click.** The new `RainbowButton` ships with
+all four spec variants, `registry.json` now describes 10 components (8 Free +
+2 Pro) with all 14 `files[].path` values present on disk, and `deadui init`
+performs the spec's **dual** injection — the `rainbow` keyframe + animation
+into the Tailwind config (or the v4 stylesheet) **and** the `--color-1`…`--color-5`
+gradient stops into the project's own `:root`. What remains is drafting the
+`v0.1.2` GitHub Release, which is what fires the npm publish. **The release is
+`v0.1.2`, not `v0.1.1`** — the reasoning is in Next Up #13 and is not
+negotiable.
 
 ## Completed
 
@@ -416,22 +411,42 @@ both packages, 7 curl cases against the live route, and
      text that actually exists. Full verification in the
      Session Notes.
 30. **Feature 24: 100% COMPLETE (release verification)** —
-     the owner cut `v0.1.0`; the workflow fired and ran on
-     the real GitHub runner. `npm ci` and `npm run build` both
-     passed there; `npm publish` failed on the one input it
-     has, the not-yet-created `NPM_TOKEN` secret, with the npm
-     name confirmed free and the manifest confirmed
-     publishable. The live registry path was then proven with
-     no override at all: a Free component installs
-     byte-identically from `HamidRezaSepehr/deadui`, and a Pro
-     component stops at the licence gate. One GitHub-UI action
-     (add the secret, re-run the job) stands between here and
-     `npx deadui@latest` — see Next Up #11.
+      the owner cut `v0.1.0`; the workflow fired and ran on
+      the real GitHub runner. `npm ci` and `npm run build` both
+      passed there; `npm publish` failed on the one input it
+      has, the not-yet-created `NPM_TOKEN` secret, with the npm
+      name confirmed free and the manifest confirmed
+      publishable. The live registry path was then proven with
+      no override at all: a Free component installs
+      byte-identically from `HamidRezaSepehr/deadui`, and a Pro
+      component stops at the licence gate. One GitHub-UI action
+      (add the secret, re-run the job) stands between here and
+      `npx deadui@latest` — see Next Up #11.
+31. **Feature 25: Rainbow Button (Free) + CLI `init` dual
+      injection** — `registry/rainbow-button/` (component +
+      barrel), a `registry.json` entry (`tier: "free"`,
+      `dependencies: ["class-variance-authority", "clsx",
+      "tailwind-merge"]`), the `rainbow` keyframe + the
+      `--color-1`…`--color-5` stops in `app/globals.css` so the
+      docs site can preview it, a new `setupRainbowColors()`
+      step in `packages/cli/src/commands/init.ts`, test page
+      `app/test-rainbow-button/page.tsx` (5 sections) and docs
+      page `app/docs/components/rainbow-button/page.mdx`.
+      Four variants — `default` (solid face, 1px animated ring,
+      tight halo), `outline` (transparent, ring only),
+      `gradient-text` (no ring; the label itself carries the
+      gradient via `background-clip: text`), `glow` (solid face,
+      ring, wide `blur-xl` halo) — plus sizes `sm` / `default` /
+      `lg` / `icon` and `borderWidth` / `speed` props. Full
+      verification in the Session Notes. **The registry now
+      describes 10 components (8 Free + 2 Pro) and all 14
+      `files[].path` values exist on disk.**
 
 ## In Progress
 
-None. Feature 24 (NPM Publishing & CI/CD Pipeline) is
-verified and complete.
+None. Feature 25 is implemented and verified; the `v0.1.2`
+GitHub Release is the only remaining step and it is a UI click,
+not code.
 
 
 
@@ -551,6 +566,59 @@ verified and complete.
     sits in the private repo. One residual gap is recorded as
     an Open Question: no clause states how the terms reach a
     licensee at purchase time.
+13. **`v0.1.1` IS BURNED — PUBLISH `v0.1.2` INSTEAD. THIS IS
+    THE RELEASE, AND IT IS NOT A TYPO.** The Feature 25 spec
+    says to tag `v0.1.1`. That tag was **already created and
+    its GitHub Release already published** before this feature
+    started, and it is unwinnable:
+    - `refs/tags/v0.1.1` → `e5dd658`, and
+      `git show v0.1.1:packages/cli/package.json` says
+      **`0.1.0`** at that commit. The workflow publishes the
+      MANIFEST version, so that release could only ever have
+      tried to publish `0.1.0` — which npm already has. It
+      failed, and npm's only version is still `0.1.0`.
+    - A follow-up commit (`c909975 "Updated Version"`) bumped
+      the manifest to `0.1.1` **after** the tag had moved on,
+      so the two are permanently out of step. Nothing can make
+      `v0.1.1` publish `0.1.1`.
+    - The workflow triggers on `release: [created]` only, and
+      the release is already published, so editing it re-runs
+      nothing.
+    - `git tag v0.1.1` fails outright (`already exists`), and
+      re-pointing a published tag needs a force-push, which
+      `AGENTS.md` forbids.
+    The fix is the ordinary one: manifest `0.1.2`, tag
+    `v0.1.2`, and a **new** release — which is exactly the
+    4-step workflow working as intended. `0.1.1` is skipped as
+    a version number and nothing is lost but the label. Two
+    consequences worth stating: npm will show no `0.1.1` at
+    all, so the version sequence in the registry is
+    `0.1.0 → 0.1.2`; and `npm view deadui@0.1.1` will 404
+    forever.
+14. **`NPM_TOKEN` is still not set, but the workflow no longer
+    uses it.** Next Up #11's fix (create an npm automation
+    token, add it as the `NPM_TOKEN` secret, re-run) was
+    overtaken: commit `d4d60c1` rewrote
+    `.github/workflows/publish-cli.yml` to publish with
+    `--provenance` and **no `NODE_AUTH_TOKEN`**, i.e. npm OIDC
+    / Trusted Publisher, which is why `0.1.0` actually landed
+    on npm (`registry.npmjs.org/deadui` → HTTP 200,
+    `versions: ['0.1.0']`, `dist-tags.latest: 0.1.0`). So
+    #11's remaining action is **obsolete — do not create the
+    secret.** What is still worth doing in that UI is
+    confirming the Trusted Publisher is configured for the
+    `deadui` package and pointing at this repo + the
+    `publish` environment (the job declares
+    `environment: publish`, which must match the npm side or
+    OIDC will be refused). Keep it in mind before the
+    `v0.1.2` release is published.
+15. **The README still advertises `staggered-grid`, which the
+    CLI cannot install** — unchanged by Feature 25, which added
+    `rainbow-button` rather than fixing it. The registry now
+    has 8 Free entries but **not** that one; `npx deadui add
+    staggered-grid` still prints "Component not found". This
+    is Next Up #9 / the first Open Question and was
+    deliberately left alone again.
 
 
 ## Component Status
@@ -566,12 +634,38 @@ verified and complete.
 | 7 | Gradient Border Glow | Free | COMPLETE (Feature 14) | ✅ (F20) | rotating, pulsing, static, spotlight |
 | 8 | WebGL Image Trail | Pro | COMPLETE (Features 15 + 15b) | ✅ (F20, Pro badge) | effect: liquid, distortion, pixelate, wave (cva variants empty per spec; fully prop-configurable) |
 | 8b | CSS Image Trail | Free | COMPLETE (Feature 16) | ✅ (F20) | effect: fade-scale, rotate-scale, 3d-rotate, blur-fade, clip-circle, skew-fade (cva variants empty per spec; fully prop-configurable) |
+| 8c | Rainbow Button | Free | COMPLETE (Feature 25) | ✅ (F25) | default, outline, gradient-text, glow (size: sm, default, lg, icon) |
 | 9 | Horizontal Parallax Pin Gallery | Pro | Not started | ❌ (Soon) | deep, subtle, cards |
 | 10 | 3D Perspective Card Stack | Pro | Not started | ❌ (Soon) | fan, cascade, flip-through |
 | 11 | Text Fill Animation | Pro | COMPLETE (Feature 08) | ✅ (F20, Pro badge) | — (configurable via props, no cva variants) |
 
 ## Open Questions
 
+- **Is the `--speed` variable name too generic to ship?**
+  (Feature 25) The spec mandates the animation string
+  `rainbow var(--speed, 2s) infinite linear`, so `init` and
+  the component both have to use the bare `--speed` custom
+  property. It is set on the button element itself, so it only
+  leaks in as far as that subtree, but any third-party CSS in a
+  consumer's project that also reads `--speed` on an ancestor
+  would resolve differently depending on where it is declared.
+  Candidates: keep it (spec compliance, and `--speed` is the
+  MagicUI convention users will expect), or prefix it
+  (`--rainbow-speed`, which is what `--rainbow-border-width`
+  already does) and accept that the emitted animation string
+  then differs from the spec. Not decided — it changes what
+  `init` writes into a user's config.
+- **Should `init` also write the `--color-*` stops for
+  projects with no stylesheet at all?** (Feature 25) With no
+  `globals.css` / `index.css` in any of the six probed
+  locations, `setupRainbowColors` prints the five declarations
+  and moves on rather than creating a file. That is the safe
+  default — inventing a stylesheet path for a project whose
+  framework we could not identify is exactly the "guess"
+  the Registry-is-Truth rule forbids — but it means
+  `npx deadui add rainbow-button` in such a project installs a
+  component that renders unstyled until the user pastes them
+  by hand.
 - **Should `staggered-grid` be added to `registry.json`, or
   dropped from the README?** (Feature 23) The spec's README
   lists 8 Free components including Staggered Grid Reveal,
@@ -745,6 +839,234 @@ verified and complete.
 - Zero CLS invariant for all components.
 
 ## Session Notes
+
+- Feature 25 (feature spec
+  `25-rainbow-button-and-release.md`): Rainbow Button, the
+  `init` dual injection, and the **`v0.1.2`** release.
+  Created: `registry/rainbow-button/rainbow-button.tsx`,
+  `registry/rainbow-button/index.ts`,
+  `app/test-rainbow-button/page.tsx`,
+  `app/docs/components/rainbow-button/page.mdx`. Modified:
+  `packages/cli/src/commands/init.ts` (`rainbow` keyframe +
+  animation in `THEME_PROPERTIES` and `THEME_CSS_BLOCK`; new
+  `findTopLevelRootSelector()` + `setupRainbowColors()` +
+  a fifth `init` step), `app/globals.css` (`@keyframes
+  rainbow`, `.animate-rainbow`, a `:root` block for
+  `--color-1`…`--color-5`, and `.animate-rainbow` added to the
+  existing unlayered reduced-motion block), `registry.json`,
+  `packages/cli/package.json` (`0.1.1` → `0.1.2`, plus the
+  trailing newline commit `c909975` had stripped), this file.
+  No new dependencies, and no change to `add.ts`,
+  `fetch-registry.ts`, `install-deps.ts` or
+  `detect-framework.ts`.
+
+  **THE RELEASE IS `v0.1.2`, NOT `v0.1.1`, AND THE SPEC'S
+  STEP 5 IS WHY.** The spec says tag `v0.1.1`; `v0.1.1`
+  already existed and its Release was already published before
+  this feature began. `refs/tags/v0.1.1` → `e5dd658`, whose
+  manifest says **`0.1.0`**, and the workflow publishes the
+  manifest rather than the tag, so that release could only
+  ever have republished `0.1.0` — which npm already has, which
+  is why `registry.npmjs.org/deadui` still lists only
+  `0.1.0`. Commit `c909975` then bumped the manifest to
+  `0.1.1` *after* the tag had moved, permanently desyncing
+  them. `release: [created]` cannot be re-fired for an
+  existing release, and re-pointing the tag needs a
+  force-push that `AGENTS.md` forbids. So the manifest went to
+  `0.1.2` and the tag to `v0.1.2`, which is the 4-step workflow
+  working correctly rather than being worked around. Full
+  detail in Next Up #13. The corollary, worth not being
+  surprised by later: **npm will never have a `0.1.1`.**
+
+  **THE COMPONENT'S DOM IS THREE LAYERS, AND TWO OF THE
+  THREE DECISIONS WERE FORCED RATHER THAN CHOSEN.**
+  `registry/rainbow-button` renders `<button>` → optional
+  blurred halo `<span aria-hidden>` → optional ring `<span
+  aria-hidden>` → face `<span>`. The root is deliberately
+  **not** `overflow-hidden`, because a `filter: blur()` on a
+  descendant is severed by an ancestor's overflow clip and
+  neither a negative `z-index` nor `transform: scale()` escapes
+  one — so the `glow` variant could not glow at all. But an
+  unclipped root means the halo is a positioned sibling of the
+  root's own background, and a positioned descendant paints
+  *above* it: the halo would wash out the label. `isolate`
+  does not rescue this, because negative-`z-index` children
+  still paint above the element's own background. Hence the
+  opaque face layer, whose only job is to punch the middle
+  back out. The ring cannot be a real `border` because a
+  border's colour cannot be animated.
+
+  **TWO REAL BUGS FOUND BY LOOKING AT THE RENDER, NOT BY
+  THE ASSERTIONS — both invisible to a green build.**
+  1. **`[mask: …]` silently reset `mask-composite`.** The
+     ring is the standard two-layer trick, normally written
+     `[mask:linear-gradient(#fff 0 0)_content-box,linear-gradient(#fff_0_0)]`
+     plus `[mask-composite:exclude]`. But `mask` is a
+     **shorthand**, so it resets `mask-composite` to its
+     initial `add`, and Tailwind emits the shorthand *after*
+     the exclude declaration — so `add` won. It rendered
+     correctly in Chrome purely by luck: Lightning CSS
+     compiles a prefixed `-webkit-mask` shorthand that also
+     sets `-webkit-mask-composite: xor`. Firefox exposes
+     `-webkit-mask-composite` as a plain **alias** of
+     `mask-composite`, so `add` would have won there and the
+     "ring" would have filled the whole button. The computed
+     value said `add, add` while the pixels looked fine,
+     which is what gave it away. Fixed with the longhands
+     `mask-image` / `mask-clip` / `mask-composite`, which
+     reset nothing and so are order-independent.
+  2. **The button did not size to its own label.** The face
+     was `absolute inset-0`, which contributes nothing to
+     layout, so the root collapsed to its bare padding box:
+     **every button measured 40×40** regardless of label,
+     with the text overflowing its own face
+     (`scrollWidth > clientWidth` on all of them). This is
+     invisible for `default`/`outline`/`glow` — an
+     overflowing label centred on a same-coloured background
+     still *looks* like a button — and it is catastrophic for
+     `gradient-text`, whose label is `color: transparent` and
+     visible only where the face's background is painted. Any
+     glyph past the background box simply does not render:
+     "Gradient Text" came out as **"›radien"** on two lines.
+     Fix: the face is `relative` (in flow) and carries the
+     `size` classes, including the padding — which also keeps
+     it exactly coincident with the root's box, so
+     `rounded-[inherit]` stays concentric with the ring
+     instead of being inset by a padding the ring already
+     occupies. Sizing the cva and the variant cva separately
+     is what lets the public props keep a single `size` union.
+  Neither was caught by "all four variants render": the first
+  needed a computed-style read, the second needed a
+  measurement. Both are now asserted, and the second is
+  asserted per-label.
+
+  **`motion-reduce:animate-none`, NOT `motion-safe:animate-rainbow`,
+  and the reason is a Tailwind version boundary.** The
+  opt-out has to be expressed against a **core** utility,
+  because `animate-rainbow` is a *custom* one: under v4
+  `init` writes it as a plain `@layer utilities` rule, and
+  Tailwind cannot attach a variant to a utility it did not
+  generate itself, so `motion-safe:animate-rainbow` would
+  compile to **nothing** and the border would never animate at
+  all for v4 users. `animate-none` exists in v3 and v4, so
+  gating on it works in both (and in v4 `init`'s unlayered
+  reduced-motion block wins too).
+
+  **`--color-1`…`--color-5` ARE NOT TAILWIND COLOURS, AND
+  THE SPEC'S `:root` IS THE REASON.** They go in a plain
+  `:root` block, not `theme.colors` / `@theme`, which would
+  register a colour scale and generate a family of
+  `bg-color-1` utilities that could collide with a project's
+  own numbering. They are consumed only as `var(--color-1)`
+  inside arbitrary values on the component's own layers.
+
+  **THE `:root` INJECTION REFUSES A NESTED ONE, AND THAT IS
+  THE WHOLE POINT OF `findTopLevelRootSelector`.** A project
+  that themes with `@media (prefers-color-scheme: dark) {
+  :root { … } }` has a perfectly valid `:root` at brace depth
+  1. Injecting there would confine the rainbow stops to dark
+  mode — the button would render with no gradient at all in
+  light mode, with no error anywhere. The scanner is
+  string- and comment-aware for the same reason the rest of
+  `init.ts` is (`:root` shows up inside prose), matches
+  `:root` as a whole token so `--x: :root`-style decoys do not
+  fire, and only accepts depth 0. When the only `:root` is
+  nested, a new top-level block is appended instead.
+
+  **`setupRainbowColors` IS UNPROMPTED, DELIBERATELY.**
+  Every other conditional write in `init` asks a `confirm`,
+  but there is no decision here — the variables are required
+  by a shipped component and inert otherwise — and every new
+  prompt is another chance to hit the stdin-EOF race that
+  `install-deps.ts` and the Feature 18 license prompt already
+  fall into, where an unsettled prompt exits 0 having written
+  nothing. It is still idempotent via the `--color-1` probe,
+  which checks the **first** variable rather than all five so
+  a half-finished block from an interrupted write is detected
+  instead of topped up into a duplicate.
+
+  VERIFY — `npm run build` in `packages/cli` (zero TS errors);
+  root `npx tsc --noEmit` and `npm run lint` clean; `.next`
+  deleted and root `npm run build` re-run (all 28 routes
+  prerender, including the two new ones). The emitted CSS was
+  then read directly rather than assumed: `:root` stops
+  present, `@keyframes rainbow` present, `.animate-rainbow`
+  present, the unlayered reduced-motion rule present, and all
+  three mask longhands present with **no** `mask:` shorthand
+  left from this component.
+  - **73/73 browser assertions** (`/tmp/verify_f25.py`,
+    Playwright driving system Chrome against `npm start`):
+    all four variants present; the ring is inset-0 with the
+    right computed `padding`, `mask-clip` and
+    `mask-composite`; **pixel proof** the ring's centre is not
+    painted (`elementFromPoint` lands on the face); the halo's
+    box is wider than the button's and the root's `overflow`
+    is `visible`; `gradient-text` draws no ring, uses
+    `background-clip: text` and is `rgba(0,0,0,0)`;
+    `background-position` measurably **advances**; `speed` →
+    `0.6s`/`14s` and `borderWidth` → `1px`/`2px`/`4px` all
+    read back off computed style; the button's box does not
+    move across 400ms (zero CLS); the docs page has one `h1`,
+    real `<table>`s, `pre.shiki`, zero nested `<p>`, working
+    Variant and Size controls (each variant's layer count and
+    each size's measured height assert real behaviour), 21
+    sidebar links, **0** "Soon" rows, ⌘K opens;
+    `prefers-reduced-motion` yields `animation-name: none`
+    while the gradient is still painted; Tab reaches a button;
+    **zero console and page errors.**
+  - **48/48 CLI assertions** (`/tmp/verify_f25_init.py`, live
+    runs of the built `dist/index.js` against throwaway
+    projects, since deleted) across 7 fixtures: a v3 project
+    with `import type { Config }`, its own `colors` /
+    `keyframes` / `animation` and a comment containing `theme`
+    and `{`; one with no `:root`; one whose only `:root` is
+    nested in a `prefers-color-scheme` block; a v4 project with
+    no config; a pre-existing `--color-1`. Asserted: the
+    `rainbow` keyframe with both `background-position` stops
+    and the `rainbow var(--speed, 2s) infinite linear`
+    animation land in `theme.extend`; the user's
+    `colors.brand`, `keyframes.wiggle`, `animation.wiggle`, the
+    leading import and every comment survive; there is exactly
+    **one** `keyframes:` and **one** `animation:` property (the
+    duplicate-key trap from Feature 21); the five variables
+    land inside an existing `:root` with `--brand`, `--radius`
+    and the user's comment intact, or in a freshly appended
+    block, or **not** in the dark-mode `:root`; the v4 path
+    emits `@keyframes rainbow` + `.animate-rainbow` and adds
+    it to the reduced-motion block without creating a config
+    file; **two consecutive runs are byte-identical** for both
+    the v3 and v4 fixtures; and a user's own `--color-1: red`
+    is neither duplicated nor overwritten.
+  - **THE INJECTED TAILWIND CONFIG WAS COMPILED, NOT JUST
+    PARSED** — real Tailwind 3.4.19 over the file `init`
+    produced: `.animate-rainbow` emitted with the
+    `rainbow`/`--speed`/`2s`/`infinite`/`linear` shorthand,
+    `@keyframes rainbow` with both stops, and the user's own
+    `.bg-dead-950`, `.animate-wiggle` and `@keyframes wiggle`
+    still resolving. "The file parses" is not "the button is
+    styled".
+  - **Installs from a bare checkout:**
+    `DEADUI_REGISTRY_BASE_URL=<repo> deadui add
+    rainbow-button` in a throwaway `src/` project wrote
+    `src/components/ui/rainbow-button.tsx`, exited 0, and the
+    file is **byte-identical** to the repo source (`cmp`).
+  - **Registry invariant:** 10 components, 14 `files[].path`
+    values, **0** missing on disk.
+
+  HARNESS NOTES (additions to the Feature 24 list). Tailwind's
+  content **scanner** still finds nothing on this machine for
+  a glob, so the compile proof needs `{ raw, extension:
+  "html" }` — the Feature 21 note, hit again, and the cause of
+  a first-round 41/46 that was the harness's fault, not the
+  product's. And Tailwind **tree-shakes unused keyframes**:
+  asserting `@keyframes wiggle` survives requires the user to
+  also have an `animation.wiggle` AND `animate-wiggle` in the
+  probe content, because `.animate-*` is generated from
+  `theme.animation`, not `theme.keyframes` — my first fixture
+  asserted something Tailwind is *designed* to drop. Two of
+  my own assertions were wrong before the code was, which is
+  the argument for asserting the composed result rather than
+  the implementation.
 
 - Feature 24, part 4 (release verification, feature CLOSED):
   the owner cut release `v0.1.0`. Checked via the GitHub REST

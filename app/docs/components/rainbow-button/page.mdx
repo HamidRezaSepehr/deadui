@@ -1,0 +1,143 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { RainbowButton } from "@/registry/rainbow-button"
+
+export const metadata = {
+  title: "Rainbow Button",
+  description: "An animated button with a customizable rainbow effect.",
+}
+
+# Rainbow Button
+
+An animated button with a customizable rainbow effect. Pure CSS — the gradient
+lives on three decorative layers and never touches the button's own box.
+
+## Preview
+
+<ComponentCustomizer
+  component={RainbowButton}
+  defaultProps={{
+    children: "Click Me",
+    variant: "default",
+    size: "default",
+  }}
+  controls={{
+    variant: {
+      type: "select",
+      options: ["default", "outline", "gradient-text", "glow"],
+    },
+    size: { type: "select", options: ["default", "sm", "lg", "icon"] },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="rainbow-button" tier="free" />
+
+### One-time setup
+
+The button needs two things `deadui init` writes for you: a `rainbow` keyframe
+(`animate-rainbow`, which animates `background-position`) and the `--color-1` …
+`--color-5` gradient stops.
+
+```bash
+npx deadui@latest init
+```
+
+If you already ran `init` before this component existed, re-run it — it is
+idempotent and will add only what is missing.
+
+## Usage
+
+```tsx
+import { RainbowButton } from "@/components/ui/rainbow-button"
+
+export function Cta() {
+  return (
+    <RainbowButton variant="glow" speed={3} borderWidth={2}>
+      Get started
+    </RainbowButton>
+  )
+}
+```
+
+## Variants
+
+<div className="grid grid-cols-1 gap-6 not-prose my-8 sm:grid-cols-2">
+  <div className="bg-preview-grid flex min-h-[120px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <RainbowButton variant="default">default</RainbowButton>
+  </div>
+  <div className="bg-preview-grid flex min-h-[120px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <RainbowButton variant="outline">outline</RainbowButton>
+  </div>
+  <div className="bg-preview-grid flex min-h-[120px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <RainbowButton variant="gradient-text">gradient-text</RainbowButton>
+  </div>
+  <div className="bg-preview-grid flex min-h-[120px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <RainbowButton variant="glow">glow</RainbowButton>
+  </div>
+</div>
+
+| Variant         | Face            | Ring | Halo                        |
+| --------------- | --------------- | ---- | --------------------------- |
+| `default`       | solid           | yes  | tight, 50% opacity, nudged down |
+| `outline`       | transparent     | yes  | none                        |
+| `gradient-text` | `background-clip: text` | none | none                  |
+| `glow`          | solid           | yes  | `-inset-4`, `blur-2xl`, 80% |
+
+## Props
+
+| Prop          | Type                                                                   | Default     | Description                                                          |
+| ------------- | ---------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------- |
+| `children`    | `React.ReactNode`                                                      | —           | Button label. Required.                                              |
+| `variant`     | `"default" \| "outline" \| "gradient-text" \| "glow"`                  | `"default"` | Visual treatment.                                                    |
+| `size`        | `"default" \| "sm" \| "lg" \| "icon"`                                  | `"default"` | Height and horizontal padding. `icon` is square.                     |
+| `borderWidth` | `number`                                                               | `1`         | Thickness of the animated ring, in pixels.                           |
+| `speed`       | `number`                                                               | `2`         | Seconds for one full rainbow cycle.                                  |
+| `className`   | `string`                                                               | —           | Merged after the variant classes, so it wins on conflicts.           |
+
+## How it works
+
+The gradient is never painted on the button itself. It lives on three
+absolutely-positioned layers:
+
+1. **The ring** — an inset layer with a 1px padding, masked with two gradients
+   composited with `mask-composite: exclude`. What survives is the padding frame,
+   so it reads as an animated border without a real `border` being involved (a
+   real border cannot have its colour animated).
+2. **The halo** — the same gradient, blurred and pushed outside the button's
+   bounds. This is why the root is *not* `overflow-hidden`: a `filter: blur()` on
+   a descendant is cut off by an ancestor's overflow clip.
+3. **The face** — the coloured layer, which for `default` and `glow` has to be
+   separate so it can cover the halo's overlap in the middle of the button.
+
+One `--speed` custom property drives every layer, so the ring, halo and text stay
+in phase.
+
+## Dependencies
+
+- `class-variance-authority`
+- `clsx` and `tailwind-merge`, via your project's existing `cn()` helper
+
+## Performance
+
+- The animation moves `background-position`, not geometry — the button's box is
+  fixed by its `size` classes and every decorative layer is absolutely
+  positioned, so there is **zero layout shift** and no re-render: the component
+  is presentational and holds no state at all.
+- `background-position` is a repaint rather than a compositor-only property, but
+  the repainted area is just the button's own ring and halo.
+- No JS runs per frame, and there is no `requestAnimationFrame`, listener, or
+  effect to clean up.
+
+## Accessibility
+
+- Renders a real `<button>`, so it is reachable with `Tab` and fires on
+  <kbd>Enter</kbd> / <kbd>Space</kbd>.
+- The ring, halo and face are `aria-hidden` and `pointer-events-none`, so the
+  accessible name is the label alone.
+- Under `prefers-reduced-motion: reduce` the sweep is switched off and the button
+  renders as a still gradient — every variant stays fully legible, because each
+  one is only a gradient stop away from its resting appearance.
+- The `icon` size has no text in it, so pass an `aria-label` when you use it.
