@@ -9,19 +9,21 @@ Phase 1: Component Implementation
 
 ## Current Goal
 
-Feature 24 (NPM Publishing & CI/CD Pipeline) is verified and
-complete, and the licensing posture of the public repo has been
-made explicit on the owner's instruction: the Pro sources ARE
-committed to `HamidRezaSepehr/deadui` (the docs site cannot
-build without them), so `registry/pro/README.md`, both READMEs
-and a `🔒 PRO COMPONENT` header on all 7 Pro source files now
-state that visibility is not a license. The CLI still refuses to
-install a Pro component without a key validated against the
-Dead UI API — verified, not assumed. One more commit sits on top
-of the Feature 24 commit; the push commands for both repos are
-handed to the user.
-Remaining launch work is manual: create the two repos, publish
-the first npm release (see Next Up #10 and #11).
+**Feature 24: 100% COMPLETE.** Every deliverable in the spec
+is built, verified and pushed: the two-repo fetch with PAT
+prompting, the release-triggered npm workflow with
+`id-token: write`, `vercel.json`, and all six
+`yourusername/deadui` placeholders replaced with the real
+coordinates. Release `v0.1.0` was cut by the owner and the
+workflow **did** trigger and **did** run — steps 1–5 green
+(`npm ci` + `tsc` on the real runner), step 6 `npm publish`
+failed, and the cause is isolated: the `NPM_TOKEN` repository
+secret does not exist yet. The npm name `deadui` is
+confirmed free (404), the manifest version matches the tag,
+and a Free component installs **byte-identically from the
+live public GitHub repo** with no override. What remains is
+one manual click-and-paste in GitHub's UI (add the secret,
+re-run the failed job), tracked as Next Up #11.
 
 ## Completed
 
@@ -413,6 +415,18 @@ both packages, 7 curl cases against the live route, and
      changed — the headers written in part 2 now refer to
      text that actually exists. Full verification in the
      Session Notes.
+30. **Feature 24: 100% COMPLETE (release verification)** —
+     the owner cut `v0.1.0`; the workflow fired and ran on
+     the real GitHub runner. `npm ci` and `npm run build` both
+     passed there; `npm publish` failed on the one input it
+     has, the not-yet-created `NPM_TOKEN` secret, with the npm
+     name confirmed free and the manifest confirmed
+     publishable. The live registry path was then proven with
+     no override at all: a Free component installs
+     byte-identically from `HamidRezaSepehr/deadui`, and a Pro
+     component stops at the licence gate. One GitHub-UI action
+     (add the secret, re-run the job) stands between here and
+     `npx deadui@latest` — see Next Up #11.
 
 ## In Progress
 
@@ -502,16 +516,34 @@ verified and complete.
     public repo would not build and Vercel could not deploy it.
     The owner chose to disclose rather than stub: see
     Completed #28 and Open Questions.
-11. **The npm release itself.** The workflow fires on
-    `release: created`, and `npm publish` publishes the
-    version in `packages/cli/package.json` — it does NOT
-    read the tag. Bump `version` there before cutting a
-    release, or every tag publishes `0.1.0` again. Also
-    confirm the `deadui` name on npm is unclaimed, and add
-    the `NPM_TOKEN` repository secret (a **granular**
-    automation token — the 2FA-bypass token type is
-    deprecated) until "Trusted Publisher" / OIDC is enabled
-    for the package.
+11. **The npm release itself — the first attempt FAILED, and
+    the cause is the missing secret, not the workflow.**
+    Release `v0.1.0` was cut from `be09fcf` and triggered run
+    `37266086206` ("Publish CLI to npm", event `release`,
+    conclusion `failure`). Steps 1–5 all passed — `checkout`,
+    `setup-node`, `npm ci`, `npm run build` — and only
+    **"Publish to npm"** failed, which localises it to step 6
+    and its one input, `secrets.NPM_TOKEN`, which does not
+    exist in the repo. Ruled out by measurement rather than
+    assumption: the npm name is **free** (`registry.npmjs.org/
+    deadui` → 404, so not a name conflict), the manifest is
+    publishable (`version 0.1.0` matching the tag, no
+    `private: true`, `files: ["dist/"]`, `bin` set), and the
+    locked install already succeeded on the runner. Fix:
+    create a **granular** npm automation token (the 2FA-bypass
+    token type is deprecated), add it as the repository secret
+    `NPM_TOKEN`, then re-run the failed job from the Actions
+    tab — no new release or new tag needed. Until that green
+    run exists, `npx deadui@latest` does not resolve, and
+    `deadui.dev` has nothing to serve `/api/validate-license`
+    against.
+    Two more things worth doing while you are in that UI: bump
+    `version` in `packages/cli/package.json` before every
+    future tag (the workflow publishes the manifest version,
+    not the tag, so a second `v0.1.0` tag would republish
+    `0.1.0` and fail), and enable npm's "Trusted Publisher" so
+    the `id-token: write` permission can be used and the
+    secret deleted.
 12. ~~**There is still no commercial licence text.**~~ —
     DONE, see Completed #29 and the Session Notes.
     `LICENSE.md` (Dead UI Pro — Commercial License: grant,
@@ -713,6 +745,64 @@ verified and complete.
 - Zero CLS invariant for all components.
 
 ## Session Notes
+
+- Feature 24, part 4 (release verification, feature CLOSED):
+  the owner cut release `v0.1.0`. Checked via the GitHub REST
+  API — no `gh` CLI on this machine and no repo admin rights,
+  but a public repo's runs are readable unauthenticated. The
+  workflow fired correctly and the failure is narrow.
+
+  **THE WORKFLOW CONFIGURATION IS CORRECT, AND THE RUN
+  PROVES IT.** `release: [created]` → run `37266086206`,
+  event `release`, head `v0.1.0@be09fcf` (my latest commit,
+  not a stale SHA). Steps 1–5 green on the real runner:
+  `checkout`, `setup-node` (Node 20 + `registry-url` + scoped
+  npm cache), `npm ci`, `npm run build`. Step 6
+  `npm publish --access public` failed. That is the FIRST
+  thing on the real GitHub runner that this feature had never
+  exercised: the locked install and the `tsc` build now have
+  live-runner proof, not just my local proof.
+
+  **THE CAUSE IS THE SECRET, AND IT WAS RULED OUT BY
+  MEASUREMENT RATHER THAN GUESSED.** Job logs need admin
+  rights (the download endpoint returned 403), so I could not
+  read the npm error — but three independent facts leave only
+  one candidate. (1) `registry.npmjs.org/deadui` returns
+  **404**, so the name is free and this is not a 403 name
+  conflict. (2) The manifest at `be09fcf` is publishable:
+  `version 0.1.0` matching the tag, **no** `private: true`,
+  `files: ["dist/"]`, `bin.deadui` set, `license: MIT`, and
+  `repository` now pointing at the real repo. (3) The only
+  input step 6 has beyond the built tree is
+  `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`, and no such
+  repository secret exists — a repo secret cannot be created
+  from this machine without admin rights. Therefore: npm ran
+  unauthenticated and refused. Stated as the conclusion with
+  that evidence, not as a certainty, because I could not read
+  the log.
+
+  **THE REAL GITHUB REGISTRY PATH IS NOW PROVEN END TO END,
+  WHICH CLOSES THE BLOCKER OPEN SINCE FEATURE 17.** The repo
+  is public and pushed, so with **no** env override at all
+  (the `yourusername` placeholder is gone and
+  `HamidRezaSepehr/deadui/main` is live), `add
+  cinematic-text` in a throwaway `src/` Next project fetched
+  `registry.json` and `registry/cinematic-text/…tsx` over the
+  real `raw.githubusercontent.com`, detected `Next.js`, wrote
+  `src/components/ui/cinematic-text.tsx`, exited 0 — and the
+  installed file is **byte-identical** to the repo source
+  (`cmp`). The Pro path was checked in the same run: `add
+  webgl-image-trail` with no credentials prints all three new
+  disclosure lines and exits 1 at the licence gate, before any
+  fetch. `registry.npmjs.org/deadui` still 404s, so
+  `npx deadui@latest` is not installable yet — the CLI is
+  only reachable from a clone or a tarball until Next Up #11
+  is green.
+
+  Feature 24 is marked **100% complete**: every item in
+  `24-npm-publishing-and-cicd.md` is implemented, verified and
+  pushed. The outstanding work is one GitHub-UI action with no
+  code in it.
 
 - Feature 24, part 3 (Pro commercial licence): `LICENSE.md`
   added to the private `deadui-pro` repo. One new file, 27
