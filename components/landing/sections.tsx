@@ -223,7 +223,7 @@ export function Pricing() {
                   {plan.name}
                 </h3>
                 {plan.highlighted ? (
-                  <span className="rounded-full bg-purple-500/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-purple-400">
+                  <span className="rounded-full bg-purple-500/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-purple-600 dark:text-purple-400">
                     Pro
                   </span>
                 ) : null}

@@ -5,7 +5,7 @@ import { CinematicText } from "@/registry/cinematic-text"
 export const metadata = {
   title: "Cinematic Text Reveal",
   description:
-    "GSAP SplitText + ScrollTrigger letter-by-letter reveal with four variants.",
+    "GSAP SplitText + ScrollTrigger letter-by-letter reveal with twelve variants.",
 }
 
 # Cinematic Text Reveal
@@ -27,7 +27,11 @@ GSAP SplitText + ScrollTrigger letter-by-letter reveal with multiple variants.
   controls={{
     variant: {
       type: "select",
-      options: ["blur-in", "fade-up", "slide-stagger", "scale-pop"],
+      options: [
+        "blur-in", "fade-up", "slide-stagger", "scale-pop", // Existing
+        "rise-color", "slide-left-color", "scale-blur-color", "diagonal-blur-color",
+        "flip-x-color", "heavy-flip-color", "flip-top-color", "mask-reveal", // New
+      ],
     },
     duration: { type: "slider", min: 0.1, max: 2, step: 0.1, unit: "s" },
     stagger: { type: "slider", min: 0, max: 0.3, step: 0.01, unit: "s" },
@@ -86,6 +90,70 @@ export function Hero() {
       scale-pop
     </CinematicText>
   </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="rise-color"
+      className="text-xl font-bold text-dead-50"
+    >
+      rise-color
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="slide-left-color"
+      className="text-xl font-bold text-dead-50"
+    >
+      slide-left-color
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="scale-blur-color"
+      className="text-xl font-bold text-dead-50"
+    >
+      scale-blur-color
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="diagonal-blur-color"
+      className="text-xl font-bold text-dead-50"
+    >
+      diagonal-blur-color
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="flip-x-color"
+      className="text-xl font-bold text-dead-50"
+    >
+      flip-x-color
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="heavy-flip-color"
+      className="text-xl font-bold text-dead-50"
+    >
+      heavy-flip-color
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="flip-top-color"
+      className="text-xl font-bold text-dead-50"
+    >
+      flip-top-color
+    </CinematicText>
+  </div>
+  <div className="bg-preview-grid flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <CinematicText
+      variant="mask-reveal"
+      className="text-xl font-bold text-dead-50"
+    >
+      mask-reveal
+    </CinematicText>
+  </div>
 </div>
 
 ## Props
@@ -93,7 +161,7 @@ export function Hero() {
 | Prop            | Type                                                                  | Default            | Description                                                            |
 | --------------- | --------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------- |
 | `children`      | `string`                                                              | —                  | The text to split and reveal. Required.                               |
-| `variant`       | `"blur-in" \| "fade-up" \| "slide-stagger" \| "scale-pop"`            | `"blur-in"`        | Animation style.                                                      |
+| `variant`       | `"blur-in" \| "fade-up" \| "slide-stagger" \| "scale-pop" \| "rise-color" \| "slide-left-color" \| "scale-blur-color" \| "diagonal-blur-color" \| "flip-x-color" \| "heavy-flip-color" \| "flip-top-color" \| "mask-reveal"` | `"blur-in"` | Animation style. The `*-color` variants reveal from a dimmed gray to white. `mask-reveal` clips characters as they rise. |
 | `duration`      | `number`                                                              | `0.8`              | Animation duration in seconds.                                        |
 | `delay`         | `number`                                                              | `0`                | Delay before the animation starts.                                    |
 | `stagger`       | `number`                                                              | `0.05`             | Delay between each split unit.                                        |
@@ -110,8 +178,9 @@ export function Hero() {
 
 ## Performance
 
-- Only `transform` and `opacity` (plus one `filter: blur` on the `blur-in`
-  variant) are animated, so the reveal stays on the compositor.
+- Only `transform`, `opacity`, `color` (on the `*-color` variants) and
+  `filter: blur` (on the blur variants) are animated, so the reveal stays off
+  the layout path.
 - Splitting runs once per props change and is reverted through
   `gsap.context()`, so remounting leaves nothing behind.
 - The element's layout space is established before the animation runs — no

@@ -32,6 +32,36 @@ Core Tokens
 | Border            | --border / border-dead-800 | #27272A (subtle dark border)     |
 | Glow              | --glow                     | rgba(220, 38, 38, 0.15)         |
 
+The Neutral Ramp Is Theme-Reactive
+The eight neutral steps are declared TWICE in `app/globals.css` — once in
+`:root` for light mode, once under `.dark` — and `@theme` emits each as
+`var(--dead-*)` rather than as a fixed hex. Flipping the class on `<html>`
+therefore re-points every `bg-dead-*` / `text-dead-*` / `border-dead-*` utility
+in the codebase at once, which is why the site needs almost no `dark:` variants.
+
+Each step keeps its ROLE, not its position:
+
+| Step  | Role                | Dark     | Light    |
+|-------|---------------------|----------|----------|
+| 950   | Page background     | #09090B  | #FAFAFA  |
+| 900   | Card surface        | #18181B  | #F4F4F5  |
+| 800   | Border              | #27272A  | #D4D4D8  |
+| 700   | Hover surface       | #3F3F46  | #A1A1AA  |
+| 600   | Dim label text      | #52525B  | #71717A  |
+| 400   | Muted body text     | #A1A1AA  | #52525B  |
+| 200   | Body text           | #E4E4E7  | #27272A  |
+| 50    | Foreground text     | #FAFAFA  | #09090B  |
+
+Contrast on the light page background (#FAFAFA): `600` = 4.8:1,
+`400` = 7.7:1, `200` = 13.7:1, `50` = 19.6:1 — all above the 4.5:1 floor below,
+which matters most for `600`, used for 10px uppercase labels. The accent
+(#DC2626) is theme-independent at 4.8:1 in both modes.
+
+Consequence for authoring: never hard-code a neutral from the raw Tailwind
+palette (`zinc-400`, `white`, `black`) in site chrome. Use a `dead-*` step, or —
+if the value must be a raw palette colour — name a light value first and the
+dark one under `dark:`. The tier badges are the only sites that still need this.
+
 Semantic Colors
 | Role              | Tailwind Classes                        | Usage                          |
 |-------------------|-----------------------------------------|--------------------------------|
@@ -122,9 +152,14 @@ Landing Page: Full-viewport hero with live animation demo,
 terminal-style CLI command, feature grid, component gallery,
 pricing table, footer. Dark background throughout.
 
-Documentation Shell: Fixed left sidebar (`w-[260px]`) with
-component navigation, main content area with live preview
-at top and code/props below. Dark background.
+Documentation Shell: Sticky left sidebar (`w-[260px]`) whose header is a
+sticky block holding a row of icon-only category filters (each with a tooltip to
+the RIGHT of the column) above a search bar whose placeholder states how many
+components the active category holds, then a scrollable menu: an unfiltered
+"Get Started" pair (Introduction, Installation) followed by the filtered
+"Components" list. Hovering a component link floats a 320x208 live preview box to
+the right of the sidebar, springing to the hovered row's vertical position.
+Main content area has a live preview at top and code/props below.
 
 Component Preview Cards: Dark surface (`bg-dead-900`) with
 subtle border (`border-dead-800`), rounded corners, and

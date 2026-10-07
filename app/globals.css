@@ -1,14 +1,65 @@
 @import "tailwindcss";
 
+/* next-themes drives the class strategy (`<html class="dark">`), so Tailwind's
+   `dark:` variant has to follow the class instead of the media query — the
+   default in v4 is `prefers-color-scheme`, which would ignore an explicit
+   toggle. Both selectors are listed so `.dark` on the root element and a nested
+   `.dark` scope behave identically. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* THE NEUTRAL RAMP IS A RUNTIME VARIABLE, NOT A LITERAL.
+   Every `dead-*` step below is emitted by `@theme` as `var(--dead-*)` rather
+   than as a fixed hex, and `--dead-*` is declared once here for light mode and
+   once under `.dark`. Because both blocks land on the same element (`<html>`)
+   and `.dark` comes later in source order with equal specificity, flipping the
+   class re-points every `bg-dead-*` / `text-dead-*` / `border-dead-*` utility
+   in the codebase at once — which is why the theme toggle needs no per-component
+   `dark:` variants, and why none existed before.
+
+   Each step keeps its ROLE, not its position: `950` is the page background,
+   `50` the foreground text, `800` the border, and so on. In dark mode that maps
+   onto the zinc ramp from darkest to lightest; in light mode the mapping is
+   mirrored, so `50` becomes the page background and `950` the text.
+
+   Contrast on the light page background (#fafafa): `600` = 4.8:1,
+   `400` = 7.7:1, `200` = 13.7:1, `50` = 19.6:1 — all above the 4.5:1 floor in
+   ui-context.md, which matters most for `600`, which is used for 10px
+   uppercase labels. */
+:root {
+  --dead-50: #09090b;
+  --dead-200: #27272a;
+  --dead-400: #52525b;
+  --dead-600: #71717a;
+  --dead-700: #a1a1aa;
+  --dead-800: #d4d4d8;
+  --dead-900: #f4f4f5;
+  --dead-950: #fafafa;
+
+  color-scheme: light;
+}
+
+.dark {
+  --dead-50: #fafafa;
+  --dead-200: #e4e4e7;
+  --dead-400: #a1a1aa;
+  --dead-600: #52525b;
+  --dead-700: #3f3f46;
+  --dead-800: #27272a;
+  --dead-900: #18181b;
+  --dead-950: #09090b;
+
+  color-scheme: dark;
+}
+
 @theme static {
-  --color-dead-950: #09090b;
-  --color-dead-900: #18181b;
-  --color-dead-800: #27272a;
-  --color-dead-700: #3f3f46;
-  --color-dead-600: #52525b;
-  --color-dead-400: #a1a1aa;
-  --color-dead-200: #e4e4e7;
-  --color-dead-50: #fafafa;
+  --color-dead-950: var(--dead-950);
+  --color-dead-900: var(--dead-900);
+  --color-dead-800: var(--dead-800);
+  --color-dead-700: var(--dead-700);
+  --color-dead-600: var(--dead-600);
+  --color-dead-400: var(--dead-400);
+  --color-dead-200: var(--dead-200);
+  --color-dead-50: var(--dead-50);
   --color-dead-red: #dc2626;
   --color-dead-red-hover: #ef4444;
 
@@ -30,6 +81,9 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+  transition:
+    background-color 200ms ease-out,
+    color 200ms ease-out;
 }
 
 /* Infinite Blur Marquee
@@ -189,6 +243,207 @@ body {
   .animate-gradient-rotate,
   .animate-gradient-pulse,
   .animate-rainbow {
+    animation: none;
+  }
+}
+
+/* Sidebar hover previews
+
+   Eight of the eleven registry components cannot honestly be shown live in a
+   ~300x200 box that mounts on hover: `cinematic-text`, `text-fill-animation`,
+   `scroll-scrub` and `staggered-grid` all register GSAP ScrollTriggers (which
+   would fight the docs page's own scroll), and `image-trail` /
+   `webgl-image-trail` need pointer movement and a WebGL context respectively.
+   These keyframes are stand-ins for exactly those eight — pure compositor-only
+   properties, no layout reads, no JS — so a hover never costs a ScrollTrigger
+   registration or a canvas context.
+
+   Every one of them is self-running (no hover, no scroll, no pointer) and takes
+   its delay from `--d`, set per element with Tailwind's `[--d:150ms]` arbitrary
+   property, which keeps the stagger out of inline `style` props. */
+@keyframes preview-reveal {
+  0%,
+  22% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(0.5rem);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+  85%,
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes preview-fill {
+  0%,
+  20% {
+    background-position: -160% 0;
+  }
+  70%,
+  100% {
+    background-position: 160% 0;
+  }
+}
+
+@keyframes preview-magnet {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  25% {
+    transform: translate3d(0.6rem, -0.35rem, 0) scale(1.08);
+  }
+  55% {
+    transform: translate3d(-0.45rem, 0.3rem, 0) scale(1.05);
+  }
+  80% {
+    transform: translate3d(0.2rem, 0.15rem, 0) scale(1.02);
+  }
+}
+
+@keyframes preview-scrub {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  100% {
+    transform: translate3d(-22%, 0, 0) scale(1.28);
+  }
+}
+
+@keyframes preview-scrub-bar {
+  0%,
+  12% {
+    transform: scaleX(0);
+  }
+  80%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes preview-stagger {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translate3d(0, 0.6rem, 0) scale(0.94);
+  }
+  48%,
+  86% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes preview-spotlight {
+  0%,
+  100% {
+    background-position: -60% -40%;
+  }
+  50% {
+    background-position: 160% 140%;
+  }
+}
+
+@keyframes preview-trail {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.4) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(6rem, -3.25rem, 0) scale(1.5) rotate(22deg);
+  }
+}
+
+@keyframes preview-liquid {
+  0%,
+  100% {
+    transform: scale(1) skewX(0deg);
+    filter: hue-rotate(0deg) saturate(1);
+  }
+  35% {
+    transform: scale(1.22) skewX(-8deg);
+    filter: hue-rotate(35deg) saturate(1.5);
+  }
+  70% {
+    transform: scale(0.94) skewX(6deg);
+    filter: hue-rotate(-25deg) saturate(1.2);
+  }
+}
+
+@layer utilities {
+  .animate-preview-reveal {
+    animation: preview-reveal 3.4s var(--d, 0s) ease-out infinite;
+  }
+
+  .animate-preview-fill {
+    animation: preview-fill 3s var(--d, 0s) linear infinite;
+  }
+
+  .animate-preview-magnet {
+    animation: preview-magnet 3.6s var(--d, 0s) cubic-bezier(0.22, 1, 0.36, 1)
+      infinite;
+  }
+
+  .animate-preview-scrub {
+    animation: preview-scrub 4.2s var(--d, 0s) linear infinite alternate;
+  }
+
+  .animate-preview-scrub-bar {
+    animation: preview-scrub-bar 4.2s var(--d, 0s) cubic-bezier(0.22, 1, 0.36, 1)
+      infinite;
+    transform-origin: left center;
+  }
+
+  .animate-preview-stagger {
+    animation: preview-stagger 3.2s var(--d, 0s) cubic-bezier(0.22, 1, 0.36, 1)
+      infinite;
+  }
+
+  .animate-preview-spotlight {
+    animation: preview-spotlight 3.8s var(--d, 0s) ease-in-out infinite;
+  }
+
+  .animate-preview-trail {
+    animation: preview-trail 2.6s var(--d, 0s) ease-out infinite;
+  }
+
+  .animate-preview-liquid {
+    animation: preview-liquid 4s var(--d, 0s) ease-in-out infinite;
+  }
+}
+
+/* The preview keyframes are added to the unlayered block above rather than given
+   `!important`: this is the same one-line opt-out every other animation here
+   uses, and unlayered beats `@layer utilities` in the cascade. Each preview
+   falls back to its own resting style, which is a legible still frame. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-preview-reveal,
+  .animate-preview-fill,
+  .animate-preview-magnet,
+  .animate-preview-scrub,
+  .animate-preview-scrub-bar,
+  .animate-preview-stagger,
+  .animate-preview-spotlight,
+  .animate-preview-trail,
+  .animate-preview-liquid {
     animation: none;
   }
 }

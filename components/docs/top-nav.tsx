@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Box, Moon, Rocket, SearchIcon, Skull } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Box, Moon, Rocket, SearchIcon, Skull, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -74,11 +75,36 @@ function getShortcutServerSnapshot(): string {
   return "⌘K";
 }
 
-export interface TopNavProps {
-  items: DocsNavItem[];
+/**
+ * "Has React hydrated yet?", through the same `useSyncExternalStore` trick as the
+ * shortcut glyph above — server snapshot `false`, client snapshot `true`.
+ *
+ * The obvious `useEffect(() => setMounted(true), [])` is the shape this file's
+ * own lint config rejects (`react-hooks/set-state-in-effect`): it is a guaranteed
+ * extra render pass on every mount, purely to learn something React already
+ * knows. Here the store compares the two snapshots during hydration and re-renders
+ * once if they disagree — same single pass, but driven by the reconciler instead
+ * of by a synthetic effect.
+ */
+function getMountedSnapshot(): boolean {
+  return true;
 }
 
-export function TopNav({ items }: TopNavProps) {
+function getMountedServerSnapshot(): boolean {
+  return false;
+}
+
+export interface TopNavProps {
+  items: DocsNavItem[];
+  /**
+   * Live star count, fetched on the server by `lib/github.ts`. Passed in rather
+   * than fetched here because `TopNav` is a Client Component and the GitHub API
+   * must never be called from the browser.
+   */
+  stars: number;
+}
+
+export function TopNav({ items, stars }: TopNavProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -124,17 +150,20 @@ export function TopNav({ items }: TopNavProps) {
           <NavLink href="/docs">Docs</NavLink>
           <NavLink href="/docs/components/cinematic-text">Components</NavLink>
           <NavLink href="/#pricing">Pricing</NavLink>
+        </nav>
+
+        <div className="ml-auto flex items-center gap-2">
           <a
             href={GITHUB_URL}
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded-md px-3 py-2 font-mono text-xs text-dead-400 transition-colors duration-200 ease-out hover:bg-dead-900 hover:text-dead-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dead-red"
+            className="hidden h-9 items-center gap-2 rounded-md border border-dead-800 bg-dead-900 px-3 font-mono text-xs text-dead-400 transition-colors duration-200 ease-out hover:border-dead-700 hover:text-dead-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dead-red md:inline-flex"
           >
-            GitHub
+            <GithubMark />
+            <span className="hidden lg:inline">Star on GitHub</span>
+            <span className="tabular-nums text-dead-50">{formatStars(stars)}</span>
           </a>
-        </nav>
 
-        <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -146,6 +175,8 @@ export function TopNav({ items }: TopNavProps) {
               {shortcut}
             </kbd>
           </button>
+
+          <ThemeToggle />
 
           <Button asChild size="sm" className="hidden sm:inline-flex">
             <a href="#get-started">
@@ -184,7 +215,7 @@ export function TopNav({ items }: TopNavProps) {
                     item.href === null
                       ? "text-dead-600"
                       : item.tier === "pro"
-                        ? "text-purple-400"
+                        ? "text-purple-600 dark:text-purple-400"
                         : "text-dead-400",
                   )}
                 >
@@ -228,6 +259,91 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     >
       {children}
     </Link>
+  );
+}
+
+/**
+ * Icon-only dark/light switch.
+ *
+ * NOTHING here may read the resolved theme until `mounted` is true, and that
+ * includes the `aria-label` — not just the glyph. `resolvedTheme` is `undefined`
+ * on the server but already correct on the client's hydration render (it is read
+ * from the class next-themes' blocking script wrote), so labelling the button
+ * from it unguarded makes the server and the first client tree disagree:
+ *
+ *   server:  aria-label="Switch to dark mode"   (resolvedTheme === undefined)
+ *   client:  aria-label="Switch to light mode"  (resolvedTheme === "dark")
+ *
+ * which React reports as an unpatchable hydration mismatch. So before mount the
+ * label is deliberately mode-agnostic — "Toggle theme" is true in both modes —
+ * and it becomes specific on the first post-hydration render.
+ *
+ * The CLICK handler is the exception and reads the real theme unconditionally:
+ * withholding a label is harmless, withholding behaviour would mean a click in
+ * that first frame did nothing.
+ *
+ * The icon shows the mode you would switch TO: `Sun` while dark, `Moon` while
+ * light. `defaultTheme="system"` + `enableSystem` on the provider mean the first
+ * load already matches the OS and no preference is written to `localStorage`
+ * until the reader actually chooses one.
+ */
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    getMountedSnapshot,
+    getMountedServerSnapshot,
+  );
+
+  const isDark = resolvedTheme === "dark";
+  const label = !mounted
+    ? "Toggle theme"
+    : isDark
+      ? "Switch to light mode"
+      : "Switch to dark mode";
+
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={label}
+      className="grid size-9 shrink-0 place-items-center rounded-md border border-dead-800 bg-dead-900 text-dead-400 transition-colors duration-200 ease-out hover:border-dead-700 hover:text-dead-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dead-red"
+    >
+      {mounted && isDark ? (
+        <Sun className="size-4" strokeWidth={1.5} />
+      ) : mounted ? (
+        <Moon className="size-4" strokeWidth={1.5} />
+      ) : null}
+    </button>
+  );
+}
+
+/** `1234` reads as noise next to a glyph; `1.2k` reads as a number. */
+function formatStars(stars: number): string {
+  if (stars < 1000) return String(stars);
+  return `${(stars / 1000).toFixed(stars < 10000 ? 1 : 0).replace(/\.0$/, "")}k`;
+}
+
+/**
+ * The GitHub mark, inlined.
+ *
+ * `lucide-react` v1 DROPPED its brand icons — `Github` is no longer exported —
+ * and the two obvious replacements are both worse: `Star` next to the words
+ * "Star on GitHub" is a duplicated word, and pulling in another icon package
+ * breaks ui-context.md's "no external icon libraries besides lucide-react". So
+ * this is the official GitHub mark as a 16x16 single path, filled with
+ * `currentColor` so it inherits the button's hover colour like any lucide glyph.
+ */
+function GithubMark() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+      className="size-3.5 fill-current"
+    >
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+    </svg>
   );
 }
 

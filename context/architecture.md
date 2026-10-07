@@ -17,8 +17,8 @@ deadui/
 ├── app/                    # Next.js App Router
 │   ├── page.tsx            # Landing page
 │   ├── docs/               # Docs routes; components/<name>/page.mdx
-│   ├── globals.css         # Tailwind theme + dead-* tokens
-│   └── layout.tsx          # Root layout
+│   ├── globals.css         # Tailwind theme + dead-* tokens (theme-reactive)
+│   └── layout.tsx          # Root layout; wraps children in <ThemeProvider>
 ├── mdx-components.tsx      # Required by @next/mdx: global element mapping
 ├── next.config.ts          # MDX loader + rehype-slug + Shiki (vesper)
 ├── registry/               # Component source files
@@ -56,21 +56,88 @@ deadui/
 │   ├── utils.ts            # cn() helper
 │   ├── animations.ts       # Shared GSAP defaults
 │   ├── docs-nav.ts         # Client-safe nav model derived from registry.json
-│   └── docs-nav-server.ts  # Server-only: marks which components have a page
+│   ├── docs-nav-server.ts  # Server-only: marks which components have a page
+│   └── github.ts           # Server-only: live GitHub star count (1h revalidate)
 ├── components/
 │   ├── ui/                 # Installed shadcn components
 │   │   └── ...             # button, dialog, command, select, slider, tabs
 │   ├── docs/               # Docs-only building blocks
-│   │   ├── top-nav.tsx           # Sticky nav + ⌘K command palette
-│   │   ├── sidebar.tsx           # Free/Pro component nav
+│   │   ├── top-nav.tsx           # Sticky nav + ⌘K palette + theme toggle + stars
+│   │   ├── sidebar.tsx           # Category filters + search + floating preview box
 │   │   ├── table-of-contents.tsx # Scroll-spy TOC
 │   │   ├── component-customizer.tsx  # Live prop controls for a component
 │   │   ├── install-tabs.tsx      # npm/pnpm/yarn/bun commands
-│   │   └── copy-button.tsx       # Mounted by the global `pre` mapping
+│   │   ├── copy-button.tsx       # Mounted by the global `pre` mapping
+│   │   ├── preview-wrappers.tsx  # 'use client' adapters for MDX playgrounds
+│   │   └── previews/             # Sidebar hover previews (one file per component)
 │   └── landing/            # Landing page sections
 ├── context/                # Spec files (this folder)
 └── public/                 # Static assets
 ```
+
+### Theming
+
+Colour is theme-reactive without a single per-component `dark:` variant.
+`app/globals.css` emits every neutral `dead-*` step as `var(--dead-*)` rather than
+as a fixed hex, and declares `--dead-*` once for light mode and once under `.dark`.
+Both blocks land on the same element (`<html>`), so flipping the class re-points
+every `bg-dead-*` / `text-dead-*` / `border-dead-*` utility in the codebase at
+once. Each step keeps its ROLE across modes — `950` is the page background,
+`50` is the foreground text — and light mode mirrors the ramp rather than
+inverting it by name.
+
+`next-themes` owns the class (`<ThemeProvider attribute="class"
+defaultTheme="system" enableSystem>` in `app/layout.tsx`), so first load follows
+the OS and nothing is written to `localStorage` until a reader chooses. The
+`dark:` Tailwind variant is redefined as `&:where(.dark, .dark *)` to match that
+class strategy; it defaults to `prefers-color-scheme`, which would ignore an
+explicit toggle. Only three class sites still need `dark:` — the tier badges,
+which are the sole non-`dead-*` colours left on the site.
+
+Two hydration constraints are load-bearing and easy to undo by accident:
+
+1. `<html>` needs `suppressHydrationWarning`, because the class is written by a
+   blocking script before React hydrates.
+2. Nothing in a Client Component may read `resolvedTheme` until it is mounted —
+   **including `aria-label`s**. `resolvedTheme` is `undefined` on the server but
+   already correct on the client's hydration render, so an unguarded label
+   produces an unpatchable mismatch. `components/docs/top-nav.tsx` detects mount
+   with `useSyncExternalStore` (server snapshot `false`, client snapshot `true`),
+   which the repo lint config's `react-hooks/set-state-in-effect` rule also
+   forces in preference to the `useEffect` + `setState` idiom.
+
+### Live GitHub Stars
+
+`lib/github.ts` fetches `stargazers_count` with `next: { revalidate: 3600 }`, so
+the docs routes became `1h` ISR routes rather than hitting the unauthenticated
+rate limit on every render. It returns `0` on any failure rather than throwing: a
+star count is decoration and must not take the docs site down. The fetch runs in
+`app/docs/layout.tsx` and the number crosses to the Client Component `<TopNav>` as
+a plain prop, so the GitHub API is never called from a browser.
+
+### Two Families of `*Preview` Components
+
+The docs site has two unrelated sets of preview components and **four names exist
+in both**:
+
+- `components/docs/previews/` — what the sidebar shows on hover. Tiny,
+  auto-playing, zero-prop, mounted on hover, rendered into one fixed-size
+  `<PreviewStage>`.
+- `components/docs/preview-wrappers.tsx` — adapters that let an MDX page hand a
+  real registry component to `<ComponentCustomizer>`, forwarding the playground's
+  props.
+
+Always import from an explicit path. Of the eleven sidebar previews, three render
+the **real** registry component (`rainbow-button`, `marquee`, `gradient-border` —
+pure CSS loops with no ScrollTrigger, no pointer dependency and no WebGL, so they
+are already auto-playing). The other eight are stand-ins, because the real
+component is defined by scroll position (`cinematic-text`, `text-fill-animation`,
+`scroll-scrub`, `staggered-grid`), by pointer movement (`magnetic-button`,
+`spotlight-card`, `image-trail`) or by a WebGL context (`webgl-image-trail`) —
+none of which a 320x208 hover box that mounts on pointer enter can supply. Their
+keyframes live in `app/globals.css` alongside the component animations, take
+their stagger from `--d`, and are all disabled by the same unlayered
+`prefers-reduced-motion` block.
 
 ### Docs Rendering Pipeline
 

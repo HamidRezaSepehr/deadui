@@ -9,16 +9,18 @@ Phase 1: Component Implementation
 
 ## Current Goal
 
-**Feature 25: Rainbow Button + the v0.1.2 release — implemented and
-verified, awaiting one GitHub-UI click.** The new `RainbowButton` ships with
-all four spec variants, `registry.json` now describes 10 components (8 Free +
-2 Pro) with all 14 `files[].path` values present on disk, and `deadui init`
-performs the spec's **dual** injection — the `rainbow` keyframe + animation
-into the Tailwind config (or the v4 stylesheet) **and** the `--color-1`…`--color-5`
-gradient stops into the project's own `:root`. What remains is drafting the
-`v0.1.2` GitHub Release, which is what fires the npm publish. **The release is
-`v0.1.2`, not `v0.1.1`** — the reasoning is in Next Up #13 and is not
-negotiable.
+**Feature 27: Cinematic Text Advanced Variants — implemented and
+verified.** `CinematicText` now ships 12 variants: the original 4 plus
+`rise-color`, `slide-left-color`, `scale-blur-color`,
+`diagonal-blur-color`, `flip-x-color`, `heavy-flip-color`,
+`flip-top-color` and `mask-reveal`, all using the `color-mix` dim→white
+reveal (opacity 0.3 → 1) where applicable, with `mask-reveal` clipping
+chars via `overflow: hidden` on the container. Docs MDX (customizer,
+variant grid, props table, performance note), the `/test-cinematic-text`
+showcase (section 6), and `packages/cli/package.json` (`0.1.4`) are all
+updated; `tsc`, `lint`, `build` and 71/71 browser assertions pass. The
+only remaining step is the `v0.1.4` GitHub Release UI click (Release
+Workflow step 4) — see Next Up #16.
 
 ## Completed
 
@@ -442,11 +444,124 @@ both packages, 7 curl cases against the live route, and
       describes 10 components (8 Free + 2 Pro) and all 14
       `files[].path` values exist on disk.**
 
+32. **Docs: CLI README format refresh** — `packages/cli/README.md`
+       was rewritten for npm-facing clarity: concise product intro,
+       Quick Start, `init` behavior, command reference, Free/Pro
+       component tables synced to `registry.json`, Pro credential notes,
+       environment overrides, troubleshooting, and license summary. No
+       CLI behavior, package metadata, registry entries, or architecture
+       changed.
+
+33. **Feature 26: React Bits-Inspired Documentation UI Overhaul** —
+    the docs shell is rebuilt. New `lib/github.ts` (server-only star
+    fetch, `revalidate: 3600`, returns `0` on any failure — the build
+    output now shows every `/docs` route as a `1h` ISR route, which is
+    that cache entry). `app/layout.tsx` wraps children in
+    `next-themes`' `<ThemeProvider attribute="class" defaultTheme="system"
+    enableSystem>`. `components/docs/top-nav.tsx` gained an icon-only
+    `ThemeToggle` and a "Star on GitHub" button with the octocat inlined
+    as SVG; `app/docs/layout.tsx` is now `async` and passes `stars` down
+    as a plain prop, so the GitHub API is never called from a browser.
+    `components/docs/sidebar.tsx` is a complete rewrite: sticky header
+    (`sticky top-0 z-20 bg-background`) with six icon-only filters +
+    right-side tooltips and a search bar whose placeholder states the
+    active category's count (`"Filter 2 text components"` →
+    `"Filter 1 component"`, singularised), an unfiltered Get Started
+    section, the filtered component list, and the floating preview box.
+    New `components/docs/previews/` holds eleven zero-prop preview
+    components, one per file plus a barrel, of which **three render the
+    REAL registry component** (`rainbow-button`, `marquee`,
+    `gradient-border`) and eight are documented stand-ins. Nine new
+    `@keyframes` + utilities in `app/globals.css` drive the stand-ins,
+    all opted out by the existing unlayered `prefers-reduced-motion`
+    block. **Enabling light mode required reworking the palette, not
+    adding variants** — see the note below. Added dependencies:
+    `next-themes@^0.4.6` and `framer-motion@^11.18.2` (the latter was
+    already hoisted as `motion`'s own dependency, so both import paths
+    resolve to ONE copy). `context/architecture.md` gained Theming /
+    Live GitHub Stars / Two Families of `*Preview` Components sections
+    and `context/ui-context.md` gained the theme-reactive ramp table and
+    the revised Documentation Shell layout. **No registry entry, no
+    component source and no CLI file changed**, so `registry.json` still
+    describes 10 components and `npm run build` still passes with zero
+    errors. Full verification in the Session Notes.
+
+    **THE THREE BUGS THIS FEATURE'S OWN VERIFICATION CAUGHT — none
+    visible to a green build or a green test suite.** 1. **A hydration
+    mismatch in `ThemeToggle` that only appears in DARK mode.**
+    `resolvedTheme` is `undefined` on the server but already correct on
+    the client's hydration render, so gating only the *glyph* on a mount
+    flag still left `aria-label` disagreeing — server said "Switch to
+    dark mode", client said "Switch to light mode". React reported an
+    unpatchable mismatch on every dark-mode load. The label is now
+    mode-agnostic ("Toggle theme") until mount; the click handler is the
+    deliberate exception and reads the real theme unconditionally,
+    because withholding a label is harmless and withholding behaviour
+    would mean a click in that first frame did nothing. 2. **The filter
+    tooltips rendered INSIDE the sidebar, not to its right.** The spec
+    asks for `absolute left-full ml-2`, and that resolves against the
+    nearest positioned ancestor — which was the 32px button wrapper, so
+    each tooltip sat 32px past its own button, at a different x for each
+    of the six. The wrapper is now `display: contents`, which removes the
+    box so the containing block becomes the sticky header and all six
+    tooltips land at the same x, just outside the column. 3. **A
+    light-mode contrast regression in the tier badges.**
+    `zinc-400`/`purple-400` sit at ~2.2:1 on the light page background,
+    under the 4.5:1 floor, because they were only ever chosen against a
+    near-black sidebar. Each tier now names a light value and a
+    `dark:`-scoped one; these are the only three `dark:` variants on the
+    site.
+
+    **EIGHT OF ELEVEN PREVIEWS ARE STAND-INS, AND THREE ARE NOT — the
+    line was drawn at "is this component's defining behaviour a function
+    of scroll, of the pointer, or of a GPU context?"** `rainbow-button`,
+    `marquee` and `gradient-border` are pure CSS loops: already
+    auto-playing, one composited layer, and showing the real component is
+    strictly more accurate than an impression of it. The other eight
+    cannot run in a 320x208 box that mounts on pointer enter —
+    `cinematic-text`, `text-fill-animation`, `scroll-scrub` and
+    `staggered-grid` register GSAP ScrollTriggers (which would fight the
+    docs page's own scroll), `magnetic-button`, `spotlight-card` and
+    `image-trail` are `mousemove`-driven so they sit still until the
+    pointer arrives, and `webgl-image-trail` would mount a WebGL context
+    per hover with no eviction. Each stand-in reproduces the *visual
+    signature* with compositor-only properties, no JS, and a doc comment
+    naming the substitution and the reason.
+
+34. **Feature 27: Cinematic Text Advanced Variants** — eight new
+    variants added to `registry/cinematic-text/cinematic-text.tsx`:
+    `rise-color`, `slide-left-color`, `scale-blur-color`,
+    `diagonal-blur-color`, `flip-x-color`, `heavy-flip-color`,
+    `flip-top-color` (all colour-reveal) and `mask-reveal` (clip). The
+    colour pattern is two pinned `color-mix` endpoints —
+    `color-mix(in srgb, rgb(255,255,255) 0%, rgb(161,161,161))` →
+    `...100%...` — tweened as complex STRINGS via `gsap.fromTo` (GSAP
+    cannot parse `color-mix` as a colour, so only the differing `0% →
+    100%` number interpolates; `fromTo` is mandatory because a plain
+    `from()` would resolve the end against the element's natural
+    colour). Container poses live in cva (`translate-y-[25px]`,
+    `-translate-x-[7px]`, `scale-50`, `blur-[Npx]`,
+    `overflow-hidden`) and share
+    `will-change-[transform,opacity,color,filter]`; the container
+    `gsap.to` resets `opacity/filter/y/x/scale`, flips use GSAP
+    `transformPerspective` + `rotationX`, and `mask-reveal` chars run
+    the shared legacy `gsap.from({ yPercent: 100 })` path with the
+    container acting as the clipping parent. Docs MDX gained all 8
+    names in the customizer select, 8 variant cards (12 total), the
+    updated props table and reworded performance section;
+    `/test-cinematic-text` gained section 6 — an 8-card grid; CLI
+    bumped to `0.1.4`. Full verification: `npx tsc --noEmit`,
+    `npm run lint`, `npm run build` (28/28 routes), and 71/71
+    automated Playwright/Chrome assertions (see Session Notes).
+    **Stale metadata flagged, not fixed** (spec forbids touching
+    `registry.json`): its `cinematic-text.variants` array, plus the
+    variant lists in `context/project-overview.md` and
+    `context/code-standards.md`, still name only the original 4.
+
 ## In Progress
 
-None. Feature 25 is implemented and verified; the `v0.1.2`
-GitHub Release is the only remaining step and it is a UI click,
-not code.
+None. Feature 27 is implemented and verified. The `v0.1.4` GitHub
+Release is the only remaining step and it is a UI click, not code.
 
 
 
@@ -625,7 +740,7 @@ not code.
 
 | # | Component | Tier | Status | Docs page | Variants |
 |---|-----------|------|--------|-----------|----------|
-| 1 | Cinematic Text Reveal | Free | COMPLETE (Session 7) | ✅ | blur-in, fade-up, slide-stagger, scale-pop |
+| 1 | Cinematic Text Reveal | Free | COMPLETE (Session 7, +F27 12 variants) | ✅ | blur-in, fade-up, slide-stagger, scale-pop, rise-color, slide-left-color, scale-blur-color, diagonal-blur-color, flip-x-color, heavy-flip-color, flip-top-color, mask-reveal |
 | 2 | Magnetic Elastic Button | Free | COMPLETE (Feature 09) | ✅ (F20) | default, outline, glow, ghost |
 | 3 | Infinite Blur Marquee | Free | COMPLETE (Feature 10) | ✅ (F20) | horizontal, vertical (blur: none/edges/left/right) |
 | 4 | Spotlight Hover Card | Free | COMPLETE (Feature 11) | ✅ (F20) | glow: border, background, both, none (shape: rounded, soft, sharp) |
@@ -839,6 +954,222 @@ not code.
 - Zero CLS invariant for all components.
 
 ## Session Notes
+
+- Feature 27 (feature spec `27-cinematic-text-advanced-variants.md`):
+  the eight advanced `CinematicText` variants. Modified:
+  `registry/cinematic-text/cinematic-text.tsx` (cva classes,
+  `COLOR_DIM`/`COLOR_FULL`, `COLOR_VARIANT_TWEENS`, `fromTo` branch,
+  `mask-reveal` in `initialStates`, base will-change),
+  `app/docs/components/cinematic-text/page.mdx` (customizer select →
+  12 options, 8 new variant cards, props table, performance section),
+  `app/test-cinematic-text/page.tsx` (new section 6: 8-card showcase
+  grid), `packages/cli/package.json` (`0.1.2` → `0.1.4`),
+  `context/progress-tracker.md`. Created:
+  `context/feature-specs/27-cinematic-text-advanced-variants.md`.
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` clean,
+  `npm run build` 28/28 routes, and 71/71 automated
+  Playwright/Chrome assertions against the production server.
+
+  **WHY `gsap.fromTo`, NOT `gsap.from` — AND WHY THE STRING TWEEN
+  WORKS AT ALL.** GSAP's `_colorStringFilter` does not parse
+  `color-mix()`, so a colour endpoint would normally fall through to
+  complex-string interpolation — which here is exactly what we want:
+  both endpoints are structurally identical
+  (`color-mix(in srgb, rgb(255, 255, 255) N%, rgb(161, 161, 161))`),
+  so only `N` differs and only `N` interpolates, 0 → 100. The filter
+  normalises the inner `rgb()` to `rgba()` first, which is why the
+  computed start reads `color(srgb 0.631373 …)` in Chrome rather than
+  `rgb(161, 161, 161)` — the test harness had to parse BOTH formats.
+  `fromTo` is mandatory: a plain `from({ color: COLOR_DIM })` would
+  resolve the END against the element's natural computed colour and
+  the white endpoint would never be pinned. The browser proof is a
+  mid-flight sample taken while the tween runs —
+  `color(srgb 0.690156 …)` sits strictly between dim and white, so
+  the percentage is genuinely interpolating rather than snapping.
+
+  **TAILWIND V4 POSES SURVIVE GSAP'S NORMALISATION.** Tailwind v4
+  emits individual `translate:`/`scale:` properties; GSAP 3.15's
+  `_parseTransform` reads them, folds them into `transform`, and
+  writes `translate: none; rotate: none; scale: none` back to the
+  element at tween creation (visible as
+  `transform: translate(0px, 25px)` on the `rise-color` container
+  before anything scrolls into view). The pose is intact — the first
+  test run flagged `translate: none` as a failure until the inline
+  `transform` matrix was inspected. The same eager render is why the
+  container `gsap.to({ … filter: 'none' … })` writes its start state
+  before the trigger fires; blur clears when the trigger plays.
+
+  **BLUR ENDS ARE `blur(0px)`, NEVER `'none'`.** `_renderNonTweeningValue`
+  snaps `none` instantly at ratio > 0, which would pop the blur off
+  the first frame instead of resolving it with the ease.
+
+  **`mask-reveal` CLIPS ON THE CONTAINER.** The root carries
+  `overflow-hidden` (the cva base keeps it `inline-block`, so the
+  root IS the clipping parent) and its chars take the shared legacy
+  `gsap.from({ yPercent: 100 })` path in `initialStates` —
+  no `COLOR_VARIANT_TWEENS` entry, no colour tween, no opacity 0.3.
+  Pre-trigger the char rect starts exactly one char-height below the
+  container bottom (fully clipped); post-trigger top deltas are 0.
+  Spec-accepted limitation unchanged: the clip only fully hides chars
+  on the last line, and descenders can graze the mask edge.
+
+  **THE 71 ASSERTIONS' FIRST RUN WAS 54/71, AND EVERY ONE OF THE 17
+  FAILURES WAS THE TEST, NOT THE CODE**: Chrome reports `color-mix`
+  results as `color(srgb …)` floats (11 colour asserts), the scroll
+  stopped short of the last grid row so `flip-top-color` and
+  `mask-reveal` never passed their `top 85%` start line (4), and
+  `translate: none` was GSAP's normalisation, not a lost pose (2).
+  Also verified: reduced-motion renders all 8 variants visible with
+  text intact, the docs customizer lists exactly 12 options and
+  swaps the preview classes per variant, all Tailwind pose classes
+  resolve to real computed styles (blur values, matrix translations,
+  `overflow: hidden`), and zero console/page errors on both pages.
+
+  **RELEASE:** spec-literal 4-step flow — version `0.1.4`, a single
+  `git add .` commit `feat: add 8 advanced cinematic text variants
+  for v0.1.4`, tag `v0.1.4`, both pushed. NOTE: that commit also
+  carries Feature 26's docs UI overhaul, which had been sitting
+  uncommitted in the same working tree (sidebar, top-nav, previews,
+  `lib/github.ts`, theming, context files) — one commit, two
+  features, flagged to the owner. The GitHub Release UI click for
+  `v0.1.4` remains; publish is OIDC/Trusted Publisher
+  (`--provenance`, no `NPM_TOKEN`), and the runner checks out the
+  tag, which is why the manifest had to say `0.1.4` BEFORE the tag
+  existed.
+
+- Feature 26 (feature spec `26-docs-ui-overhaul.md`): the
+  React Bits-inspired docs UI overhaul. Created:
+  `lib/github.ts`, `components/docs/previews/` (11 preview
+  components + `preview-stage.tsx` + `index.ts`). Modified:
+  `app/layout.tsx` (ThemeProvider + `suppressHydrationWarning`),
+  `app/globals.css` (theme-reactive ramp, `@custom-variant dark`,
+  9 preview keyframes + utilities, extended reduced-motion block),
+  `app/docs/layout.tsx` (now `async`; `await getGitHubStars()`,
+  passes `stars` to `<TopNav>`), `components/docs/top-nav.tsx`
+  (`ThemeToggle`, `GithubMark`, `formatStars`, star button,
+  `getMountedSnapshot`), `components/docs/sidebar.tsx` (full
+  rewrite), `components/docs/previews/preview-stage.tsx`,
+  `components/landing/sections.tsx` (one `dark:` on a badge),
+  `context/architecture.md`, `context/ui-context.md`, this file.
+  **No registry entry, no component source and no CLI file was
+  touched** — `registry.json` still describes 10 components, and
+  `npm run build` passes with zero errors and `npm run lint` clean.
+
+  **LIGHT MODE NEEDED A PALETTE REWORK, NOT A `dark:` VARIANT
+  SWEEP.** The obvious implementation — add `dark:` overrides to
+  everything — is a several-hundred-site change, because this
+  codebase hard-codes `bg-dead-950` / `text-dead-400` /
+  `border-dead-800` in every component and in `mdx-components.tsx`,
+  and it had NO `dark:` usage at all. Instead the eight neutral
+  steps were made runtime variables: `@theme static` now emits
+  `--color-dead-950: var(--dead-950)` etc., and `--dead-*` is
+  declared once in `:root` and once under `.dark`. Both blocks land
+  on `<html>`, `.dark` has equal specificity to `:root` and comes
+  later in source order, so the class flip re-points every neutral
+  utility in the codebase at once — verified by measuring computed
+  background colours, not by inspection. Light mode MIRRORS the
+  ramp by role (`950` = page background, `50` = foreground text)
+  rather than inverting it by name, which is what keeps
+  `bg-dead-900` a card in both modes. `--color-red` and
+  `--color-red-hover` stay literal because the accent is
+  theme-independent. `color-scheme` is set alongside so form
+  controls and scrollbars follow. `@custom-variant dark
+  (&:where(.dark, .dark *))` was added because Tailwind v4 defaults
+  `dark:` to `prefers-color-scheme`, which would ignore an explicit
+  toggle.
+
+  **THE FLOATING BOX USES `y`, NOT `layout` — AND `layout` COULD
+  NOT HAVE WORKED.** Framer Motion's `layout` prop derives the delta
+  from the element's position in the LAYOUT FLOW, and this box is
+  `position: absolute` outside it, so there is no layout change for
+  `layout` to interpolate. Instead `handleHover` reads
+  `getBoundingClientRect()` on the pointerenter event, centres the
+  box on the link, clamps it to the sidebar's own height, and stores
+  that as `y` in state. The box is rendered inside `AnimatePresence`
+  with ONE stable `key="component-preview"`, which is the load-bearing
+  detail: because the key does not change when the pointer moves to
+  the next link, React does not remount it, so Framer Motion springs
+  the existing `y` (stiffness 320, damping 30 — the ui-context.md
+  spring) from the old row to the new one. Changing the key would
+  cross-fade two boxes instead of gliding one, and remounting would
+  also restart the CSS preview animation from frame 0 on every
+  pointer move. The rects are read INSIDE the event, never during
+  render, because a layout read in the render body forces a
+  synchronous reflow on every commit. The box is anchored to a
+  non-scrolling wrapper rather than to the scrolling list, so it
+  holds still while the list scrolls under it, and it is
+  `pointer-events-none` so it cannot steal the pointer as it travels
+  rightwards off the link (which would fire `onPointerLeave` early
+  and make the preview unreadable). `useReducedMotion()` collapses
+  the spring to `duration: 0`.
+
+  **`PREVIEW_BOX_HEIGHT = 208` IS A MEASURED CONSTANT, NOT A
+  GUESS, AND IT IS COUPLED TO THE `h-[208px]` CLASS.** The clamp
+  needs the box's height to keep it inside the sidebar, and the box
+  is a 176px stage plus a 32px header and its border. Both are
+  commented at the constant and at the class; changing one without
+  the other silently mis-clamps at the bottom of the list.
+
+  **`display: contents` ON THE FILTER WRAPPER IS LOAD-BEARING.**
+  The spec's tooltip recipe is `absolute left-full ml-2`, which
+  resolves against the nearest POSITIONED ancestor. A normal
+  `relative` wrapper makes that the 32px button, so the tooltip
+  lands 32px past its own button and at a different x for each of the
+  six — inside the 260px column, not to the right of it.
+  `display: contents` removes the wrapper's box, so the containing
+  block becomes the sticky header and all six tooltips resolve to
+  the same x, just outside the sidebar edge (verified: every one at
+  x=267 against a sidebar right edge at 260). `group-hover` still
+  works because the class match is against the DOM parent, not
+  against a box. `top-10` is the button's centre (24px of `pt-6` plus
+  half of 32px) and is shared by the whole row, which is why one
+  constant covers all six.
+
+  **"INSTALLATION" POINTS AT `/#get-started`, NOT AT A DOCS
+  ROUTE.** The spec asks the Get Started section for "Introduction,
+  Installation", but there is no `app/docs/installation/page.mdx` and
+  the CLI install steps exist only on the landing page. Inventing a
+  `/docs/installation` href would 404 — the exact failure
+  `lib/docs-nav-server.ts` exists to prevent — so the link goes to
+  the real anchor.
+
+  **`lucide-react` v1 HAS NO `Github` ICON.** The brand icons were
+  removed, so the star button inlines the octocat as a single 16x16
+  `<path>` filled with `currentColor`. The alternatives were both
+  worse: `Star` beside the words "Star on GitHub" is a duplicated
+  word, and a second icon package would break ui-context.md's "no
+  external icon libraries besides lucide-react".
+
+  **THE MOUNT FLAG IS `useSyncExternalStore`, NOT
+  `useEffect` + `setState`.** The obvious
+  `useEffect(() => setMounted(true), [])` is the shape this repo's
+  own lint config rejects (`react-hooks/set-state-in-effect`): a
+  guaranteed extra render pass on every mount, purely to learn
+  something React already knows. The store takes the server snapshot
+  as `false` and the client snapshot as `true`, so the reconciler
+  performs the same single pass. The file already used this pattern
+  for the ⌘K platform glyph, so it is not a new idea here.
+
+  **VERIFICATION: 73/73 automated Playwright/Chrome assertions**,
+  run against the dev server at 1440x900 plus a second
+  `reduced_motion="reduce"` context and screenshots in both modes.
+  Worth calling out because three of the checks failed on the first
+  run and every one of them was a real defect (the ThemeToggle
+  hydration mismatch, the tooltips rendering inside the column, and
+  the tier-badge contrast regression — see Completed #33). Five other
+  failures were test bugs, which are worth naming so they are not
+  re-introduced as false confidence: `Scroll Effects` really is **1**
+  and not 2, because `staggered-grid` still has no `registry.json`
+  entry and therefore never reaches the docs nav at all (Next Up #9);
+  the trail components are titled "CSS Image Trail" and "WebGL Image
+  Trail"; and the reduced-motion keyframe probe initially ran while
+  the RAINBOW preview was mounted, which renders the real component
+  and has no `animate-preview-*` class. The suite also asserts what
+  is easy to regress silently: the placeholder counts the CATEGORY
+  and not the category-plus-query, Get Started survives both filters
+  and the search, all six tooltips clear the sidebar edge, all ten
+  component links produce a real preview, `y` is eased rather than
+  snapped, and the console is free of hydration mismatches.
 
 - Feature 25 (feature spec
   `25-rainbow-button-and-release.md`): Rainbow Button, the

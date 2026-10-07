@@ -62,6 +62,63 @@ export default function TestPage() {
         Scroll slowly to scrub this one.
       </CinematicText>
 
+      <div className="h-[100vh]" />
+
+      <p className="font-mono text-sm text-dead-400">
+        6. ADVANCED VARIANTS — colour reveal (dim gray → white, opacity 0.3 → 1)
+        plus the mask-reveal clip effect
+      </p>
+      <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">rise-color</span>
+          <CinematicText variant="rise-color" className="text-3xl font-bold text-dead-white">
+            Rise with color.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">slide-left-color</span>
+          <CinematicText variant="slide-left-color" className="text-3xl font-bold text-dead-white">
+            Slide with color.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">scale-blur-color</span>
+          <CinematicText variant="scale-blur-color" className="text-3xl font-bold text-dead-white">
+            Scale with color.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">diagonal-blur-color</span>
+          <CinematicText variant="diagonal-blur-color" className="text-3xl font-bold text-dead-white">
+            Diagonal with color.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">flip-x-color</span>
+          <CinematicText variant="flip-x-color" className="text-3xl font-bold text-dead-white">
+            Flip X with color.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">heavy-flip-color</span>
+          <CinematicText variant="heavy-flip-color" className="text-3xl font-bold text-dead-white">
+            Heavy flip with color.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">flip-top-color</span>
+          <CinematicText variant="flip-top-color" className="text-3xl font-bold text-dead-white">
+            Flip top with color.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">mask-reveal</span>
+          <CinematicText variant="mask-reveal" className="text-3xl font-bold text-dead-white">
+            Mask reveal.
+          </CinematicText>
+        </div>
+      </div>
+
       <div className="h-[50vh]" />
     </div>
   )
