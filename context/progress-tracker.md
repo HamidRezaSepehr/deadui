@@ -1008,6 +1008,33 @@ tag/push and the manual npm publish are the remaining steps.
 
 ## Session Notes
 
+- Feature 28 bugfix (post-ship): two user-reported defects in
+  `melting-blur-text`. **(1) Invisible text until selection.** The SVG gooey
+  filter was permanently applied to the container. `feGaussianBlur` spreads a
+  thin anti-aliased glyph stroke, so its blurred alpha falls below the `9/19 ≈
+  0.474` `feColorMatrix` cut-off and the threshold burns the whole glyph
+  away — text only reappeared when dragging-select painted the highlight rect.
+  Fixed two ways: the filter is now only written to the container while the
+  melt is active (a `filterOn` closure reconciled inside the rAF tick from
+  `pointer.active || strength >= 0.0005`, and cleared on drain/cleanup), and
+  the final `feComposite` changed from `operator="atop"` to `in="SourceGraphic"
+  in2="gooey" operator="over"` so the crisp glyphs always composite ON TOP of
+  the gooey silhouette — letters stay sharp and readable mid-melt instead of
+  being thresholded away. At rest the container renders through zero filter.
+  **(2) Words splitting across lines.** Adjacent `inline-block` character
+  spans let the browser break a word at the line fold. Characters are now
+  grouped into word runs, each rendered as an `inline-block whitespace-nowrap`
+  wrapper (run building happens per render with a `start` index aligned to the
+  `chars` array so per-char refs and the melt loop stay in sync); only real
+  whitespace runs keep plain inline spans, so the sentence breaks at spaces
+  only and an overflowing word moves whole to the next line. Verified with a
+  Playwright + PIL pass against `next start`: rest text visible (59,948 bright
+  px in the container crop, `container.style.filter === ''`), 0/126 word runs
+  split (sentence still wraps to 6 lines), melt turns the filter on and moves
+  10 chars while the text stays legible, full drain back to flat state, zero
+  console errors. `tsc`/`lint`/`build` clean; docs MDX Performance +
+  Accessibility sections updated to describe the gated filter and word runs.
+
 - Feature 28 publish follow-up: the local `npm publish` of the CLI hit
   E404-on-401 — this machine is not logged into npm and `deadui` is
   owned only by `hamidrezasepehr`. Debugged npm 11.6.2's publish

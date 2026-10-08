@@ -57,6 +57,25 @@ export function MeltingBlurText({
 
   const chars = Array.from(children)
 
+  // Group contiguous characters into word runs: `{ space, start, text }`.
+  // `start` is the run's index inside `chars`, so character spans inside a
+  // run keep refs aligned with the melt loop below.
+  const runs: Array<{ space: boolean; start: number; text: string[] }> = []
+  {
+    let charIndex = 0
+    for (const char of chars) {
+      const space =
+        char === ' ' || char === '\t' || char === '\n' || char === '\r'
+      const last = runs[runs.length - 1]
+      if (last && last.space === space) {
+        last.text.push(char)
+      } else {
+        runs.push({ space, start: charIndex, text: [char] })
+      }
+      charIndex += 1
+    }
+  }
+
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -82,7 +101,6 @@ export function MeltingBlurText({
       clear()
       return
     }
-    container.style.filter = `url(#${filterId})`
 
     const measure = () => {
       centers.current = spans.map((span) => ({
@@ -123,10 +141,23 @@ export function MeltingBlurText({
     const spread = Math.max(blurSpread, 0)
     let frame = 0
 
-    const tick = () => {
-      const settled = !pointer.current.active && strength.current < 0.0005
+    // The container-level gooey filter must only run while the melt is
+    // active. Left on at rest, feGaussianBlur spreads each thin anti-aliased
+    // stroke below the 9/19 alpha threshold and the feColorMatrix burns the
+    // glyph away entirely — the "text is invisible until you select it" bug.
+    let filterOn = false
+    const syncFilter = (on: boolean) => {
+      if (on !== filterOn) {
+        container.style.filter = on ? `url(#${filterId})` : ''
+        filterOn = on
+      }
+    }
 
-      if (!settled) {
+    const tick = () => {
+      const melting = pointer.current.active || strength.current >= 0.0005
+      syncFilter(melting)
+
+      if (melting) {
         const rect = container.getBoundingClientRect()
         const targetX = pointer.current.x - rect.left
         const targetY = pointer.current.y - rect.top
@@ -171,6 +202,7 @@ export function MeltingBlurText({
       container.removeEventListener('pointermove', onPointerMove)
       container.removeEventListener('pointerleave', onPointerLeave)
       observer.disconnect()
+      container.style.filter = ''
       clear()
     }
   }, [children, effectRadius, blurSpread, inertia, shouldReduce, filterId])
@@ -206,24 +238,38 @@ export function MeltingBlurText({
             values={GOOEY_MATRIX}
             result="gooey"
           />
-          <feComposite in="SourceGraphic" in2="gooey" operator="atop" />
+          <feComposite in="SourceGraphic" in2="gooey" operator="over" />
         </filter>
       </svg>
 
-      {chars.map((char, index) => (
-        <span
-          key={index}
-          ref={(element) => {
-            charRefs.current[index] = element
-          }}
-          // Spaces stay plain inline so the sentence can still break across
-          // lines — inline-block boxes only wrap when the source has a real
-          // break opportunity between them.
-          className={char === ' ' ? undefined : 'inline-block'}
-        >
-          {char}
-        </span>
-      ))}
+      {runs.map((run) =>
+        run.space ? (
+          // Real whitespace stays a plain inline span so the sentence still
+          // has a soft wrap opportunity — and the ONLY one, because every
+          // word below is wrapped in nowrap.
+          <span key={run.start}>{run.text.join('')}</span>
+        ) : (
+          // Each word is an atomic nowrap run: adjacent inline-block glyph
+          // spans let the browser break a word across lines, so bundling a
+          // word this way forces the whole word onto the next line instead.
+          <span
+            key={run.start}
+            className="inline-block whitespace-nowrap"
+          >
+            {run.text.map((char, offset) => (
+              <span
+                key={run.start + offset}
+                ref={(element) => {
+                  charRefs.current[run.start + offset] = element
+                }}
+                className="inline-block"
+              >
+                {char}
+              </span>
+            ))}
+          </span>
+        ),
+      )}
     </span>
   )
 }

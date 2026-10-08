@@ -116,6 +116,12 @@ Ships one file: `melting-blur-text.tsx`.
   `getBoundingClientRect()` per frame reads a clean box and forces no reflow.
 - The loop parks itself once the pointer leaves and the effect has fully
   drained, so an idle page runs no work at all.
+- The container-level gooey filter is applied only while the melt is active
+  and removed as soon as it drains, so at rest the text renders through no
+  filter at all — identical glyphs, zero cost, always fully legible.
+- During the melt the filter composites the crisp `SourceGraphic` over the
+  gooey silhouette, so letters stay sharp and readable instead of being
+  burned away by the alpha threshold.
 - The container filter region is expanded well past the default `-10% / 120%`
   box — a drip plus its blur always falls outside that, and the default region
   would clip it into a straight edge.
@@ -128,6 +134,8 @@ Ships one file: `melting-blur-text.tsx`.
 - The character spans carry no roles or labels, so the split stays out of the
   way: assistive technology reads the original string as one continuous
   sentence.
-- Whitespace is kept as plain inline spans rather than inline-block boxes, so
-  the sentence still wraps at every width — and the melt never changes the
-  layout it is painted on top of.
+- Each word is grouped inside an `inline-block whitespace-nowrap` run and only
+  real whitespace stays a plain inline box, so a word can never break across a
+  line — if it does not fit, the whole word moves to the next line. The melt
+  is written to per-character transforms, so it never changes the layout it
+  is painted on top of.
