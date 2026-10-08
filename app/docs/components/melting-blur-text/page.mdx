@@ -1,0 +1,133 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { MeltingBlurText } from "@/registry/pro/melting-blur-text"
+
+export const metadata = {
+  title: "Melting Blur Text",
+  description:
+    "Liquid, gooey text that melts toward your cursor with inertia-based tracking. Pro component.",
+}
+
+<div className="not-prose mt-2 inline-flex items-center gap-2 rounded-full border border-dead-red/40 bg-dead-red/10 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-dead-red">
+  <span aria-hidden="true">🔒</span>
+  <span>Pro Component</span>
+</div>
+
+# Melting Blur Text
+
+Liquid, gooey text that melts toward your cursor and pours back into place.
+
+<div className="not-prose my-6 rounded-lg border border-dead-red/30 bg-dead-red/5 p-4 text-sm text-dead-200 [&_p]:m-0 [&_p]:leading-7">
+  <div className="mb-2 font-semibold text-dead-red">This is a Pro component.</div>
+  <div>
+    Installing it needs a license key. Run the command below and paste your key
+    when prompted, or pass it straight through with{" "}
+    <code className="rounded border border-dead-800 bg-dead-900 px-1.5 py-0.5 font-mono text-[0.85em] text-dead-50">
+      --token
+    </code>
+    . Everything on this page — the live preview, the props table, the code —
+    is public.
+  </div>
+</div>
+
+## Preview
+
+<ComponentCustomizer
+  component={MeltingBlurText}
+  defaultProps={{
+    children: "Hover over this text to melt it.",
+    effectRadius: 60,
+    blurSpread: 8,
+    blurQuality: "medium",
+    inertia: 0.15,
+  }}
+  controls={{
+    effectRadius: { type: "slider", min: 20, max: 150, step: 5 },
+    blurSpread: { type: "slider", min: 2, max: 20, step: 1 },
+    blurQuality: { type: "select", options: ["low", "medium", "high"] },
+    inertia: { type: "slider", min: 0.05, max: 0.5, step: 0.05 },
+  }}
+  className="not-prose my-8"
+/>
+
+Move the pointer across the preview. The characters nearest to it sag and
+blur, then an SVG gooey filter on the container welds them back into one wet
+silhouette. Every frame the pointer position is interpolated toward with
+`inertia`, so the melt trails behind a fast flick instead of teleporting.
+
+`effectRadius` is how far from that interpolated point a character reacts.
+`blurSpread` sets both the drip distance (twice the spread) and the blur
+radius on each character. `blurQuality` is the container filter's
+`stdDeviation` — inverted on purpose, so `high` is a tight `4` and `low` is a
+wide `10`.
+
+## Installation
+
+<InstallTabs componentName="melting-blur-text" tier="pro" />
+
+## Usage
+
+```tsx
+import { MeltingBlurText } from "@/components/ui/melting-blur-text"
+
+export function Hero() {
+  return (
+    <MeltingBlurText
+      effectRadius={60}
+      blurSpread={8}
+      blurQuality="medium"
+      inertia={0.15}
+    >
+      Hover over this text to melt it.
+    </MeltingBlurText>
+  )
+}
+```
+
+The component sizes its own type as a display heading; pass `className` to
+put it on your own scale.
+
+## Props
+
+| Prop            | Type                                | Default            | Description                                                                 |
+| --------------- | ----------------------------------- | ------------------ | --------------------------------------------------------------------------- |
+| `children`      | `string`                            | —                  | The sentence to melt. Split into one `<span>` per character.                 |
+| `effectRadius`  | `number`                            | `60`               | Distance from the lerped cursor at which a character starts to melt.         |
+| `blurSpread`    | `number`                            | `8`                | Drip distance (× 2) and per-character blur radius, in pixels.                |
+| `blurQuality`   | `'low' \| 'medium' \| 'high'`       | `'medium'`         | Gooey filter precision: `high` → `4`, `medium` → `6`, `low` → `10`.          |
+| `inertia`       | `number`                            | `0.15`             | Per-frame lerp factor, `0.05` (heavy lag) to `0.5` (near instant).           |
+| `className`     | `string`                            | —                  | Merged over the base classes with `cn()`.                                    |
+
+## Dependencies
+
+- `framer-motion` — `useReducedMotion`
+- `clsx` + `tailwind-merge` — `cn`
+
+Ships one file: `melting-blur-text.tsx`.
+
+## Performance
+
+- The melt is computed in a single `requestAnimationFrame` loop and written
+  straight to each character's `style.transform` / `style.filter`. React never
+  re-renders during a sweep, so a forty-character sentence costs one component
+  render total, not sixty per second.
+- Character centres are cached from `offsetLeft` / `offsetTop` and refreshed
+  only by a `ResizeObserver`. Transforms do not dirty layout, so the one
+  `getBoundingClientRect()` per frame reads a clean box and forces no reflow.
+- The loop parks itself once the pointer leaves and the effect has fully
+  drained, so an idle page runs no work at all.
+- The container filter region is expanded well past the default `-10% / 120%`
+  box — a drip plus its blur always falls outside that, and the default region
+  would clip it into a straight edge.
+
+## Accessibility
+
+- Under `prefers-reduced-motion: reduce` the animation loop never starts and
+  the SVG filter is never applied. The sentence renders once as plain,
+  static text.
+- The character spans carry no roles or labels, so the split stays out of the
+  way: assistive technology reads the original string as one continuous
+  sentence.
+- Whitespace is kept as plain inline spans rather than inline-block boxes, so
+  the sentence still wraps at every width — and the melt never changes the
+  layout it is painted on top of.

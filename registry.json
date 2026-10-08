@@ -239,6 +239,24 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "melting-blur-text",
+      "title": "Melting Blur Text",
+      "description": "A premium, liquid-like melting text effect on hover with customizable inertia and blur.",
+      "tier": "pro",
+      "dependencies": [
+        "framer-motion",
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "registry/pro/melting-blur-text/melting-blur-text.tsx",
+          "target": "components/ui/melting-blur-text.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }
