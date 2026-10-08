@@ -25,8 +25,11 @@ sections) and the Pro badge/notice docs page are all in place;
 `npm run lint`, `npm run build` (30/30 routes) and a
 Playwright/pixel suite that proves the gooey filter, the lerp,
 the reduced-motion path, line wrapping and zero layout shift.
-Remaining: `git add` / `commit` / `push` / `tag v0.1.5` /
-`push origin v0.1.5`, then the manual npm publish.
+**RELEASED**: `deadui@0.1.5` is live on npm (verified via
+`npm view`); a last-minute fix commit (e734d8a) moved
+`packages/cli/package.json`'s bin to `"dist/index.js"` because
+npm 11.6.2 silently strips `./`-prefixed bin paths from the
+published tarball, and tag `v0.1.5` was re-pointed at that commit.
 
 ## Completed
 
@@ -1004,6 +1007,17 @@ tag/push and the manual npm publish are the remaining steps.
 - Zero CLS invariant for all components.
 
 ## Session Notes
+
+- Feature 28 publish follow-up: the local `npm publish` of the CLI hit
+  E404-on-401 — this machine is not logged into npm and `deadui` is
+  owned only by `hamidrezasepehr`. Debugged npm 11.6.2's publish
+  auto-correct: a bin of `"./dist/index.js"` is *silently removed* from
+  the published tarball (so `npx deadui` would have been a broken
+  install), while `"dist/index.js"` passes cleanly (verified with
+  `npm publish --dry-run` and by un-tarring the packed manifest).
+  Fixed in e734d8a and tag `v0.1.5` re-pointed at it. The owner then
+  published manually; `npm view deadui` returns latest `0.1.5` with
+  `bin = { deadui: 'dist/index.js' }`.
 
 - Feature 28 (feature spec `28-melting-blur-text-pro.md`): the Pro
   `MeltingBlurText` component. Created:
