@@ -9,27 +9,19 @@ Phase 1: Component Implementation
 
 ## Current Goal
 
-**Feature 28: Melting Blur Text (Pro) — implemented and
-verified.** `MeltingBlurText` lives at
-`registry/pro/melting-blur-text/melting-blur-text.tsx`: every
-character becomes its own `<span>`, a `requestAnimationFrame`
-loop lerps the pointer (`current += (target - current) *
-inertia`) and writes `translateY` + `blur()` straight to each
-character's style inside a quadratic falloff bounded by
-`effectRadius`, and the container carries the SVG gooey filter
-(`feGaussianBlur` → `feColorMatrix` → `feComposite atop`). The
-spec's exact `registry.json` entry, the spec's exact
-`<ComponentCustomizer>` config, `/test-melting-blur-text` (5
-sections) and the Pro badge/notice docs page are all in place;
-`packages/cli` is at `0.1.5`. Verification: `npx tsc --noEmit`,
-`npm run lint`, `npm run build` (30/30 routes) and a
-Playwright/pixel suite that proves the gooey filter, the lerp,
-the reduced-motion path, line wrapping and zero layout shift.
-**RELEASED**: `deadui@0.1.5` is live on npm (verified via
-`npm view`); a last-minute fix commit (e734d8a) moved
-`packages/cli/package.json`'s bin to `"dist/index.js"` because
-npm 11.6.2 silently strips `./`-prefixed bin paths from the
-published tarball, and tag `v0.1.5` was re-pointed at that commit.
+**Feature 28 removed.** The Melting Blur Text Pro component
+has been fully removed from the project at the user's request:
+registry source (`registry/pro/melting-blur-text/`), the
+`registry.json` entry, the test page
+(`app/test-melting-blur-text/page.tsx`), the docs page
+(`app/docs/components/melting-blur-text/page.mdx`) and the
+feature spec (`context/feature-specs/28-melting-blur-text-pro.md`)
+are deleted; the `registry.json` count is back to 10 and the
+docs nav (derived from the manifest) drops the route
+automatically. The Component Status table and Session Notes no
+longer advertise it. Remaining verification: `tsc` / `lint` /
+`build` clean, no `melting` references outside historical
+session notes.
 
 ## Completed
 
@@ -587,11 +579,20 @@ both packages, 7 curl cases against the live route, and
     filter more than quadruples edge hardness (0.0871 → 0.0215
     transition-pixel ratio) and that `blurSpread` in the customizer
     moves the live peak drip from 14.02px to 35.06px.
+36. **Feature 28 removed (user request)** — the Melting Blur
+    Text Pro component was fully removed: `git rm` of
+    `registry/pro/melting-blur-text/`, `app/test-melting-blur-text/`,
+    `app/docs/components/melting-blur-text/` and
+    `context/feature-specs/28-melting-blur-text-pro.md`; the
+    `registry.json` entry deleted (manifest back to 10
+    components, JSON re-validated); the `registry/pro/` tree in
+    `context/architecture.md` updated; the Component Status
+    table row and this goal section updated. Docs nav is derived
+    from the manifest, so the route disappears automatically.
 
 ## In Progress
 
-None. Feature 28 is implemented and verified. The `v0.1.5` git
-tag/push and the manual npm publish are the remaining steps.
+None. Feature 28 has been removed from the project.
 
 
 
@@ -783,7 +784,6 @@ tag/push and the manual npm publish are the remaining steps.
 | 9 | Horizontal Parallax Pin Gallery | Pro | Not started | ❌ (Soon) | deep, subtle, cards |
 | 10 | 3D Perspective Card Stack | Pro | Not started | ❌ (Soon) | fan, cascade, flip-through |
 | 11 | Text Fill Animation | Pro | COMPLETE (Feature 08) | ✅ (F20, Pro badge) | — (configurable via props, no cva variants) |
-| 12 | Melting Blur Text | Pro | COMPLETE (Feature 28) | ✅ (F28, Pro badge) | — (configurable via props, no cva variants). ⚠️ no `COMPONENT_META` entry, so it is hidden behind the sidebar's category filters — see Open Questions |
 
 ## Open Questions
 
@@ -944,28 +944,9 @@ tag/push and the manual npm publish are the remaining steps.
   display, JetBrains Mono for code) but both map to the
   `font-mono` utility. Currently using Geist Mono; confirm
   whether to add JetBrains Mono as a second font var.
-- **`melting-blur-text` has no `COMPONENT_META` entry, so
-  it disappears behind the sidebar's category filters.**
-  (Feature 28) `components/docs/sidebar.tsx` keeps the
-  category + hover preview mapping in ONE record, and
-  `inCategory` returns `false` for any name it does not
-  know — so under the default "All Components" filter the
-  component is listed and the ⌘K palette finds it, but
-  clicking "Text Animations" hides it and the floating
-  preview box never appears for it. The feature spec's
-  *Files to Create/Update* list names exactly six files and
-  `sidebar.tsx` is not one of them, so the entry was not
-  invented here (per "do not infer, guess … or invent
-  unrequested behavior"). Fixing it properly needs BOTH
-  `category: "text"` and a `preview` node — and a
-  pointer-driven effect in a 320x208 box is the exact case
-  `components/docs/previews/` documents as needing a
-  stand-in, which would be a second new file. Decide:
-  add a CSS-only `MeltingBlurTextPreview` stand-in plus the
-  meta entry (and extend the "eleven sidebar previews"
-  note in `architecture.md`), point the entry at the real
-  component and accept that it sits still until the pointer
-  enters the box, or leave it reachable only from "All".
+- **ARCHIVE (moot):** the question about `melting-blur-text`
+  having no `COMPONENT_META` entry is obsolete — the
+  component was removed from the project (see Completed #36).
 
 ## Resolved Decisions
 
@@ -1007,177 +988,6 @@ tag/push and the manual npm publish are the remaining steps.
 - Zero CLS invariant for all components.
 
 ## Session Notes
-
-- Feature 28 bugfix (post-ship): two user-reported defects in
-  `melting-blur-text`. **(1) Invisible text until selection.** The SVG gooey
-  filter was permanently applied to the container. `feGaussianBlur` spreads a
-  thin anti-aliased glyph stroke, so its blurred alpha falls below the `9/19 ≈
-  0.474` `feColorMatrix` cut-off and the threshold burns the whole glyph
-  away — text only reappeared when dragging-select painted the highlight rect.
-  Fixed two ways: the filter is now only written to the container while the
-  melt is active (a `filterOn` closure reconciled inside the rAF tick from
-  `pointer.active || strength >= 0.0005`, and cleared on drain/cleanup), and
-  the final `feComposite` changed from `operator="atop"` to `in="SourceGraphic"
-  in2="gooey" operator="over"` so the crisp glyphs always composite ON TOP of
-  the gooey silhouette — letters stay sharp and readable mid-melt instead of
-  being thresholded away. At rest the container renders through zero filter.
-  **(2) Words splitting across lines.** Adjacent `inline-block` character
-  spans let the browser break a word at the line fold. Characters are now
-  grouped into word runs, each rendered as an `inline-block whitespace-nowrap`
-  wrapper (run building happens per render with a `start` index aligned to the
-  `chars` array so per-char refs and the melt loop stay in sync); only real
-  whitespace runs keep plain inline spans, so the sentence breaks at spaces
-  only and an overflowing word moves whole to the next line. Verified with a
-  Playwright + PIL pass against `next start`: rest text visible (59,948 bright
-  px in the container crop, `container.style.filter === ''`), 0/126 word runs
-  split (sentence still wraps to 6 lines), melt turns the filter on and moves
-  10 chars while the text stays legible, full drain back to flat state, zero
-  console errors. `tsc`/`lint`/`build` clean; docs MDX Performance +
-  Accessibility sections updated to describe the gated filter and word runs.
-
-- Feature 28 publish follow-up: the local `npm publish` of the CLI hit
-  E404-on-401 — this machine is not logged into npm and `deadui` is
-  owned only by `hamidrezasepehr`. Debugged npm 11.6.2's publish
-  auto-correct: a bin of `"./dist/index.js"` is *silently removed* from
-  the published tarball (so `npx deadui` would have been a broken
-  install), while `"dist/index.js"` passes cleanly (verified with
-  `npm publish --dry-run` and by un-tarring the packed manifest).
-  Fixed in e734d8a and tag `v0.1.5` re-pointed at it. The owner then
-  published manually; `npm view deadui` returns latest `0.1.5` with
-  `bin = { deadui: 'dist/index.js' }`.
-
-- Feature 28 (feature spec `28-melting-blur-text-pro.md`): the Pro
-  `MeltingBlurText` component. Created:
-  `registry/pro/melting-blur-text/melting-blur-text.tsx`,
-  `registry/pro/melting-blur-text/index.ts` (barrel — the docs page
-  imports `@/registry/pro/melting-blur-text`, matching
-  `text-fill-animation`),
-  `app/test-melting-blur-text/page.tsx` (5 sections),
-  `app/docs/components/melting-blur-text/page.mdx`. Modified:
-  `registry.json` (the spec's Pro entry), `packages/cli/package.json`
-  (`0.1.4` → `0.1.5`), `context/architecture.md` (the `registry/pro/`
-  tree gained `melting-blur-text/`), `context/progress-tracker.md`.
-  Full verification: `npx tsc --noEmit` clean, `npm run lint` clean,
-  `npm run build` 30/30 routes, and a Playwright + PIL suite run
-  against `next start` (normal-motion page, `reduced_motion="reduce"`
-  context, and the docs customizer).
-
-  **HOW IT WORKS.** `Array.from(children)` gives one `<span>` per
-  character (surrogate-safe, so an emoji is a single cell). One
-  `requestAnimationFrame` loop owns all frame state in refs —
-  `pointer` (clientX/Y + `active` + `seen`), `current` (the lerped
-  point), `strength` (0→1 while hovering, 1→0 on exit) and `centers`
-  (cached `offsetLeft/offsetTop` midpoints) — because a `setState`
-  per frame would re-render forty spans sixty times a second for no
-  gain. Per frame: read the container rect once, convert the stored
-  client point to container-local, lerp `current` toward it by
-  `inertia`, lerp `strength` toward `active`, then for each character
-  compute `falloff = 1 - distance/effectRadius` (0 outside the
-  radius), square it for a soft rim, scale by `strength`, and write
-  `translateY(influence * blurSpread * 2)` +
-  `blur(influence * blurSpread)` straight to `element.style`. Nothing
-  that touches layout is written, so the whole sweep is repaint-only.
-
-  **WHY THE POINTER IS STORED IN CLIENT COORDINATES AND RE-BASED
-  EVERY FRAME.** Caching the container-local point would go stale the
-  moment the page scrolls under a stationary pointer. Reading
-  `getBoundingClientRect()` once per frame is safe precisely because
-  `transform` and `filter` do not dirty layout — the box is clean, so
-  the read forces no reflow. The very first `pointermove` also SNAPS
-  `current` to the pointer (the `seen` flag); without it the lerped
-  point starts at (0,0) and the goo sweeps in from the top-left corner
-  on first contact.
-
-  **THE GOOEY FILTER — AND THE TWO THINGS THE SPEC'S SNIPPET GETS
-  WRONG WHEN THERE IS MORE THAN ONE INSTANCE.** The spec gives
-  `<filter id="melting-filter">` with `feGaussianBlur` (stdDeviation
-  4/6/10 for high/medium/low — inverted on purpose), `feColorMatrix`
-  `0 0 0 19 -9` (an alpha threshold at 9/19 ≈ 0.47, which turns the
-  gaussian blob into a hard silhouette) and `feComposite
-  operator="atop"` with `in="SourceGraphic" in2="gooey"` (crisp glyphs
-  where the source is opaque, the gooey silhouette everywhere the
-  gooey extends past it). Two deviations, both forced: (1) the id is
-  `useId()` because a fixed id means the SECOND instance on a page
-  references the FIRST instance's filter — the test page has twelve;
-  React 19 emits `_r_<n>_`, which is safe inside `url(#…)`; (2) the
-  filter region is expanded to `x="-100%" y="-300%" width="300%"
-  height="700%"`, because the default `-10% / 120%` box is a
-  percentage of the container and a single line of text is only ~36px
-  tall — 10% of that is 3.6px, while the drip alone is `blurSpread * 2`
-  = 16px at the default and up to 40px at the slider maximum, so the
-  default region clips every drip into a straight horizontal edge.
-
-  **THE BUG THE BROWSER FOUND: AN UNPATCHABLE HYDRATION MISMATCH,
-  AND WHY THE FILTER IS NOW SET FROM AN EFFECT.** The first
-  implementation rendered `style={{ filter: shouldReduce ? undefined :
-  url(#…) }}`. `useReducedMotion()` reads a media query that only
-  exists on the client, so the server always emitted the filter and
-  `prefers-reduced-motion: reduce` always disagreed with it. React 19
-  does not silently repair that — it logs *"A tree hydrated but some
-  attributes of the server rendered HTML didn't match … This won't be
-  patched up"* and leaves the SERVER value in the DOM, i.e. reduced
-  motion kept the gooey filter it was supposed to drop (the animation
-  loop itself was already correct, so the symptom was a filter with
-  no melt). The `style` prop no longer carries `filter` at all; the
-  effect writes `container.style.filter = url(#id)` before starting
-  the loop and clears it when `shouldReduce` is true. Server and
-  client markup are then byte-identical, the effect is the only thing
-  that can disagree with the server, and React never rewrites a
-  property it does not manage — verified by re-rendering the docs
-  customizer through both sliders and the `blurQuality` select and
-  re-reading `container.style.filter` afterwards.
-
-  **LINE WRAPPING IS THE OTHER TRAP.** Transform does not apply to a
-  non-replaced `inline` box, so every character has to be
-  `inline-block` — but adjacent `inline-block`s only soft-wrap when
-  the SOURCE has a break opportunity between them, and
-  `Array.from(children)` produces none. A whole paragraph of
-  `inline-block` characters therefore never breaks and overflows. The
-  fix is to leave ONLY the space characters as plain `inline` spans:
-  the real space supplies the break opportunity, it has no visible box
-  so there is nothing to transform, and the surrounding glyphs still
-  melt through the gap. Verified: the 40-word closing sentence lays
-  out on 5 lines.
-
-  **THE NUMBERS THE SUITE ACTUALLY PROVED.**
-  1. **The gooey filter is not decorative.** Hovering, then toggling
-     just `container.style.filter = 'none'` with the per-character
-     blur left running, changes 19.06% of the crop's pixels and cuts
-     the transition-pixel ratio from 0.0871 to 0.0215 — i.e. with the
-     filter the melted glyphs have hard, welded edges; without it they
-     are four times softer and separate.
-  2. **The lerp and the radius work.** 12 of 45 characters in the
-     first instance pick up a transform on hover, peaking at
-     `translateY(5.34px) / blur(2.67px)`; all of them drain back to
-     empty 1.8s after the pointer leaves.
-  3. **Zero layout shift.** The container's box is pixel-identical
-     (622 x 99) and `document.body.scrollHeight` is unchanged (4162)
-     before, during and after a full melt.
-  4. **All four controls are live.** `stdDeviation` reads 4 / 6 / 10
-     across the three `blurQuality` instances, and moving the docs
-     `blurSpread` slider to its right end raises the measured peak
-     drip from 14.02px to 35.06px (20 * 2 = 40px at full strength).
-  5. **Reduced motion is clean.** `container.style.filter` is `''`,
-     there is no inline `style` attribute, zero characters transform
-     after a real pointer sweep, and no hydration error is logged —
-     against 12/12 instances still carrying the filter and an
-     unpatchable-mismatch error before the fix.
-  6. **No console or page errors** on the test page, the docs page or
-     under reduced motion.
-
-  **DEVIATIONS FROM THE SPEC, ALL DELIBERATE.** `variants: []` was
-  added to the `registry.json` entry the spec quotes verbatim —
-  `lib/docs-nav.ts` assigns `component.variants` straight into a
-  `string[]` field, so an entry without it fails `tsc` (every other
-  entry in the manifest carries it). The component adds default
-  display typography (`text-2xl md:text-4xl font-semibold`) in its
-  `cn()` base so the spec's `defaultProps` — which contain no
-  `className`, by design — render at a usable size in the customizer;
-  `className` overrides it through `twMerge`. Colour is deliberately
-  NOT defaulted, because the Dead palette is theme-reactive, so
-  inherited text is correct on both the dark and the light preview
-  surface. The interface is the spec's six fields exactly, with no
-  `HTMLAttributes` spread.
 
 - Feature 27 (feature spec `27-cinematic-text-advanced-variants.md`):
   the eight advanced `CinematicText` variants. Modified:

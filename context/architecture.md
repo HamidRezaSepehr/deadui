@@ -30,8 +30,6 @@ deadui/
 │   │   └── magnetic-button.tsx
 │   ├── pro/                # Pro component sources (tier-gated, mirrored into
 │   │   │                   # the PRIVATE HamidRezaSepehr/deadui-pro repo)
-│   │   ├── melting-blur-text/
-│   │   │   └── melting-blur-text.tsx (+ index.ts)
 │   │   ├── text-fill-animation/
 │   │   │   └── text-fill-animation.tsx (+ .module.css, index.ts)
 │   │   └── webgl-image-trail/
