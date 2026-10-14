@@ -67,8 +67,10 @@ export const cinematicTextVariants = cva(
       variant: {
         'blur-in': 'opacity-0 blur-[10px]',
         'fade-up': 'opacity-0 translate-y-5',
-        'slide-stagger': 'opacity-0 -translate-x-5',
-        'scale-pop': 'opacity-0 scale-90',
+        'slide-stagger': 'opacity-0',
+        // Scale is applied per split unit (see initialStates), not on the
+        // container, so each char/word/line pops individually.
+        'scale-pop': 'opacity-0',
       },
     },
     defaultVariants: {

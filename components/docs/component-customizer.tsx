@@ -151,6 +151,7 @@ export function ComponentCustomizer({
                 className="h-10 w-full cursor-pointer rounded-md border border-dead-800 bg-dead-900 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dead-red"
               />
             )}
+
           </div>
         ))}
       </div>

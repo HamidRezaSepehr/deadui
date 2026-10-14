@@ -771,7 +771,7 @@ None. Feature 28 has been removed from the project.
 
 | # | Component | Tier | Status | Docs page | Variants |
 |---|-----------|------|--------|-----------|----------|
-| 1 | Cinematic Text Reveal | Free | COMPLETE (Session 7, +F27 12 variants) | ✅ | blur-in, fade-up, slide-stagger, scale-pop, rise-color, slide-left-color, scale-blur-color, diagonal-blur-color, flip-x-color, heavy-flip-color, flip-top-color, mask-reveal |
+| 1 | Cinematic Text Reveal | Free | COMPLETE (Session 7, F27 12 variants, +4 Codrops grain) | ✅ | blur-in, fade-up, slide-stagger, scale-pop, rise-color, slide-left-color, scale-blur-color, diagonal-blur-color, flip-x-color, heavy-flip-color, flip-top-color, mask-reveal, blur-grain, blur-grain-bright, scale-blur-grain, skew-blur-grain |
 | 2 | Magnetic Elastic Button | Free | COMPLETE (Feature 09) | ✅ (F20) | default, outline, glow, ghost |
 | 3 | Infinite Blur Marquee | Free | COMPLETE (Feature 10) | ✅ (F20) | horizontal, vertical (blur: none/edges/left/right) |
 | 4 | Spotlight Hover Card | Free | COMPLETE (Feature 11) | ✅ (F20) | glow: border, background, both, none (shape: rounded, soft, sharp) |
@@ -4808,3 +4808,241 @@ None. Feature 28 has been removed from the project.
   across two device pixels and reads slightly softer than the other three
   edges. That is a property of 1px borders on fractional boxes, not of this
   component; pass `width={2}` where crispness matters more than weight.
+
+### Cinematic Text — `mask-reveal` rebuilt per-line (Codrops TypographyMotion)
+
+  The owner reported that on multi-line text the first line "just moved
+  up, unclipped" while only the last line was masked. The tracker had
+  recorded this as a spec-accepted limitation of the F27 build; it is now
+  fixed. Reference effect: tympanus.net "Making Stagger Reveal Animations
+  for Text" / github.com/codrops/TypographyMotion.
+
+  ROOT CAUSE. The mask was the block container (`overflow-hidden` on the
+  root) while each glyph travelled `yPercent: 100` = ONE LINE HEIGHT. A
+  glyph on line 1 of N moves one line down and is still inside the
+  N-line box, so it is never hidden. In the Codrops source every
+  `.content__paragraph` is a single line with its own `overflow: hidden`
+  — the mask is PER LINE, which is the whole trick.
+
+  REBUILD (only the `mask-reveal` branch touched; other 11 variants and
+  the ScrollTrigger / props contract untouched):
+  1. cva class `'opacity-0 overflow-hidden'` -> `'opacity-0'` (root is no
+     longer the clipper).
+  2. SplitText for this variant always splits `lines` plus the requested
+     `splitBy` (`lines` / `lines,words` / `lines,words,chars`) and passes
+     `mask: 'lines'` (GSAP >= 3.13; project is on 3.15). SplitText wraps
+     each `.split-line` in a `.split-line-mask` with `overflow: clip`.
+  3. Tween is `gsap.fromTo(targets, { yPercent: 100 }, { yPercent: 0,
+     stagger, ease: 'power3.out', scrollTrigger })` on `split[splitBy]`,
+     so chars, words AND whole lines all slide up behind their own line
+     mask. `fromTo` (not `from`) so `once=false` replays are exact.
+     `'mask-reveal'` was removed from the legacy `initialStates` map.
+
+  VERIFIED in headless Chromium against a temporary 3-block page (420px
+  column, 3–4 wrapped lines each, deleted afterwards). Per `splitBy`:
+  N masks = N lines, every mask `overflow: clip` at exactly one line box
+  (45px); at t≈0 every glyph on EVERY line sat at y=45 (fully hidden —
+  the original defect gone), at 300ms line-1 glyphs read 3/5/8px (the
+  stagger is real), last line still 45; final all 0. Screenshot showed
+  "A long pi…" with glyphs sheared at the line edge while lower lines
+  were still empty. Zero console/page errors. Lint + `tsc` clean.
+
+  Two earlier attempts by a previous session were discarded (file was
+  `git checkout`-ed before this rebuild): (a) animating a single inner
+  wrapper lost the stagger entirely; (b) `y: containerHeight` on every
+  char and dropping ScrollTrigger diverged from the component contract.
+  Feature spec 27 §3 / acceptance item "clips using overflow: hidden on
+  the parent" now describes the superseded mechanism.
+
+  FOLLOW-UP — WORD-BREAK FIX FOR ALL VARIANTS. The owner noticed words
+  wrapping mid-word ("extraord|inary") on every variant except the
+  rebuilt mask-reveal. Cause: `splitBy="chars"` produced bare inline-
+  block char spans with no word wrapper, so the browser may break
+  between any two chars. SplitText now always receives `words,chars`
+  when `splitBy` is `chars` (targets remain `split.chars`); the type is
+  built from a de-duplicated list so mask-reveal's `lines` prefix
+  composes with it. Verified in headless Chromium on a 380px column for
+  all 12 variants: baseline broke `across` and `extraordinary.` on 11
+  of 12; after the fix 0 broken words on 12/12, all end states clean
+  (opacity 1, identity transform, `translate: none`), zero errors.
+  Same audit confirmed char blur on `blur-in` eases 10 -> 7.8 -> 4.0 ->
+  1.5 -> 0.5px (not a snap) and the `*-color` variants resolve to
+  `color(srgb 1 1 1)`.
+
+### Cinematic Text — four Codrops ScrollBlurTypography grain variants
+
+  Reference: github.com/codrops/ScrollBlurTypography (`js/effect-{1,2,3,4}/`).
+  Four new variants appended to `cinematicTextVariants` (the 12 existing
+  variants untouched): `blur-grain`, `blur-grain-bright`,
+  `scale-blur-grain`, `skew-blur-grain`. Each reproduces one demo's exact
+  scroll-scrubbed filter reveal over a grain tile.
+
+  MECHANISM (test page). SCRUB_VARIANT_TWEENS pins both filter endpoints
+  (`blur(10px) brightness(0|30|50%)` -> `blur(0) brightness(100%)`, plus
+  `scaleY 0.1`x`scaleX 1.8` for effect-3 and word-split `opacity 0 ->
+  1`, `skewX -20 -> 0` for effect-4), because GSAP cannot interpolate the
+  `filter` shorthand from a computed value. Trigger is the demo's exact
+  `start: 'top bottom-=15%'` / `end: 'bottom center+=15%'` with
+  `scrub: true`, injected per element via
+  `buildScrubScrollTrigger(containerRef.current)` — without the element
+  trigger the scrub attached to the window and ran at scroll 0 (the
+  "static, already-unblurred" bug). `skew-blur-grain` forces
+  `splitType: 'words'`; effects 1–3 split chars like the base component.
+  The cva class carries ONLY the grain tile (`styles.cinematicTextNoise`,
+  `background-image: url('./noise.png'); background-size: 200px` — see the
+  "grain tile now ships with the component" note below for the
+  move from the original absolute `url('/noise.png')`) and NO
+  `opacity-0` — the demos keep the text visible-but-blurred from the
+  start, so an `opacity-0` container would hide every char. New
+  `registry/cinematic-text/cinematic-text.module.css`; `registry.json`
+  gains the CSS module in `files` and the four names in `variants`;
+  `/test-cinematic-text` gained section 7.
+
+  DOCS PREVIEW FIX (owner report: the four grain variants showed no
+  animation in `app/docs/components/cinematic-text/page.mdx` while the
+  test page worked). Root cause: the customizer preview box has no
+  scroll, so a `scrub: true` trigger freezes at whatever page-scroll
+  progress it is created at — the text renders already-unblurred and
+  never moves (the sidebar stand-in already documents this for the same
+  reason, `components/docs/previews/cinematic-text-preview.tsx`). Fix: a
+  new optional `preview?: boolean` prop on `CinematicText`. It only
+  affects the grain variants — `isScrubbed = isScrubGrain && !preview` —
+  demoting them from the scrubbed trigger to the standard play-once
+  config, so they reveal on mount and replay on every prop change
+  (variant / duration / stagger / splitBy). The docs page passes
+  `preview: true` in the customizer `defaultProps` and on the four grain
+  variant cards; the props table gained a `preview` row. Non-grain
+  variants ignore `preview` entirely.
+
+  VERIFIED. `npx tsc --noEmit`, `npm run lint`, `npm run build` all
+  clean. Headless Chromium on `/docs/components/cinematic-text`: all four
+  grain variants start blurred (~8.8px) and settle sharp on selection;
+  noise tile applied; changing the duration slider replays from 10px to
+  0; `skew-blur-grain` splits 5 words / 0 chars; zero console errors.
+  `/test-cinematic-text` regression re-run: scroll-scrub still starts
+  blurred off-screen and sharpens through the scrub zone, all pass.
+
+### Cinematic Text — grain tile now ships with the component (CLI copies it)
+
+  Owner asked whether `noise.png` was in the right folder and whether the
+  CLI would copy it on install. It was NOT: the file sat in the docs
+  repo's `public/noise.png` (served because the CSS used an absolute
+  `url('/noise.png')`), and `registry.json` listed only the `.tsx` and
+  `.module.css`, so `npx deadui add cinematic-text` would have installed a
+  component whose grain tile silently 404'd. Two things had to change.
+
+  ASSET MOVE + RELATIVE IMPORT. `public/noise.png` -> 
+  `registry/cinematic-text/noise.png` (untracked before, so a plain `mv`),
+  and `cinematic-text.module.css` switched from `url('/noise.png')` to
+  `url('./noise.png')`. Relative is deliberate: the bundler (Next/webpack/
+  Turbopack/Vite) resolves and emits the asset in BOTH the docs build and
+  the consumer's build, so the component no longer depends on a `public/`
+  folder the installer may not have and does not repaint the page.
+  `registry.json` `cinematic-text.files` gained
+  `registry/cinematic-text/noise.png -> components/ui/noise.png` (the
+  `components/` prefix is rewritten to `src/components/` by
+  `resolveTargetPath` for `src/` layouts, so the CSS `url('./noise.png')`
+  still resolves — image and CSS land in the same directory).
+
+  CLI BINARY-SAFETY (the real blocker). `fetchFile` used `response.text()`
+  and `add.ts` wrote `'utf-8'`, which corrupts a PNG (`0x89 0x50 0x4E 0x47`
+  is not valid text). `fetch-registry.ts` gained a shared `prepareRequest`
+  helper (Pro-token rule in one place) and `fetchFile` now returns a
+  `Buffer` (`arrayBuffer()` remotely, `fs.readFile` without encoding
+  locally); `add.ts` writes the buffer with no encoding. Text files are
+  unaffected — identical bytes. No new dependency.
+
+  VERIFIED. Root `npx tsc --noEmit` / `npm run lint` / `npm run build`
+  clean; `packages/cli` `tsc` clean. The production build emitted the tile
+  to `.next/static/media/noise.<hash>.png` and the app CSS chunk was
+  rewritten to `url(../media/noise.<hash>.png)`; headless Chromium on
+  `/docs/components/cinematic-text` shows the computed `background-image`
+  pointing at that URL and it answers HTTP 200 (zero console errors). CLI
+  end-to-end in a throwaway `/tmp` project with
+  `DEADUI_REGISTRY_BASE_URL=<repo>` installed all three files, and
+  `components/ui/noise.png` is sha256-identical to the registry source
+  (`ec521f5a…`), confirmed a valid 200x200 palette PNG.
+
+  SHIPPING CAVEAT (not done here). These reach users only after: (a) the
+  registry.json + `registry/cinematic-text/` changes are pushed to public
+  `main` (the CLI fetches both from
+  `raw.githubusercontent.com/.../main`), and (b) a NEW CLI version is
+  published — the binary-safe `fetchFile` is a code change, so the current
+  npm `0.1.5` cannot install the tile correctly. Bump
+  `packages/cli/package.json` and follow the AGENTS.md release sequence.
+
+### Cinematic Text — `scale-pop` now scales each split unit, not the block
+
+  Owner report: `scale-pop` scaled the whole text block up first and only
+  then let the characters fade in, so it did not read as a per-character
+  pop. Owner's rule: the scale must happen on whatever `splitBy` targets —
+  chars scale per char, words per word, lines per line.
+
+  **ROOT CAUSE — TWO SCALE TWEENS RAN AT ONCE.** The cva container carried a
+  scale class (`'scale-pop': 'opacity-0 scale-90'` at HEAD/spec; the working
+  tree had drifted to `scale-10`, i.e. 0.1, which is why the block zoom
+  dominated) AND `initialStates['scale-pop'] = { opacity: 0, scale: 0.9 }`
+  was already applied to `split[splitBy] || split.chars`. The container got a
+  single non-staggered `gsap.to(..., { scale: 1 })` (0.1 -> 1 zoom of the
+  whole block), while each unit got its own staggered 0.9 -> 1 scale. The
+  block-level zoom is what was read as "the text scales up".
+
+  FIX (one class, no tween-logic change). Container `scale-pop` reduced to
+  `'opacity-0'` — it keeps only the hidden-before-JS state (no flash), with a
+  comment explaining why the scale is not on the container. The per-unit
+  `scale: 0.9` (unchanged, matches the spec) already targets the correct unit
+  via `targetElements`, so chars/words/lines each pop individually. The
+  shared container `gsap.to({ ... scale: 1 })` stays because other variants
+  (`scale-blur-color` etc.) still need it.
+
+  DOCS SYNC. `context/feature-specs/07-component-cinematic-text.md` and
+  `context/code-standards.md` cva examples updated from
+  `'opacity-0 scale-90'` to `'opacity-0'`.
+
+  VERIFIED. `npx tsc --noEmit` and `npm run lint` clean. Playwright
+  `/tmp/verify_scale_pop.py` drives `/docs/components/cinematic-text`, selects
+  `scale-pop`, and samples the first unit's computed scale for each `splitBy`
+  (bouncing through another value first so the effect always replays):
+  chars min 0.935, words min 0.935, lines min 0.928, all settling at 1.000;
+  the container (`:scope > div`) scale stays exactly 1.000 throughout for all
+  three; zero console errors.
+
+### Cinematic Text — removed the whole-block animation from four variants
+
+  Owner report: `slide-stagger`, `rise-color`, `slide-left-color` and
+  `scale-blur-color` each showed the ENTIRE text block slide/scale/blur as a
+  unit in addition to the per-character animation. (Verified as real.)
+
+  ROOT CAUSE — the same double-tween as `scale-pop`. The cva container class
+  carried the variant's start pose (`-translate-x-5`, `translate-y-[25px]`,
+  `-translate-x-[7px]`, `translate-y-[15px] scale-50 blur-[2px]`) AND the
+  shared container `gsap.to(containerRef.current, { opacity: 1, filter: 'none',
+  y: 0, x: 0, scale: 1, … })` animated the whole block from that pose. The
+  per-unit tween (`gsap.from` / COLOR_VARIANT_TWEENS `fromTo`) then animated
+  the chars/words on top. Two animations, one on the whole block.
+
+  FIX. For these four variants only, the cva container class is reduced to
+  `'opacity-0'` (no transform/scale/blur), and the container tween is reduced
+  to a zero-duration, non-animated reveal (`gsap.to(container, { opacity: 1,
+  duration: 0, delay, scrollTrigger })`), gated by a new `isUnitMotionOnly`
+  flag. `opacity-0` stays because it is the pre-JS hide (without it the text
+  would FOUC and the color variants — whose units start at opacity 0.3 rather
+  than 0 — would be visible before the trigger). The container is therefore
+  set visible at the trigger, not tweened, so ONLY the split units animate.
+  The per-unit tweens are untouched. Non-mentioned variants keep the original
+  container tween unchanged. `scale-pop` is intentionally left alone (owner
+  set its unit scale to 0.5 by hand).
+
+  DOCS SYNC. `context/feature-specs/07-component-cinematic-text.md` and
+  `context/code-standards.md` slide-stagger cva rows updated from
+  `'opacity-0 -translate-x-5'` to `'opacity-0'`. (Spec 27's per-variant motion
+  notes describe the per-unit tween, which is unchanged, so they stay.)
+
+  VERIFIED. `npx tsc --noEmit` / `npm run lint` / `npm run build` clean.
+  Playwright `/tmp/verify_unit_motion.py` on `/docs/components/cinematic-text`
+  samples the container's computed `transform`/`filter` and a unit's transform
+  through the animation for each variant: for all four the container transform
+  stays identity and filter stays `none` for the whole run, the container ends
+  at `opacity: 1`, and the split units animate (e.g. slide-stagger char
+  `translateX -14 → 0`). Regression guard: `fade-up` and `blur-in` still show
+  their block-level animation (unchanged). Zero console errors.

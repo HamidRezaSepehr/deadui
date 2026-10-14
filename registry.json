@@ -8,18 +8,38 @@
       "dependencies": [
         "gsap"
       ],
-      "files": [
-        {
-          "path": "registry/cinematic-text/cinematic-text.tsx",
-          "target": "components/ui/cinematic-text.tsx"
-        }
-      ],
-      "variants": [
-        "blur-in",
-        "fade-up",
-        "slide-stagger",
-        "scale-pop"
-      ]
+"files": [
+    {
+      "path": "registry/cinematic-text/cinematic-text.tsx",
+      "target": "components/ui/cinematic-text.tsx"
+    },
+    {
+      "path": "registry/cinematic-text/cinematic-text.module.css",
+      "target": "components/ui/cinematic-text.module.css"
+    },
+    {
+      "path": "registry/cinematic-text/noise.png",
+      "target": "components/ui/noise.png"
+    }
+  ],
+"variants": [
+    "blur-in",
+    "fade-up",
+    "slide-stagger",
+    "scale-pop",
+    "rise-color",
+    "slide-left-color",
+    "scale-blur-color",
+    "diagonal-blur-color",
+    "flip-x-color",
+    "heavy-flip-color",
+    "flip-top-color",
+    "mask-reveal",
+    "blur-grain",
+    "blur-grain-bright",
+    "scale-blur-grain",
+    "skew-blur-grain"
+  ]
     },
     {
       "name": "marquee",

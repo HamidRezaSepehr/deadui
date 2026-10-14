@@ -75,7 +75,13 @@ visual effects.
 
 ### Free Components (8)
 1. **Cinematic Text Reveal**: GSAP SplitText + ScrollTrigger.
-   Variants: `blur-in`, `fade-up`, `slide-stagger`, `scale-pop`.
+   Variants: `blur-in`, `fade-up`, `slide-stagger`, `scale-pop`,
+   `rise-color`, `slide-left-color`, `scale-blur-color`,
+   `diagonal-blur-color`, `flip-x-color`, `heavy-flip-color`,
+   `flip-top-color`, `mask-reveal`, plus four Codrops
+   ScrollBlurTypography scrubbed-blur grain variants
+   (`blur-grain`, `blur-grain-bright`, `scale-blur-grain`,
+   `skew-blur-grain`) that unblur over a scoped grain tile.
 2. **Magnetic Elastic Button**: Framer Motion spring physics.
    Variants: `default`, `outline`, `glow`, `ghost`.
    Sizes: `sm`, `md`, `lg`. Shapes: `rounded`, `soft`, `sharp`.

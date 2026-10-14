@@ -120,6 +120,41 @@ export default function TestPage() {
       </div>
 
       <div className="h-[50vh]" />
+
+      <p className="font-mono text-sm text-dead-400">
+        7. SCRUBBED GRAIN — Codrops ScrollBlurTypography: scroll-scrubbed
+        (<code>ease:&apos;none&apos;</code>) unblur-over-a-grain-tile, trigger
+        <code>top bottom-=15%</code>
+        → <code>bottom center+=15%</code>
+      </p>
+      <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">blur-grain (chars, 0% brightness)</span>
+          <CinematicText variant="blur-grain" className="text-3xl font-bold text-dead-white">
+            Blur grain 0%.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">blur-grain-bright (chars, 30% brightness)</span>
+          <CinematicText variant="blur-grain-bright" className="text-3xl font-bold text-dead-white">
+            Blur grain 30%.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">scale-blur-grain (chars, 50% brightness)</span>
+          <CinematicText variant="scale-blur-grain" className="text-3xl font-bold text-dead-white">
+            Scale blur grain.
+          </CinematicText>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="font-mono text-xs text-dead-400">skew-blur-grain (words, ease sine)</span>
+          <CinematicText variant="skew-blur-grain" className="text-3xl font-bold text-dead-white">
+            Skew blur grain.
+          </CinematicText>
+        </div>
+      </div>
+
+      <div className="h-[50vh]" />
     </div>
   )
 }

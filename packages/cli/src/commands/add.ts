@@ -247,12 +247,13 @@ export async function addCommand(
     // Ensure directory exists
     await fs.mkdir(path.dirname(absoluteTargetPath), { recursive: true })
 
-    // Fetch and write
+    // Fetch and write. `content` is a Buffer, so text and binary component
+    // files (e.g. an image asset) both round-trip byte-for-byte.
     const content = await fetchFile(file.path, {
       tier: component.tier,
       token: githubToken,
     })
-    await fs.writeFile(absoluteTargetPath, content, 'utf-8')
+    await fs.writeFile(absoluteTargetPath, content)
     console.log(chalk.green('✓') + ` Created: ${chalk.cyan(targetPath)}`)
   }
 

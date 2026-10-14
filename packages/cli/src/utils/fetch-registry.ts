@@ -109,7 +109,17 @@ function isRemoteBase(base: string): boolean {
   return base.startsWith('https://') || base.startsWith('http://')
 }
 
-async function requestText(filePath: string, options: FetchOptions = {}): Promise<string> {
+/**
+ * A request resolved to whichever source the configured base URL points at.
+ *
+ * Both `requestText` (registry.json) and `fetchFile` (component files, which
+ * may be binary) share this so the Pro-token rule lives in exactly one place.
+ */
+type PreparedRequest =
+  | { remote: true; url: string; headers: Record<string, string> }
+  | { remote: false; localPath: string }
+
+function prepareRequest(filePath: string, options: FetchOptions): PreparedRequest {
   const tier = options.tier ?? 'free'
   const base = getRegistryBaseUrl(tier)
 
@@ -129,13 +139,23 @@ async function requestText(filePath: string, options: FetchOptions = {}): Promis
       headers.Authorization = `token ${token}`
     }
 
-    const response = await fetch(`${base}/${filePath}`, { headers })
+    return { remote: true, url: `${base}/${filePath}`, headers }
+  }
+
+  const localBase = base.startsWith('file://') ? new URL(base).pathname : base
+  return { remote: false, localPath: path.join(localBase, filePath) }
+}
+
+async function requestText(filePath: string, options: FetchOptions = {}): Promise<string> {
+  const request = prepareRequest(filePath, options)
+
+  if (request.remote) {
+    const response = await fetch(request.url, { headers: request.headers })
     if (!response.ok) throw new RegistryFetchError(response.status, response.statusText)
     return await response.text()
   }
 
-  const localBase = base.startsWith('file://') ? new URL(base).pathname : base
-  return await fs.readFile(path.join(localBase, filePath), 'utf-8')
+  return await fs.readFile(request.localPath, 'utf-8')
 }
 
 /**
@@ -165,11 +185,28 @@ export async function fetchRegistry(): Promise<Registry> {
   }
 }
 
-export async function fetchFile(filePath: string, options: FetchOptions = {}): Promise<string> {
+/**
+ * Fetch one component file as raw BYTES.
+ *
+ * Returns a `Buffer`, not a string: components may ship binary assets (e.g.
+ * `cinematic-text`'s `noise.png` grain tile), and decoding those as UTF-8
+ * corrupts them (`0x89 0x50 0x4E 0x47` is not valid text). Text sources are
+ * unaffected — their bytes written back verbatim are identical to the string.
+ * Callers write the returned buffer with no encoding.
+ */
+export async function fetchFile(filePath: string, options: FetchOptions = {}): Promise<Buffer> {
   const tier = options.tier ?? 'free'
 
   try {
-    return await requestText(filePath, options)
+    const request = prepareRequest(filePath, options)
+
+    if (request.remote) {
+      const response = await fetch(request.url, { headers: request.headers })
+      if (!response.ok) throw new RegistryFetchError(response.status, response.statusText)
+      return Buffer.from(await response.arrayBuffer())
+    }
+
+    return await fs.readFile(request.localPath)
   } catch (error) {
     console.error(chalk.red('✗') + ` Failed to fetch file: ${filePath}`)
 
