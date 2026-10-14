@@ -1,10 +1,19 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { CinematicText } from "@/registry/cinematic-text"
+import { CinematicText, type CinematicTextProps } from "@/registry/cinematic-text"
 
-const variants: Array<{ id: string; label: string }> = [
+type VariantId = NonNullable<CinematicTextProps["variant"]>
+
+const GRAIN_VARIANTS: ReadonlySet<string> = new Set([
+  "blur-grain",
+  "blur-grain-bright",
+  "scale-blur-grain",
+  "skew-blur-grain",
+])
+
+const variants: Array<{ id: VariantId; label: string }> = [
   { id: "blur-in", label: "blur-in" },
   { id: "fade-up", label: "fade-up" },
   { id: "slide-stagger", label: "slide-stagger" },
@@ -23,24 +32,15 @@ const variants: Array<{ id: string; label: string }> = [
   { id: "skew-blur-grain", label: "skew-blur-grain" },
 ]
 
-function VariantCard({ id, label }: { id: string; label: string }) {
+function VariantCard({ id, label }: { id: VariantId; label: string }) {
   const [key, setKey] = useState(0)
-  const [isGrain, setIsGrain] = useState(false)
-
-  useEffect(() => {
-    setIsGrain(
-      id === "blur-grain" ||
-        id === "blur-grain-bright" ||
-        id === "scale-blur-grain" ||
-        id === "skew-blur-grain"
-    )
-  }, [id])
+  const isGrain = GRAIN_VARIANTS.has(id)
 
   return (
     <div className="bg-preview-grid relative flex min-h-[140px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
       <CinematicText
         key={key}
-        variant={id as any}
+        variant={id}
         className="text-xl font-bold text-dead-50"
         scrub={false}
         preview={isGrain ? true : undefined}

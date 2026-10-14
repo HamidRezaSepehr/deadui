@@ -63,6 +63,15 @@
   --color-dead-red: #dc2626;
   --color-dead-red-hover: #ef4444;
 
+  /* Semantic surface/border aliases used by component variants (Marquee's
+     `bg="surface" | "elevated"` and `border="default"`). Declared as vars
+     against the ROLE-mapped ramp rather than fixed hexes, so they flip with
+     the theme like every other dead-* utility. The CLI `init` writes the
+     same three names into consumer projects with static dark values. */
+  --color-dead-surface: var(--color-dead-900);
+  --color-dead-elevated: var(--color-dead-800);
+  --color-dead-border: var(--color-dead-800);
+
   --color-background: var(--color-dead-950);
   --color-foreground: var(--color-dead-50);
   --color-card: var(--color-dead-900);

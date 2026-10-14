@@ -79,7 +79,12 @@ export function MarqueePreview({
   ...props
 }: Record<string, unknown>) {
   return (
-    <Marquee {...props} pauseOnHover={toBool(props.pauseOnHover)}>
+    <Marquee
+      {...props}
+      pauseOnHover={toBool(props.pauseOnHover)}
+      reverse={toBool(props.reverse)}
+      scrollLinked={toBool(props.scrollLinked)}
+    >
       {children as ReactNode}
     </Marquee>
   );

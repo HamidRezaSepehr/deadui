@@ -4,13 +4,14 @@ import { MarqueePreview } from "@/components/docs/preview-wrappers"
 export const metadata = {
   title: "Infinite Blur Marquee",
   description:
-    "GPU-accelerated infinite marquee with edge blur, vertical mode, pause-on-hover and reverse.",
+    "Media-agnostic infinite marquee: images, SVGs and videos with itemClassName, bg/border variants, edge blur, reverse and bidirectional scroll-linking.",
 }
 
 # Infinite Blur Marquee
 
-GPU-accelerated infinite marquee with edge blur, vertical mode, pause-on-hover
-and reverse.
+Media-agnostic infinite marquee: images, SVGs, videos and mixed HTML cards on
+one seamless track — with edge blur, vertical mode, pause-on-hover, reverse,
+uniform item styling and bidirectional scroll-linking.
 
 ## Preview
 
@@ -21,19 +22,25 @@ and reverse.
     direction: "horizontal",
     blur: "edges",
     speed: 30,
+    reverse: "false",
+    scrollLinked: "false",
     pauseOnHover: true,
   }}
   controls={{
     direction: { type: "select", options: ["horizontal", "vertical"] },
     blur: { type: "select", options: ["none", "edges", "left", "right"] },
     speed: { type: "slider", min: 5, max: 60, step: 5 },
-    pauseOnHover: { type: "select", options: ["true", "false"] },
+    reverse: { type: "select", options: ["true", "false"] },
+    scrollLinked: { type: "select", options: ["true", "false"] },
+    // Note: itemClassName, bg, and border are best demonstrated in code snippets rather than the customizer
   }}
   className="not-prose my-8"
 />
 
 Hover the strip to test `pauseOnHover`. `speed` is the duration of one full loop
-in seconds, so **lower is faster**.
+in seconds, so **lower is faster**. Set `scrollLinked` to `true` to freeze the
+autoplay and drive the strip from the page's scroll instead — scrolling down
+moves it right, scrolling up moves it left.
 
 ## Installation
 
@@ -59,6 +66,64 @@ export function TagStrip() {
 }
 ```
 
+## Styling every item with `itemClassName`
+
+`itemClassName` is applied to each repeated wrapper — together with
+`overflow-hidden` — so a border radius clips the media inside instead of
+leaving square corners poking out:
+
+```tsx
+<Marquee itemClassName="rounded-xl p-4" gap={16}>
+  {LOGOS.map((logo) => (
+    <img key={logo} src={logo} alt="" className="h-24 w-44 object-cover" />
+  ))}
+</Marquee>
+```
+
+Videos work the same way. With `gap={0}` each video fills its own wrapper edge
+to edge, so the wrapper's radius is what rounds the clip:
+
+```tsx
+<Marquee itemClassName="rounded-2xl" gap={0} repeat={5}>
+  <video src="/clips/loop.mp4" autoPlay muted loop playsInline className="h-44 w-80 object-cover" />
+</Marquee>
+```
+
+Container-level skinning lives in the `bg` and `border` variants:
+
+```tsx
+<Marquee bg="surface" border="default">
+  {TAGS.map((tag) => (
+    <span key={tag} className="px-6 font-mono text-sm text-dead-200">
+      {tag}
+    </span>
+  ))}
+</Marquee>
+```
+
+## Mixing fonts inside the children
+
+Children are ordinary markup, so every element inside the strip keeps its own
+typography — a card title can use the sans family while its body copy uses the
+serif:
+
+```tsx
+<Marquee gap={24} speed={45}>
+  {CARDS.map((card) => (
+    <article
+      key={card.title}
+      className="flex w-[380px] shrink-0 overflow-hidden rounded-xl border border-dead-800 bg-dead-900"
+    >
+      <img src={card.image} alt="" className="h-36 w-32 shrink-0 object-cover" />
+      <div className="flex flex-col gap-2 p-4">
+        <h3 className="font-sans text-sm font-semibold text-dead-50">{card.title}</h3>
+        <p className="font-serif text-[13px] leading-relaxed text-dead-400">{card.body}</p>
+      </div>
+    </article>
+  ))}
+</Marquee>
+```
+
 ## Props
 
 | Prop            | Type                                                   | Default       | Description                                                       |
@@ -71,7 +136,10 @@ export function TagStrip() {
 | `pauseOnHover`  | `boolean`                                              | `false`       | Pause the animation while the pointer is over the strip.         |
 | `reverse`       | `boolean`                                              | `false`       | Play the animation backwards.                                    |
 | `repeat`        | `number`                                               | `4`           | How many copies of `children` are rendered.                      |
-| `scrollLinked`  | `boolean`                                              | `false`       | Disable autoplay and drive the offset from page scroll instead.  |
+| `scrollLinked`  | `boolean`                                              | `false`       | Disable autoplay and drive the offset from page scroll. Horizontal moves **right on scroll down**, left on scroll up; `vertical` moves up as you scroll down. |
+| `itemClassName` | `string`                                               | —             | Applied to every repeated wrapper alongside `overflow-hidden` — use it for uniform radius, padding or background on each copy. |
+| `bg`            | `"none" \| "surface" \| "elevated"`                    | `"none"`      | Container background variant.                                     |
+| `border`        | `"none" \| "default"`                                  | `"none"`      | Container border variant.                                         |
 | `className`     | `string`                                               | —             | Merged after the variant classes, so it wins on conflicts.        |
 
 ## Dependencies
@@ -89,12 +157,15 @@ No animation library: the loop is a CSS keyframe on a transform, declared in
 - Each copy is a self-contained period with its inter-item gap baked in, and
   the keyframe translates exactly one copy's width — so the wrap point is
   pixel-perfect and there is no visible jump.
+- `scrollLinked` replaces the keyframe with a scroll-fed `translate` — still
+  compositor-only, and the listener is `passive`.
 - `repeat` is the cost dial: each copy is a full render of `children`, so
-  `repeat={4}` on an expensive child is 4x the DOM.
+  `repeat={4}` on an expensive child is 4x the DOM. Video children in
+  particular multiply their element count by `repeat`.
 
 ## Accessibility
 
-- The track carries `motion-reduce:[animation-none]!`, so under
+- The track carries `motion-reduce:[animation:none]!`, so under
   `prefers-reduced-motion: reduce` the strip renders as static content
   instead of moving.
 - The duplicate copies are decorative repetitions of real text. They are not

@@ -17,10 +17,21 @@ export const marqueeVariants = cva('flex overflow-hidden relative w-full', {
       left: '[mask-image:linear-gradient(to_right,transparent,black_20%,black_100%)]',
       right: '[mask-image:linear-gradient(to_right,black_0%,transparent_100%)]',
     },
+    bg: {
+      none: '',
+      surface: 'bg-dead-surface',
+      elevated: 'bg-dead-elevated',
+    },
+    border: {
+      none: '',
+      default: 'border border-dead-border',
+    },
   },
   defaultVariants: {
     direction: 'horizontal',
     blur: 'edges',
+    bg: 'none',
+    border: 'none',
   },
 })
 
@@ -36,6 +47,7 @@ export interface MarqueeProps
   reverse?: boolean // Reverse scroll direction (default: false)
   repeat?: number // Number of times to duplicate content (default: 4)
   scrollLinked?: boolean // If true, disables auto-play and links to page scroll (default: false)
+  itemClassName?: string // Applied to every repeated item wrapper (default: undefined)
 }
 
 export function Marquee({
@@ -43,12 +55,15 @@ export function Marquee({
   className,
   direction = 'horizontal',
   blur = 'edges',
+  bg = 'none',
+  border = 'none',
   speed = 30,
   gap = 16,
   pauseOnHover = false,
   reverse = false,
   repeat = 4,
   scrollLinked = false,
+  itemClassName,
   ...props
 }: MarqueeProps) {
   const trackRef = useRef<HTMLDivElement>(null)
@@ -76,9 +91,11 @@ export function Marquee({
     <div
       key={i}
       className={cn(
-        'flex shrink-0',
+        // overflow-hidden ensures border-radius clips children
+        'flex shrink-0 overflow-hidden',
         direction === 'vertical' && 'flex-col',
-        direction === 'vertical' ? 'pb-[var(--gap)]' : 'pr-[var(--gap)]'
+        direction === 'vertical' ? 'pb-[var(--gap)]' : 'pr-[var(--gap)]',
+        itemClassName
       )}
       style={{ gap: `${gap}px` }}
     >
@@ -91,7 +108,7 @@ export function Marquee({
 
   return (
     <div
-      className={cn(marqueeVariants({ direction, blur }), className)}
+      className={cn(marqueeVariants({ direction, blur, bg, border }), className)}
       style={{
         ['--gap' as string]: `${gap}px`,
         ['--repeat' as string]: repeat,
@@ -117,7 +134,8 @@ export function Marquee({
                 transform:
                   direction === 'vertical'
                     ? 'translateY(calc(var(--scroll-progress, 0px) * -1))'
-                    : 'translateX(calc(var(--scroll-progress, 0px) * -1))',
+                    // Positive 1 = moves right on scroll down
+                    : 'translateX(calc(var(--scroll-progress, 0px) * 1))',
               }
             : {}),
         }}
