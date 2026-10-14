@@ -1,3 +1,5 @@
+'use client'
+
 import { Marquee } from "@/registry/marquee";
 
 const VIDEO_SRC =
@@ -199,6 +201,12 @@ export default function TestMarqueePage() {
                 muted
                 loop
                 playsInline
+                ref={(el) => {
+                  // React does not SSR the `muted` attribute, so the prerendered
+                  // HTML can be blocked by the autoplay policy. Calling play()
+                  // after hydration (when `muted` is set as a property) fixes it.
+                  el?.play().catch(() => {})
+                }}
                 className="h-44 w-[320px] shrink-0 object-cover"
               />
             </Marquee>

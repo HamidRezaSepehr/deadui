@@ -9,19 +9,16 @@ Phase 1: Component Implementation
 
 ## Current Goal
 
-**Feature 28 removed.** The Melting Blur Text Pro component
-has been fully removed from the project at the user's request:
-registry source (`registry/pro/melting-blur-text/`), the
-`registry.json` entry, the test page
-(`app/test-melting-blur-text/page.tsx`), the docs page
-(`app/docs/components/melting-blur-text/page.mdx`) and the
-feature spec (`context/feature-specs/28-melting-blur-text-pro.md`)
-are deleted; the `registry.json` count is back to 10 and the
-docs nav (derived from the manifest) drops the route
-automatically. The Component Status table and Session Notes no
-longer advertise it. Remaining verification: `tsc` / `lint` /
-`build` clean, no `melting` references outside historical
-session notes.
+**Feature 28: Advanced Marquee (Free)** — the `Marquee` component
+has been upgraded to a fully media-agnostic scrolling container:
+new `itemClassName` prop (applied to every repeated wrapper with
+`overflow-hidden`), `bg`/`border` cva variants, and a fixed
+bidirectional `scrollLinked` transform (horizontal now moves right
+on scroll down). Test page rebuilt with all 5 required examples
+(Image/SVG, Image+Text combo with mixed fonts, Video, Stacked
+Opposing, Bidirectional Scroll-Linked). Docs MDX updated with new
+controls and code snippets. CLI bumped to `0.1.6`, tag `v0.1.6`
+pushed. Remaining: GitHub Release + manual npm publish.
 
 ## Completed
 
@@ -589,12 +586,45 @@ both packages, 7 curl cases against the live route, and
     `context/architecture.md` updated; the Component Status
     table row and this goal section updated. Docs nav is derived
     from the manifest, so the route disappears automatically.
+37. **Feature 28: Advanced Marquee (Free)** — `Marquee` upgraded
+    to a media-agnostic scrolling container. New `itemClassName`
+    prop applied to every repeated wrapper along with
+    `overflow-hidden` (radius clips child images/videos). New `bg`
+    (`none`/`surface`/`elevated`) and `border` (`none`/`default`)
+    cva variants for container skinning; `--color-dead-surface`,
+    `--color-dead-elevated` and `--color-dead-border` theme
+    tokens added to `app/globals.css` so the variant classes
+    resolve (the CLI `init` command already writes these names
+    for consumer projects). Bidirectional scroll-linked transform
+    fixed: horizontal now uses
+    `translateX(calc(var(--scroll-progress, 0px) * 1))` so
+    scrolling down moves the marquee RIGHT (positive X), scrolling
+    up moves it LEFT. Test page rebuilt with all 5 spec-required
+    examples: Image & SVG (`itemClassName="rounded-xl p-4"`),
+    Image+Text combo (mixed `font-sans`/`font-serif`), Video
+    (`itemClassName="rounded-2xl"`, `gap={0}`, muted/looping),
+    Stacked Opposing (`reverse={false}` + `reverse={true}`),
+    Bidirectional Scroll-Linked (`scrollLinked` + `justify-center`
+    so the track overhangs both edges and has room to travel
+    into). Docs MDX updated: customizer controls now include
+    `reverse` and `scrollLinked`, new code snippets for
+    `itemClassName`, `bg`/`border` variants and mixed-font cards,
+    props table extended. `MarqueePreview` wrapper in
+    `components/docs/preview-wrappers.tsx` extended with `toBool`
+    for the new string-valued boolean controls. CLI bumped to
+    `0.1.6`; tag `v0.1.6` created and pushed. Full verification:
+    `npx tsc --noEmit` clean, `npm run lint` clean (0 errors, 0
+    warnings), `npm run build` 28/28 routes, 25/25 Playwright
+    checks on `/test-marquee` and `/docs/components/marquee`
+    (itemClassName classes verified on wrapper, video corner
+    clipping pixel-proven, bg/border computed colors verified,
+    bidirectional scroll confirmed: scroll down → tx increases =
+    scrollY, scroll up → tx decreases).
 
 ## In Progress
 
-Feature 28: Advanced Marquee (Free) — component updated, test + docs updated, CLI bumped to 0.1.6, pushed tag v0.1.6.
-
-
+None. Feature 28 (Advanced Marquee) is complete; awaiting GitHub
+Release + manual npm publish for v0.1.6.
 
 ## Next Up
 
@@ -773,7 +803,7 @@ Feature 28: Advanced Marquee (Free) — component updated, test + docs updated, 
 |---|-----------|------|--------|-----------|----------|
 | 1 | Cinematic Text Reveal | Free | COMPLETE (Session 7, F27 12 variants, +4 Codrops grain) | ✅ | blur-in, fade-up, slide-stagger, scale-pop, rise-color, slide-left-color, scale-blur-color, diagonal-blur-color, flip-x-color, heavy-flip-color, flip-top-color, mask-reveal, blur-grain, blur-grain-bright, scale-blur-grain, skew-blur-grain |
 | 2 | Magnetic Elastic Button | Free | COMPLETE (Feature 09) | ✅ (F20) | default, outline, glow, ghost |
-| 3 | Infinite Blur Marquee | Free | COMPLETE (Feature 10) | ✅ (F20) | horizontal, vertical (blur: none/edges/left/right) |
+| 3 | Infinite Blur Marquee | Free | COMPLETE (Features 10 + 28) | ✅ (F28) | horizontal, vertical (blur: none/edges/left/right; bg: none/surface/elevated; border: none/default; itemClassName; scrollLinked) |
 | 4 | Spotlight Hover Card | Free | COMPLETE (Feature 11) | ✅ (F20) | glow: border, background, both, none (shape: rounded, soft, sharp) |
 | 5 | Scroll-Linked Image Scrub | Free | COMPLETE (Feature 12) | ✅ (F20) | media: image-sequence, video (aspect: video, square, portrait, auto; objectFit: cover, contain, fill, none) |
 | 6 | Staggered Grid Reveal | Free | COMPLETE (Feature 13) — ⚠️ no `registry.json` entry, so the CLI cannot install it (see Open Questions) | ✅ (F20) | fade-up, scale-in, blur-in, slide-left, slide-right, flip-x, flip-y |
