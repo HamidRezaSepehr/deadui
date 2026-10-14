@@ -592,7 +592,7 @@ both packages, 7 curl cases against the live route, and
 
 ## In Progress
 
-None. Feature 28 has been removed from the project.
+Feature 28: Advanced Marquee (Free) — component updated, test + docs updated, CLI bumped to 0.1.6, pushed tag v0.1.6.
 
 
 
