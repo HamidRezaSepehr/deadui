@@ -9,16 +9,30 @@ Phase 1: Component Implementation
 
 ## Current Goal
 
-**Feature 28: Advanced Marquee (Free)** — the `Marquee` component
-has been upgraded to a fully media-agnostic scrolling container:
-new `itemClassName` prop (applied to every repeated wrapper with
-`overflow-hidden`), `bg`/`border` cva variants, and a fixed
-bidirectional `scrollLinked` transform (horizontal now moves right
-on scroll down). Test page rebuilt with all 5 required examples
-(Image/SVG, Image+Text combo with mixed fonts, Video, Stacked
-Opposing, Bidirectional Scroll-Linked). Docs MDX updated with new
-controls and code snippets. CLI bumped to `0.1.6`, tag `v0.1.6`
-pushed. Remaining: GitHub Release + manual npm publish.
+**Feature 29: Text Video Mask (Free)** — the `TextVideoMask` component
+is implemented with a **deviation approved by the owner**: the spec's
+`<video>` + CSS `mask: url(#id)` + `<svg><defs><mask><foreignObject>`
+technique was proven empirically broken in Chromium (foreignObject
+content never paints inside a `<mask>`, so the video can never be
+clipped to the text — pixel-matrix evidence: masked video renders as a
+full unmasked rectangle or fully hidden, never text-shaped). With the
+owner's go-ahead the mask is implemented with `mix-blend-multiply`
+instead: an opaque text layer (default black field) blends over the
+video inside an `isolation: isolate` container — white reveals, black
+hides, same luminance semantics, full HTML/Tailwind children, works
+uniformly in Chrome/Safari/Firefox. Files: `registry/text-video-mask/`
+(component + barrel), `registry.json` entry (free tier, 11 components
+total), `app/test-text-video-mask/page.tsx` (4 sections: bold text /
+outlined stroke / multi-line complex HTML / inverted cut-out) and docs
+MDX at `app/docs/components/text-video-mask/page.mdx`. CLI already at
+`0.1.6`. Verification passed: `npx tsc --noEmit` clean, `npm run lint`
+clean, `npm run build` 30/30 routes, and Playwright/PIL pixel proofs on
+the production server — video visible only inside glyphs (bold: 86% of
+the video box hidden, kept pixels confined to the centered text bands;
+outline: strokes reveal; multi-line: 87% hidden, kept pixels in the two
+text bands; inverted: 97% kept with glyph holes; docs preview: video
+only inside the "DEAD" text). Remaining: git tag re-cut at the new
+commit, GitHub Release + manual npm publish for v0.1.6.
 
 ## Completed
 
@@ -819,10 +833,59 @@ both packages, 7 curl cases against the live route, and
     prose rewritten to describe the panel-as-scroller behaviour. Verified:
     `npx tsc --noEmit` clean, `npm run lint` clean.
 
+45. **Feature 29: Text Video Mask (Free)** —
+    `registry/text-video-mask/text-video-mask.tsx` (component) +
+    `registry/text-video-mask/index.ts` (barrel), a `registry.json`
+    entry (`tier: "free"`, `dependencies: ["clsx", "tailwind-merge"]`,
+    target `components/ui/text-video-mask.tsx`, `variants: []` — manifest
+    now 11 components), test page `app/test-text-video-mask/page.tsx`
+    (4 sections: 01 bold text / 02 outlined SVG-stroke text / 03
+    multi-line complex HTML / 04 inverted text cut-out, plus footer
+    notes on autoplay, blending and reduced motion) and docs page
+    `app/docs/components/text-video-mask/page.mdx` (preview,
+    `<InstallTabs tier="free">`, usage, "How the mask works", props
+    table, performance, accessibility with a reduced-motion wrapper
+    using React 19 ref-as-prop). CLI stays at `0.1.6`.
+
+    **TECHNIQUE DEVIATION (owner-approved).** The spec requires
+    `<video>` + CSS `mask: url(#id)` where the `<mask>` contains a
+    `<foreignObject>` with the React children. Empirically, in Chromium
+    (130+ through 153), `foreignObject` content **never paints inside a
+    `<mask>`** — the Blink mask rasterizer records only SVG-native
+    content, so the masked video renders as either a full unmasked
+    rectangle (white base rect in the mask) or fully hidden. A pixel
+    matrix proved it both ways (CSS `mask` on the video AND the SVG
+    `mask` attribute on a video-in-`foreignObject`), while SVG-native
+    mask content (`<text>`, shapes) does work (0.086 glyph coverage vs
+    0.92 unmasked). The spec's exact component therefore cannot satisfy
+    its own checklist ("video only visible inside the text") in the
+    dominant engine. The owner chose the working alternative: an opaque
+    text layer painted over the video with `mix-blend-multiply` inside a
+    container with `isolation: isolate`. Semantics are unchanged — white
+    reveals the video, black hides it — the layer ships with a black
+    field so `text-white` glyphs reveal the video only inside the text,
+    and full multi-line HTML/Tailwind children work because the layer is
+    ordinary DOM. Trade-off: no `React.useId()` / SVG `mask` id anymore
+    (not needed — nothing is referenced by id).
+
+    Full verification: `npx tsc --noEmit` clean, `npm run lint` clean
+    (0 errors, 0 warnings), `npm run build` 30/30 routes (both new
+    routes prerendered static), and Playwright + PIL pixel proofs
+    against `npm run start` at 1280px — for each section the mask layer
+    was hidden to capture the unmasked baseline and the two frames were
+    compared: 01-bold 86% of the video hidden with kept pixels confined
+    to the centered text bands; 02-outline kept pixels reduced to the
+    stroke; 03-multiline 87% hidden with kept pixels in the heading and
+    subheading bands; 04-cutout inverted (only the glyph area hidden);
+    docs preview showed the video only inside the "DEAD" text
+    (27% kept of the unmasked frame). All four videos confirmed playing
+    (`currentTime` advancing), computed `mix-blend-mode: multiply` and
+    `isolation: isolate` confirmed, zero console/page errors.
+
 ## In Progress
 
-None. Feature 28 (Advanced Marquee) is complete; awaiting GitHub
-Release + manual npm publish for v0.1.6.
+None. Feature 28 (Advanced Marquee) and Feature 29 (Text Video Mask)
+are complete; awaiting GitHub Release + manual npm publish for v0.1.6.
 
 ## Next Up
 

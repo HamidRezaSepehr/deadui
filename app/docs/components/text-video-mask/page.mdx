@@ -1,0 +1,131 @@
+---
+title: Text Video Mask
+description: Blend-masked autoplaying video clipped into the shape of any Tailwind-styled React text.
+---
+
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { TextVideoMask } from "@/registry/text-video-mask"
+
+export const metadata = {
+  title: "Text Video Mask",
+  description:
+    "Blend-masked autoplaying video clipped into the shape of any Tailwind-styled React text.",
+}
+
+# Text Video Mask
+
+A playing video is clipped into the shape of any React children you pass —
+Tailwind classes and all. The component paints an opaque text layer over
+the video and blends it with `mix-blend-multiply`, so white reveals the
+video and black hides it.
+
+## Preview
+
+<div className="not-prose my-8">
+  <TextVideoMask
+    videoSrc="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+    className="h-[320px] w-full rounded-xl border border-dead-800 bg-black"
+    textClassName="text-white text-6xl md:text-8xl font-black uppercase tracking-tight"
+  >
+    Dead
+  </TextVideoMask>
+</div>
+
+The video autoplays, loops, stays muted and plays inline — the only thing
+that changes is where it is visible: inside your text.
+
+## Installation
+
+<InstallTabs componentName="text-video-mask" tier="free" />
+
+## Usage
+
+```tsx
+import { TextVideoMask } from "@/components/ui/text-video-mask"
+
+export function Hero() {
+  return (
+    <TextVideoMask
+      videoSrc="/your-video.mp4"
+      className="h-[400px] w-full"
+      textClassName="text-white text-8xl font-black uppercase"
+    >
+      Bloom
+    </TextVideoMask>
+  )
+}
+```
+
+## How the mask works
+
+The mask is **luminance-based**: white reveals the video, black hides it.
+The text layer is an opaque box painted over the video with
+`mix-blend-multiply` (inside an isolated stacking context, so the blend
+never leaks to the page). The layer ships with a black field, so white
+glyphs reveal the video **only inside the text**:
+
+```tsx
+// Video inside the text ✅ — black field is the default
+<TextVideoMask videoSrc="/video.mp4" textClassName="text-white text-8xl font-black">
+  Bloom
+</TextVideoMask>
+
+// Video everywhere EXCEPT the text (inverted cut-out) ⚠️
+// — flip the field to white, glyphs to black
+<TextVideoMask videoSrc="/video.mp4" textClassName="bg-white text-black text-8xl font-black">
+  Bloom
+</TextVideoMask>
+```
+
+Anything React can render works as the mask: headings, paragraphs, SVG
+text with strokes, mixed font sizes — it is ordinary DOM, styled with
+ordinary Tailwind classes. The technique is pure CSS (no SVG mask, no
+canvas, no WebGL), so it works uniformly in Chrome, Safari, Firefox and
+mobile browsers.
+
+## Props
+
+| Prop            | Type                  | Default | Description                                                        |
+| --------------- | --------------------- | ------- | ------------------------------------------------------------------ |
+| `videoSrc`      | `string`              | —       | URL of the MP4 video to clip. Required.                            |
+| `children`      | `React.ReactNode`     | —       | The text/HTML that shapes the mask. Required.                      |
+| `textClassName` | `string`              | —       | Classes for the text layer inside the mask (colour, size, weight). |
+| `className`     | `string`              | —       | Classes for the container. Give it an explicit height.             |
+| `...props`      | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the container (e.g. `id`, `style`, data attributes). |
+
+## Performance
+
+- Recommend **short, optimized, muted MP4 videos** — a few seconds and a
+  few MB is plenty; very large files will dominate load time.
+- The video is `object-cover` inside the container, so give the container
+  an explicit height (e.g. `h-[400px]`) to avoid layout shift.
+- The mask itself is pure CSS — no SVG mask, no canvas, no WebGL, no
+  per-frame JS.
+
+## Accessibility
+
+- The video is **decorative** and always muted with `playsInline`, so
+  autoplay is never blocked and nothing is announced to screen readers.
+- Under `prefers-reduced-motion`, wrap the component and pause the video
+  with your own media-query hook if you want motion fully disabled:
+
+```tsx
+"use client"
+
+import { useEffect, useRef } from "react"
+import { TextVideoMask } from "@/components/ui/text-video-mask"
+
+export function ReducedMotionMask(
+  props: React.ComponentProps<typeof TextVideoMask>
+) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    ref.current?.querySelector("video")?.pause()
+  }, [])
+
+  // React 19: ref lands in props and is spread onto the container div.
+  return <TextVideoMask ref={ref} {...props} />
+}
+```

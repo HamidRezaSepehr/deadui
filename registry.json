@@ -259,6 +259,23 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "text-video-mask",
+      "title": "Text Video Mask",
+      "description": "Autoplaying video clipped into the shape of any Tailwind-styled React text",
+      "tier": "free",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "registry/text-video-mask/text-video-mask.tsx",
+          "target": "components/ui/text-video-mask.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }
