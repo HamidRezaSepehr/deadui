@@ -4,14 +4,14 @@ import { MarqueePreview } from "@/components/docs/preview-wrappers"
 export const metadata = {
   title: "Infinite Blur Marquee",
   description:
-    "Media-agnostic infinite marquee: images, SVGs and videos with itemClassName, bg/border variants, edge blur, reverse and bidirectional scroll-linking.",
+    "Media-agnostic infinite marquee: images, SVGs and videos with itemClassName, bg/border variants, edge blur, reverse and scroll-reactive motion.",
 }
 
 # Infinite Blur Marquee
 
 Media-agnostic infinite marquee: images, SVGs, videos and mixed HTML cards on
 one seamless track — with edge blur, vertical mode, pause-on-hover, reverse,
-uniform item styling and bidirectional scroll-linking.
+uniform item styling and two scroll-reactive modes.
 
 ## Preview
 
@@ -24,6 +24,7 @@ uniform item styling and bidirectional scroll-linking.
     speed: 30,
     reverse: "false",
     scrollLinked: "false",
+    scrollVelocity: "false",
     pauseOnHover: true,
   }}
   controls={{
@@ -32,6 +33,7 @@ uniform item styling and bidirectional scroll-linking.
     speed: { type: "slider", min: 5, max: 60, step: 5 },
     reverse: { type: "select", options: ["true", "false"] },
     scrollLinked: { type: "select", options: ["true", "false"] },
+    scrollVelocity: { type: "select", options: ["true", "false"] },
     // Note: itemClassName, bg, and border are best demonstrated in code snippets rather than the customizer
   }}
   className="not-prose my-8"
@@ -39,8 +41,17 @@ uniform item styling and bidirectional scroll-linking.
 
 Hover the strip to test `pauseOnHover`. `speed` is the duration of one full loop
 in seconds, so **lower is faster**. Set `scrollLinked` to `true` to freeze the
-autoplay and drive the strip from the page's scroll instead — scrolling down
-moves it right, scrolling up moves it left.
+autoplay and scrub the strip from its container's own progress through the
+viewport instead: it holds still while the strip is off-screen, then glides
+through one full period as you scroll it into and back out of view. `reverse`
+flips which way that travel runs.
+
+For a scroll-reactive loop that never stops, set `scrollVelocity` to `true`
+instead: the strip keeps auto-playing and its velocity is bound to your scroll.
+Scrolling **down** drives it in its default direction (faster), scrolling **up**
+reverses it (faster), and when you stop it keeps moving in the last direction at
+normal speed. `reverse` picks whether the default direction is left
+(`false`) or right (`true`).
 
 ## Installation
 
@@ -136,7 +147,8 @@ serif:
 | `pauseOnHover`  | `boolean`                                              | `false`       | Pause the animation while the pointer is over the strip.         |
 | `reverse`       | `boolean`                                              | `false`       | Play the animation backwards.                                    |
 | `repeat`        | `number`                                               | `4`           | How many copies of `children` are rendered.                      |
-| `scrollLinked`  | `boolean`                                              | `false`       | Disable autoplay and drive the offset from page scroll. Horizontal moves **right on scroll down**, left on scroll up; `vertical` moves up as you scroll down. |
+| `scrollLinked`  | `boolean`                                              | `false`       | Disable autoplay and scrub the offset from the container's own progress through the viewport. Travels exactly one period across the strip's on-screen life, so it never leaves its box; `reverse` flips the direction. |
+| `scrollVelocity`| `boolean`                                              | `false`       | Keep autoplay running and bind the loop's velocity to page scroll. Scrolling down drives the default direction (faster), scrolling up reverses it (faster); the last direction persists at normal speed when scrolling stops. `reverse` sets the default direction. Takes effect only when `scrollLinked` is `false`. |
 | `itemClassName` | `string`                                               | —             | Applied to every repeated wrapper alongside `overflow-hidden` — use it for uniform radius, padding or background on each copy. |
 | `bg`            | `"none" \| "surface" \| "elevated"`                    | `"none"`      | Container background variant.                                     |
 | `border`        | `"none" \| "default"`                                  | `"none"`      | Container border variant.                                         |
@@ -158,7 +170,15 @@ No animation library: the loop is a CSS keyframe on a transform, declared in
   the keyframe translates exactly one copy's width — so the wrap point is
   pixel-perfect and there is no visible jump.
 - `scrollLinked` replaces the keyframe with a scroll-fed `translate` — still
-  compositor-only, and the listener is `passive`.
+  compositor-only. The offset comes from the container's own
+  `getBoundingClientRect()` measured against the viewport, wrapped to a single
+  period so the track's spare copies always cover the box, and refreshed from
+  `passive` scroll and resize listeners plus a `ResizeObserver`.
+- `scrollVelocity` is the one mode driven by `requestAnimationFrame` (a CSS
+  keyframe cannot have its speed or direction changed mid-flight): it still only
+  writes `transform` on the same `will-change-transform` layer, and the travel
+  distance is wrapped at exactly one period so the loop stays seamless. It also
+  short-circuits under `prefers-reduced-motion`.
 - `repeat` is the cost dial: each copy is a full render of `children`, so
   `repeat={4}` on an expensive child is 4x the DOM. Video children in
   particular multiply their element count by `repeat`.

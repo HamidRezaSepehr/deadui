@@ -1,20 +1,7 @@
 import { ScrollScrub } from "@/registry/scroll-scrub";
 
-// The component's own fallback URL, passed explicitly so the section is
-// unambiguous about which media it is scrubbing. (The spec's original default,
-// Google's `gtv-videos-bucket/sample/ForBiggerBlazes.mp4`, now answers 403 for
-// anonymous callers — that bucket is no longer public — so the shipped default
-// is MDN's CC0 `flower.mp4` instead.)
-const DEFAULT_VIDEO =
-  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
-
-const UNSPLASH_FRAMES = [
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&h=600&q=80",
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&h=600&q=80",
-  "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&h=600&q=80",
-  "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=800&h=600&q=80",
-  "https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=800&h=600&q=80",
-];
+// Local video file provided for testing and demos.
+const DEFAULT_VIDEO = "/video-sequence.mp4";
 
 function SectionLabel({
   index,
@@ -51,11 +38,12 @@ export default function TestScrollScrubPage() {
       <div className="w-full max-w-4xl px-8">
         <section>
           <SectionLabel index={1}>
-            DEFAULT IMAGE SEQUENCE — no props at all. Ten Picsum frames,{" "}
+            DEFAULT IMAGE SEQUENCE —  113 local frames from{" "}
+            <span className="text-dead-200">image-sequence/</span>,{" "}
             <span className="text-dead-200">pin</span> on, ~200vh of scrub. The
             stage stays put while the frames change underneath it.
           </SectionLabel>
-          <ScrollScrub id="ss-default-images" />
+          <ScrollScrub id="ss-default-images" className="pt-24" scrub={2} />
         </section>
 
         <section>
@@ -67,26 +55,12 @@ export default function TestScrollScrubPage() {
             <span className="text-dead-200">duration</span> is never NaN. Scroll
             fast — the first frames are handled, not dropped.
           </SectionLabel>
-          <ScrollScrub id="ss-default-video" videoSrc={DEFAULT_VIDEO} />
-        </section>
-
-        <section>
-          <SectionLabel index={3}>
-            CUSTOM IMAGE SEQUENCE — five Unsplash frames via{" "}
-            <span className="text-dead-200">images</span>. Fewer frames means
-            each one holds longer on the scroll.
-          </SectionLabel>
-          <ScrollScrub id="ss-custom-images" images={UNSPLASH_FRAMES} />
-        </section>
-
-        <section>
-          <SectionLabel index={4}>
-            UNPINNED — <span className="text-dead-200">pin</span> is false and
-            the section is short (<span className="text-dead-200">h-[150vh]</span>
-            ), so the media scrolls naturally through the viewport while it
-            keeps scrubbing.
-          </SectionLabel>
-          <ScrollScrub id="ss-unpinned" pin={false} className="h-[150vh]" />
+          <ScrollScrub
+            id="ss-default-video"
+            videoSrc={DEFAULT_VIDEO}
+            scrub={2}
+            className="pt-24"
+          />
         </section>
 
         <footer className="w-full py-24 text-center">

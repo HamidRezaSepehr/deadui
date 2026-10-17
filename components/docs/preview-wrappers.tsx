@@ -78,12 +78,55 @@ export function MarqueePreview({
   children,
   ...props
 }: Record<string, unknown>) {
+  const direction = props.direction === "vertical" ? "vertical" : "horizontal";
+
+  // A vertical strip is clipped to the component's fixed `h-[500px]` stage, so
+  // its track has to be taller than that stage *plus* one spare period for the
+  // seamless wrap. The page's single-line demo string can't do that — it renders
+  // as one stubby band with an empty box under it and a loop that only travels
+  // its own line-height. So vertical gets explicit chips (split out of the same
+  // demo string) and enough `repeat` copies to fill the stage.
+  if (direction === "vertical") {
+    const parsed = String(children ?? "")
+      .split("★")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const labels =
+      parsed.length > 1
+        ? parsed
+        : ["Dead UI", "Simple Animations", "React Components"];
+
+    return (
+      <Marquee
+        {...props}
+        direction="vertical"
+        repeat={6}
+        gap={16}
+        itemClassName="items-center"
+        pauseOnHover={toBool(props.pauseOnHover)}
+        reverse={toBool(props.reverse)}
+        scrollLinked={toBool(props.scrollLinked)}
+        scrollVelocity={toBool(props.scrollVelocity)}
+      >
+        {labels.map((label) => (
+          <span
+            key={label}
+            className="flex h-[56px] w-[220px] shrink-0 items-center justify-center rounded-md border border-dead-800 bg-dead-900 font-mono text-xs uppercase tracking-[0.2em] text-dead-300"
+          >
+            {label}
+          </span>
+        ))}
+      </Marquee>
+    );
+  }
+
   return (
     <Marquee
       {...props}
       pauseOnHover={toBool(props.pauseOnHover)}
       reverse={toBool(props.reverse)}
       scrollLinked={toBool(props.scrollLinked)}
+      scrollVelocity={toBool(props.scrollVelocity)}
     >
       {children as ReactNode}
     </Marquee>
@@ -102,7 +145,20 @@ export function SpotlightCardPreview({
 }
 
 export function ScrollScrubPreview(props: Record<string, unknown>) {
-  return <ScrollScrub {...props} pin={toBool(props.pin)} />;
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <p className="font-mono text-[11px] leading-relaxed text-dead-400">
+        Scroll inside the panel to scrub the media.
+      </p>
+      <div className="relative h-[420px] w-full overflow-y-auto overscroll-contain rounded-lg border border-dead-800 bg-dead-950">
+        <ScrollScrub
+          {...props}
+          className="h-[1400px] pt-16"
+          pin={toBool(props.pin)}
+        />
+      </div>
+    </div>
+  );
 }
 
 export function StaggeredGridPreview(props: Record<string, unknown>) {

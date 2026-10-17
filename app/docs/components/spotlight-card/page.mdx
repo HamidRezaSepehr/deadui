@@ -31,6 +31,7 @@ Mouse-tracking radial spotlight with a border-masked glow and optional 3D tilt.
     enableTilt: { type: "select", options: ["true", "false"] },
     tiltIntensity: { type: "slider", min: 0, max: 30, step: 1 },
     spotlightColor: { type: "color" },
+    animatedGradient: { type: "select", options: ["true", "false"] },
   }}
   className="not-prose my-8"
 />
@@ -40,6 +41,38 @@ border ring lights up without the glow ever bleeding onto the card face.
 `glowType` decides which layers are painted — `border` is masked to the 1px
 ring, `background` fills the surface, `both` does each, `none` disables the
 spotlight entirely and leaves only the static hairline border.
+
+### Animated Gradient
+
+Enable <span className="text-dead-200">`animatedGradient`</span> to make the
+spotlight color drift gradually through the spectrum as the pointer moves.
+The hue shifts in small increments mapped to cursor distance and eases between
+values over an 800ms transition, so the color never snaps — it glides from one
+shade to the next. Use <span className="text-dead-200">`animatedGradientOpacity`</span>
+to control the glow's alpha.
+
+<div className="grid grid-cols-1 gap-6 not-prose my-8 sm:grid-cols-2">
+  <div className="bg-preview-grid flex min-h-[150px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <SpotlightCard glowType="both" animatedGradient className="w-full p-6 text-center font-mono text-xs text-dead-300">
+      animatedGradient: true
+    </SpotlightCard>
+  </div>
+  <div className="bg-preview-grid flex min-h-[150px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <SpotlightCard glowType="border" animatedGradient className="w-full p-6 text-center font-mono text-xs text-dead-300">
+      border: animated
+    </SpotlightCard>
+  </div>
+  <div className="bg-preview-grid flex min-h-[150px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <SpotlightCard glowType="background" animatedGradient className="w-full p-6 text-center font-mono text-xs text-dead-300">
+      background: animated
+    </SpotlightCard>
+  </div>
+  <div className="bg-preview-grid flex min-h-[150px] items-center justify-center rounded-xl border border-dead-800 bg-dead-900 p-6">
+    <SpotlightCard glowType="both" animatedGradient animatedGradientOpacity={0.6} className="w-full p-6 text-center font-mono text-xs text-dead-300">
+      opacity 0.6
+    </SpotlightCard>
+  </div>
+</div>
 
 ## Installation
 
@@ -90,8 +123,8 @@ is a separate prop and defaults to `rounded`.
 
 ## Props
 
-| Prop                 | Type                                                     | Default                       | Description                                                                |
-| -------------------- | -------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------- |
+| `animatedGradient`     | `boolean`                                                | `false`                      | Drift the spotlight color gradually through the spectrum as the pointer moves. |
+| `animatedGradientOpacity` | `number`                                          | `0.35`                       | Alpha of the animated gradient glow, `0` to `1`.                             |
 | `children`           | `React.ReactNode`                                        | —                             | Card content, wrapped in a `p-6` layer above the glow. Required.            |
 | `glowType`           | `"border" \| "background" \| "both" \| "none"`           | `"both"`                      | Which glow layers to paint.                                                |
 | `enableTilt`         | `boolean`                                                | `false`                       | Track the pointer with a 3D rotation as well as the spotlight.              |

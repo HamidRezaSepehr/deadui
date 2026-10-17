@@ -620,6 +620,204 @@ both packages, 7 curl cases against the live route, and
     clipping pixel-proven, bg/border computed colors verified,
     bidirectional scroll confirmed: scroll down → tx increases =
     scrollY, scroll up → tx decreases).
+38. **Fixed vertical marquee preview bug in documentation page (ensuring proper track height) and enhanced test page with three clearly visible vertical marquee examples: normal speed (speed={2}), reverse direction (speed={2}), and scroll-linked (speed={2}) with bidirectional behavior based on scroll direction. Added extensive visual debugging aids to ensure visibility.
+39. **Marquee: autoplay + bidirectional scroll-linked variation** — `scrollLinked`
+    is now `boolean | 'auto'`. The new `'auto'` value keeps the CSS keyframe loop
+    running (so the strip moves even when the page is not scrolling) and stacks
+    the same bidirectional scroll offset on top: scrolling down nudges it right,
+    scrolling up pulls it left, and once scrolling stops the offset holds while
+    autoplay carries on. Implemented with zero new DOM and zero JS per frame —
+    the keyframes keep animating `transform` while the scroll offset rides the
+    separate CSS `translate` property, and CSS applies `translate ∘ transform`,
+    so the two compose. In `'auto'` mode the offset is measured from the scroll
+    position at mount, so an embedded marquee starts at its natural position
+    instead of jumping to the document offset; `true` still maps the raw
+    `window.scrollY` exactly as before. Changed in both
+    `registry/marquee/marquee.tsx` and `components/ui/marquee.tsx`; the test page
+    gained section 6 ("AUTOPLAY + SCROLL-LINKED", `scrollLinked="auto"`) and the
+    vertical section was renumbered to 7. Docs MDX: customizer `scrollLinked`
+    control gained the `auto` option, prose + props table (`boolean | "auto"`) +
+    performance bullet updated, and `MarqueePreview` in
+    `components/docs/preview-wrappers.tsx` now passes `"auto"` through instead of
+    coercing it with `toBool`. Full verification: `npx tsc --noEmit` clean,
+    `npm run lint` clean (0 errors, 0 warnings), and 10/10 Playwright/Chromium
+    assertions on `/test-marquee` — autoplay confirmed moving with scrollY held
+    at 0, scroll down translate `0 → 500px` for a `+500px` scroll, scroll up
+    `500 → 200px` for `−300px`, loop still advancing after scrolling stopped,
+    pure `scrollLinked` variant unchanged (animation `none`, offset == scrollY
+    == 1690), plain marquee unaffected, zero console/page errors.
+    **⚠️ SUPERSEDED by #40** — the user reviewed `scrollLinked="auto"` and
+    rejected the model: overlaying a scroll *position* offset reads as the strip
+    "fighting" the loop (it reverses direction the moment a scroll event lands).
+    The `'auto'` value was removed again and replaced by the velocity model in
+    #40.
+40. **Marquee: velocity-linked scroll variation (`scrollVelocity`)** — replaces
+    the rejected `scrollLinked="auto"` from #39 with the interaction the user
+    actually specified. `scrollLinked` is back to a plain `boolean` (pure
+    position link: animation off, offset == `window.scrollY`), and the new
+    `scrollVelocity?: boolean` prop (default `false`) adds the second variation:
+    the strip **always** auto-plays (never stops) and its velocity is bound to
+    the page-scroll velocity — scrolling **down** drives it in its default
+    direction *faster*, scrolling **up** *reverses* it faster, and whichever
+    direction was scrolled last keeps moving at the base `speed` once scrolling
+    stops. `reverse` selects the default direction (`false` = left/up, `true` =
+    right/down). Because CSS keyframes cannot have their speed or direction
+    changed mid-flight, this mode is the component's one `requestAnimationFrame`
+    path: it disables the keyframe (`animation: none`), integrates a wrapped
+    travel distance, and writes `transform` on the same `will-change-transform`
+    layer — the distance wraps at exactly one period, so the loop stays
+    seamless. Still `passive` scroll listeners, still honours `pauseOnHover`
+    (via `root.matches(':hover')`) and now also short-circuits (renders static)
+    under `prefers-reduced-motion`, since rAF ignores the CSS reduced-motion
+    guard. Changed in both `registry/marquee/marquee.tsx` and
+    `components/ui/marquee.tsx`; `/test-marquee` section 6 is now
+    "VELOCITY-LINKED SCROLL" with **two** rows — default-left and
+    `reverse` (default-right) — and the vertical section stays at 7. Docs MDX:
+    `scrollLinked` control/type reverted to `true|false`, new `scrollVelocity`
+    control + `defaultProps` entry, prose, props table row, and performance
+    note. Full verification: `npx tsc --noEmit` clean, `npm run lint` clean (0
+    errors, 0 warnings), 12/12 Playwright/Chromium assertions on
+    `/test-marquee` — default-left idle `−113px/s`, scroll-down `−317px/s`,
+    idle-after-down `−113px/s`, scroll-up `+285px/s`, idle-after-up `+113px/s`;
+    default-right (reverse) the exact mirror (`+115 / +309 / +115 / −279 /
+    −115`); velocity mode reports `animationName: none` (rAF-driven); pure
+    `scrollLinked` still `tx == scrollY`; zero console/page errors — plus a docs
+    customizer run proving the new control switches the preview to the
+    rAF-driven mode with no errors.
+41. **Marquee: vertical parity for all scroll variations** — the vertical axis
+    now demonstrates the exact same set as the horizontal axis. **No component
+    change was required**: `scrollLinked`, `scrollVelocity`, the rAF travel
+    integrator and the CSS keyframe were already written axis-generically
+    (`track.scrollHeight / repeat`, `translate3d(0, −p, 0)`, and
+    `marquee-vertical`), so this step was verification + a test-page rebuild.
+    `/test-marquee` section 7 is now "VERTICAL MARQUEE VARIATIONS" with five
+    labelled strips: (1) autoplay **UP** (default, not scroll-linked), (2)
+    autoplay **DOWN** (`reverse`, not scroll-linked), (3) `scrollLinked` — only
+    moves while scrolling, (4) `scrollVelocity` — default **UP**, keeps moving
+    and is scroll-bound, (5) `scrollVelocity reverse` — default **DOWN**, keeps
+    moving and is scroll-bound. The old section used an inline-`style` dashed
+    box with `repeat={1}` (a non-repeating single item, which is why the pure
+    scroll-linked demo drifted out); it is replaced with the shared
+    `VerticalItem` helper, a `h-[320px]` container, and no inline styles.
+    Full verification: `npx tsc --noEmit` clean, `npm run lint` clean (0
+    errors, 0 warnings), 13/13 Playwright/Chromium assertions on
+    `/test-marquee` — autoplay UP `Δty −36px`, autoplay DOWN `Δty +36px`,
+    pure `scrollLinked` still when idle then `ty == −scrollY` (−400 == −400),
+    velocity default-UP idle `−89px/s` / scroll-down `−251` / idle `−89` /
+    scroll-up-reverse `+229` / idle `+89`, velocity default-DOWN the mirror
+    (`+90 / +242 / −202`), zero console/page errors. Two methodology notes
+    worth keeping: (a) a velocity sample must be measured with the **page**,
+    not the element — the rAF jumps the raw `transform` by exactly one period
+    at the wrap, which is visually seamless because the track is `repeat`
+    identical copies, so the test unwraps deltas larger than half a period
+    before computing a rate; and (b) the persisted "last scroll direction"
+    means an idle measurement must be preceded by a direction-setting nudge,
+    otherwise it inherits whatever direction the previous scroll left behind.
+42. **Fixed empty vertical `scrollLinked` demo (bug found in the #41 test page)**
+    — the user reported section 7's third card ("scrollLinked — only moves when
+    you scroll") rendered nothing. Cause: `scrollLinked` maps the **raw**
+    `window.scrollY` onto `translateY(−scrollY)`, and the strip was only
+    `repeat={8}` × 360px = **2880px** tall while that section sits ~3500–4400px
+    down the page — so the whole track was translated above the card
+    (measured `trackBottom −335px`, `overlap 0`). The horizontal
+    scroll-linked demo survives the same absolute offset only because it is
+    `justify-center` with ~13,600px of overhang. Fix (demo-only, no component
+    change — this is the documented absolute-`scrollY` behaviour): raise the
+    vertical strip to `repeat={20}` = **7200px**, so the track is always taller
+    than the page offset while the card is on screen, and note the reason in
+    the caption. Verified at 1440×900 and 390×844: `trackH 7200` vs
+    `scrollY 3505 / 4359`, container overlap now the full `320px`, 7–8 items
+    visibly intersecting the card at rest and after a `+200px` scroll, `ty ==
+    −scrollY` (still when idle) and moving up on scroll, zero console errors.
+    `npx tsc --noEmit` clean, `npm run lint` clean, and the full 13/13 vertical
+    suite still passes.
+43. **Marquee docs customizer overhaul + `scrollLinked` semantics change
+    (viewport-relative)** — owner asked to fully audit the marquee docs
+    live-preview/customize panel and fix bugs, "especially for the vertical
+    direction and the scroll linked property".
+
+    BUGS FOUND (audited the live customizer with Playwright at 1440×1200):
+    (a) **vertical autoplay looked broken** — the root is `h-[500px]` but the
+    page's single repeated sentence produced a track only `160px` tall, so the
+    content sat in the top third of an otherwise empty box and looped a stubby
+    `40px`; (b) **`scrollLinked` emptied the preview** — it mapped the **raw**
+    `window.scrollY` onto the transform, and that preview sits ~350–913px down
+    the page, so any scroll pushed the `160px` track completely out of the box
+    (`visibleItems 0` after a `351px` scroll); horizontal was affected too, just
+    less visibly (its track is wide); (c) **both scroll modes on at once** ran
+    both effects and the `scrollVelocity` rAF overwrote the `scrollLinked`
+    transform (conflicting/undefined); (d) **`reverse` was a no-op with
+    `scrollLinked`**.
+
+    OWNER DECISION (asked before changing a shipped component): make
+    `scrollLinked` **viewport-relative** rather than raw `window.scrollY`.
+
+    COMPONENT FIX (`registry/marquee/marquee.tsx` + mirrored in
+    `components/ui/marquee.tsx`). The `scrollLinked` effect now computes the
+    container's own progress through the viewport —
+    `fraction = clamp((innerHeight − box.top) / (innerHeight + box.height), 0, 1)`
+    — and writes `--scroll-progress` as a **signed px offset inside `[−period,
+    0]`** (`period = track.scrollWidth|scrollHeight / repeat`). The track is
+    `repeat` identical copies, so a full-period shift is visually identical to
+    zero: the wrap is seamless and, because the offset never leaves
+    `[−period, 0]`, the box is always fully covered (the default `repeat` of 4
+    leaves ample spare copies). `reverse` travels the same safe window the other
+    way (`offset = travel − period`). It now refreshes from `passive`
+    scroll + `resize` listeners **and** a `ResizeObserver`, and holds still
+    (offset 0) while the strip is off-screen. The `scrollVelocity` effect is
+    guarded with `|| scrollLinked` so `scrollLinked` wins when both are set, and
+    the inline transform was simplified to `translateX/Y(var(--scroll-progress,
+    0px))`.
+
+    DOCS PREVIEW FIX (`components/docs/preview-wrappers.tsx`). `MarqueePreview`
+    is now direction-aware: a vertical strip renders the demo string split on
+    `★` into explicit chips (`h-[56px] w-[220px]`, centered via
+    `itemClassName="items-center"`) and passes `repeat={6}` + `gap={16}`, so the
+    track (`1296px`) fills the fixed `500px` stage and leaves a spare period for
+    the wrap. Horizontal keeps the single demo line.
+
+    DOCS SYNC (`app/docs/components/marquee/page.mdx`). Rewrote the
+    `scrollLinked` prose, the props-table rows (and noted `scrollVelocity` only
+    applies when `scrollLinked` is `false`), the performance bullet, and the
+    metadata/lede wording away from "bidirectional". Updated the QA page
+    (`app/test-marquee/page.tsx`) section 5 + section 7.3 copy, dropped the now
+    unnecessary `justify-center` / `repeat={20}` hacks, and refreshed the chip
+    labels and footer.
+
+    VERIFIED. New `/tmp/opencode/verify_docs_customizer.py` drives the real
+    radix selects through every direction × mode × blur combination and checks
+    fill/coverage/scrub: **28/28 pass** — vertical autoplay `trackH 1296 ≥
+    rootH 500`; vertical `scrollLinked` covered and non-empty at `scrollY
+    0/200/500/900` (`offset −104 → −216`, exactly one `216px` period across the
+    traversal); horizontal `scrollLinked` covered to `scrollY 1100` (`offset
+    −198 → −418`); `reverse` produces an equal-and-opposite delta; both-modes-on
+    is stable (`−290 → −290`, `anim none`); blur variants and the speed slider
+    all render. Updated the older suites for the new semantics
+    (`test_marquee.py` 33/33, `test_velocity.py` all pass incl. the rewritten
+    pure-scrollLinked check, `test_vertical.py` 13/13 with a new
+    scroll-into-view step, and rewrote the obsolete `test_docs_marquee.py`).
+    `npx tsc --noEmit` and `npm run lint` clean; zero console/page errors.
+
+44. **Scroll-Scrub: owner-provided media + self-scrolling docs preview** —
+    replaced every external demo asset with the owner's local files. The
+    registry component's `DEFAULT_IMAGES` (was 10 Picsum seeds) is now the 57
+    frames in `public/image-sequence/ezgif-frame-NNN.jpg`, and `DEFAULT_VIDEO`
+    (was MDN `flower.mp4`) is now `/video-sequence.mp4`, so zero-prop
+    `<ScrollScrub />` demos locally. `app/test-scroll-scrub/page.tsx` dropped the
+    custom-Unsplash and unpinned sections (now just the default image + video
+    demos), and both pinned sections gained `pt-24` so the pinned stage sits
+    clear of the viewport top. The docs preview
+    (`components/docs/preview-wrappers.tsx` → `ScrollScrubPreview`) now renders
+    the scrub inside its own `h-[420px] overflow-y-auto overscroll-contain`
+    panel with a "Scroll inside the panel to scrub the media." note and a
+    `h-[1400px] pt-16` scrub height, so the page no longer scrolls to drive it.
+    To make that work, `registry/scroll-scrub/scroll-scrub.tsx` gained a
+    `findScrollContainer()` helper that walks up to the nearest scrollable
+    ancestor (`overflow-y: auto|scroll` with a real range) and hands it to
+    ScrollTrigger's `scroller`, falling back to the viewport when there is none
+    — so the component scrubs whatever container it is mounted in. Docs MDX
+    prose rewritten to describe the panel-as-scroller behaviour. Verified:
+    `npx tsc --noEmit` clean, `npm run lint` clean.
 
 ## In Progress
 
@@ -803,7 +1001,7 @@ Release + manual npm publish for v0.1.6.
 |---|-----------|------|--------|-----------|----------|
 | 1 | Cinematic Text Reveal | Free | COMPLETE (Session 7, F27 12 variants, +4 Codrops grain) | ✅ | blur-in, fade-up, slide-stagger, scale-pop, rise-color, slide-left-color, scale-blur-color, diagonal-blur-color, flip-x-color, heavy-flip-color, flip-top-color, mask-reveal, blur-grain, blur-grain-bright, scale-blur-grain, skew-blur-grain |
 | 2 | Magnetic Elastic Button | Free | COMPLETE (Feature 09) | ✅ (F20) | default, outline, glow, ghost |
-| 3 | Infinite Blur Marquee | Free | COMPLETE (Features 10 + 28) | ✅ (F28) | horizontal, vertical (blur: none/edges/left/right; bg: none/surface/elevated; border: none/default; itemClassName; scrollLinked) |
+| 3 | Infinite Blur Marquee | Free | COMPLETE (Features 10 + 28) | ✅ (F28) | horizontal, vertical (blur: none/edges/left/right; bg: none/surface/elevated; border: none/default; itemClassName; scrollLinked; scrollVelocity) — autoplay up/down + scrollLinked (viewport-scrubbed, `reverse`-aware) + scrollVelocity up/down verified on both axes; docs customizer audited across all direction × mode × blur combos |
 | 4 | Spotlight Hover Card | Free | COMPLETE (Feature 11) | ✅ (F20) | glow: border, background, both, none (shape: rounded, soft, sharp) |
 | 5 | Scroll-Linked Image Scrub | Free | COMPLETE (Feature 12) | ✅ (F20) | media: image-sequence, video (aspect: video, square, portrait, auto; objectFit: cover, contain, fill, none) |
 | 6 | Staggered Grid Reveal | Free | COMPLETE (Feature 13) — ⚠️ no `registry.json` entry, so the CLI cannot install it (see Open Questions) | ✅ (F20) | fade-up, scale-in, blur-in, slide-left, slide-right, flip-x, flip-y |

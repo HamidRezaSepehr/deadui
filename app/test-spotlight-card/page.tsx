@@ -270,6 +270,77 @@ export default function TestSpotlightCardPage() {
 
         <div className="h-[10vh]" />
 
+        <section>
+          <p className="mb-4 font-mono text-sm text-dead-400">
+            5. ANIMATED GRADIENT — <span className="text-dead-200">animatedGradient</span>{' '}
+            drifts the spotlight hue gradually as the pointer moves. The color
+            eases between shades over an 800ms transition, never snapping. Use{" "}
+            <span className="text-dead-200">animatedGradientOpacity</span> to set
+            the glow alpha.
+          </p>
+          <div className="grid grid-cols-2 gap-4 rounded-lg border border-dead-800 bg-dead-900 p-8 md:grid-cols-4">
+            <SpotlightCard
+              id="sc-animated-1"
+              className="min-h-[160px] bg-dead-900"
+              animatedGradient
+              glowType="both"
+            >
+              <div className="flex h-full flex-col justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-dead-600">
+                  animated
+                </span>
+                <span className="font-mono text-sm text-dead-50">smooth hue</span>
+              </div>
+            </SpotlightCard>
+
+            <SpotlightCard
+              id="sc-animated-2"
+              className="min-h-[160px] bg-dead-900"
+              animatedGradient
+              glowType="border"
+            >
+              <div className="flex h-full flex-col justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-dead-600">
+                  border-only
+                </span>
+                <span className="font-mono text-sm text-dead-50">edge only</span>
+              </div>
+            </SpotlightCard>
+
+            <SpotlightCard
+              id="sc-animated-3"
+              className="min-h-[160px] bg-dead-900"
+              animatedGradient
+              glowType="background"
+              animatedGradientOpacity={0.15}
+            >
+              <div className="flex h-full flex-col justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-dead-600">
+                  face-only
+                </span>
+                <span className="font-mono text-sm text-dead-50">opacity 0.15</span>
+              </div>
+            </SpotlightCard>
+
+            <SpotlightCard
+              id="sc-animated-4"
+              className="min-h-[160px] bg-dead-900"
+              animatedGradient
+              glowType="both"
+              animatedGradientOpacity={0.7}
+            >
+              <div className="flex h-full flex-col justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-dead-600">
+                  vivid
+                </span>
+                <span className="font-mono text-sm text-dead-50">opacity 0.7</span>
+              </div>
+            </SpotlightCard>
+          </div>
+        </section>
+
+        <div className="h-[10vh]" />
+
         <footer className="w-full pb-24 text-center">
           <p className="font-mono text-sm leading-relaxed text-dead-400">
             The border glow is a radial gradient on a 1px padded layer with a

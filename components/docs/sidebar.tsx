@@ -34,6 +34,7 @@ import {
   SpotlightCardPreview,
   StaggeredGridPreview,
   TextFillPreview,
+  TextVideoMaskPreview,
   WebGLTrailPreview,
 } from "@/components/docs/previews";
 import type { DocsNavGroup, DocsNavItem, DocsTier } from "@/lib/docs-nav";
@@ -73,12 +74,13 @@ interface ComponentMeta {
  * names — `registry.json` is the source of truth for those, and `docs-nav.ts`
  * already emits them.
  *
- * Three of the eleven entries (`rainbow-button`, `marquee`, `gradient-border`)
- * render the REAL registry component. Those three are pure CSS loops with no
- * ScrollTrigger, no pointer dependency and no WebGL context, so they are already
- * auto-playing and a stand-in could only be a less accurate impression of them.
- * The other eight are documented individually in `components/docs/previews/`,
- * which explains each substitution.
+ * Four of the twelve entries (`rainbow-button`, `marquee`, `gradient-border`,
+ * `text-video-mask`) render the REAL registry component. Those are auto-playing
+ * (CSS loops or a muted autoplay video) with no ScrollTrigger, no pointer
+ * dependency and no WebGL context, so they are already auto-playing and a
+ * stand-in could only be a less accurate impression of them. The other eight
+ * are documented individually in `components/docs/previews/`, which explains each
+ * substitution.
  */
 const COMPONENT_META: Record<string, ComponentMeta> = {
   "cinematic-text": { category: "text", preview: <CinematicTextPreview /> },
@@ -92,6 +94,7 @@ const COMPONENT_META: Record<string, ComponentMeta> = {
   "gradient-border": { category: "media", preview: <GradientBorderPreview /> },
   "image-trail": { category: "cursor", preview: <ImageTrailPreview /> },
   "webgl-image-trail": { category: "cursor", preview: <WebGLTrailPreview /> },
+  "text-video-mask": { category: "media", preview: <TextVideoMaskPreview /> },
 };
 
 /**

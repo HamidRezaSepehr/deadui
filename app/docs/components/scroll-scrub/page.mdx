@@ -34,16 +34,17 @@ optional pinning.
   className="not-prose my-8"
 />
 
-**The preview really is 300vh tall — that is the component, not a styling
-quirk.** `ScrollScrub` reserves its scroll range up front: the section is
-`h-[300vh]` and the short media stage is pinned inside it, so scrolling the
-page scrubs the timeline. Shrink it for a demo with
-`className="h-[150vh]"`, or pass `pin={false}` to let the media scroll away
-normally.
+**The panel above is its own scroll container — scroll inside it, not the
+page.** `ScrollScrub` reserves its scroll range up front: the section is
+`h-[300vh]` (the preview overrides this with a shorter height) and the short
+media stage is pinned inside it, so scrolling its container scrubs the
+timeline. Shrink it for a demo with `className="h-[150vh]"`, or pass
+`pin={false}` to let the media scroll away normally.
 
-Scroll down through this page to drive it. With `scrub` above `0` the timeline
-eases toward the scroll position instead of tracking it exactly — higher is
-smoother and laggier.
+The component scrubs whichever scroll container it is mounted in — the nearest
+scrollable ancestor, or the page when there is none. With `scrub` above `0`
+the timeline eases toward the scroll position instead of tracking it exactly —
+higher is smoother and laggier.
 
 ## Installation
 
@@ -54,9 +55,8 @@ smoother and laggier.
 ```tsx
 import { ScrollScrub } from "@/components/ui/scroll-scrub"
 
-const FRAMES = Array.from(
-  { length: 24 },
-  (_, i) => `https://picsum.photos/seed/frame${i}/1600/900`,
+const FRAMES = Array.from({ length: 57 }, (_, i) =>
+  `/image-sequence/ezgif-frame-${String(i + 1).padStart(3, "0")}.jpg`,
 )
 
 export function ProductScrub() {
@@ -74,9 +74,9 @@ export function ProductScrub() {
 ```
 
 Image mode is the default and needs no configuration: with no `images` and no
-`videoSrc` the component falls back to ten Picsum frames so it demos itself
-the moment it is installed. Pass `videoSrc` instead and it scrubs
-`video.currentTime` on the same range.
+`videoSrc` the component uses the local 57 frames from `image-sequence/`. Pass
+`videoSrc="/video-sequence.mp4"` for a locally hosted video scrubbed by
+`currentTime` on the same scroll range.
 
 ## Props
 

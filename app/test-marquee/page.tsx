@@ -37,7 +37,11 @@ const COMBO_CARDS = [
 
 const STACK_TOP = ["NORMAL DIRECTION", "SCROLLS LEFT", "PURE CSS KEYFRAMES", "NO JS", "ONE COMPOSITOR LAYER"];
 const STACK_BOTTOM = ["REVERSED", "SCROLLS RIGHT", "OPPOSING ROW", "SAME TRACK MATH", "STACKED IN A COLUMN"];
-const SCROLL_CHIPS = ["SCROLL DOWN → RIGHT", "SCROLL UP → LEFT", "BI-DIRECTIONAL", "SCROLL-LINKED", "NO AUTOPLAY", "WINDOW.SCROLLY"];
+const SCROLL_CHIPS = ["SCROLL DOWN → GLIDES", "VIEWPORT-LINKED", "ONE PERIOD OF TRAVEL", "NO AUTOPLAY", "PASSIVE LISTENER", "NEVER LEAVES ITS BOX"];
+const VELOCITY_LEFT_CHIPS = ["DEFAULT → LEFT", "SCROLL DOWN → FASTER LEFT", "SCROLL UP → REVERSE RIGHT", "IDLE → RESUME LEFT", "VELOCITY BOUND", "NO JUMP"];
+const VELOCITY_RIGHT_CHIPS = ["REVERSE → RIGHT", "SCROLL DOWN → FASTER RIGHT", "SCROLL UP → REVERSE LEFT", "IDLE → RESUME RIGHT", "VELOCITY BOUND", "NO JUMP"];
+
+const VERTICAL_ITEMS = ["Item 1", "Item 2", "Item 3", "Item 4", "Item 5"];
 
 /* Section 1 logo marks: three inline SVGs mixed between the photo tiles. */
 function TriangleMark() {
@@ -103,6 +107,14 @@ function Chip({ label }: { label: string }) {
   );
 }
 
+function VerticalItem({ label }: { label: string }) {
+  return (
+    <div className="flex h-[60px] w-[200px] shrink-0 items-center justify-center rounded-md border border-dead-800 bg-dead-800/50 font-mono text-sm text-dead-200">
+      {label}
+    </div>
+  );
+}
+
 function SectionLabel({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <p className="mb-4 font-mono text-sm leading-relaxed text-dead-400">
@@ -125,7 +137,8 @@ export default function TestMarqueePage() {
           <span className="text-dead-200">itemClassName</span>,{" "}
           <span className="text-dead-200">bg</span> and{" "}
           <span className="text-dead-200">border</span> variants style every
-          repeated wrapper, and the scroll-linked transform is bidirectional.
+          repeated wrapper, and the scroll-linked transform scrubs from the
+          container&apos;s viewport progress.
         </p>
       </header>
 
@@ -242,14 +255,17 @@ export default function TestMarqueePage() {
 
         <section>
           <SectionLabel n={5}>
-            BIDIRECTIONAL SCROLL-LINKED —{" "}
+            SCROLL-LINKED —{" "}
             <span className="text-dead-200">scrollLinked=&#123;true&#125;</span> disables
-            autoplay and drives{" "}
-            <span className="text-dead-200">translateX(calc(var(--scroll-progress) * 1))</span>{" "}
-            from <span className="text-dead-200">window.scrollY</span>: scrolling
-            down slides the strip to the RIGHT, scrolling up pulls it LEFT. The
-            track is centered (<span className="text-dead-200">justify-center</span>)
-            so it overhangs both edges and has room to travel into.
+            autoplay and scrubs{" "}
+            <span className="text-dead-200">translateX</span> from the container&apos;s
+            own progress through the viewport (
+            <span className="text-dead-200">getBoundingClientRect()</span> vs{" "}
+            <span className="text-dead-200">innerHeight</span>), wrapped to a
+            single period. It holds still while off-screen, glides through that
+            period as you scroll it into and out of view, and never leaves its
+            box; <span className="text-dead-200">reverse</span> flips the travel
+            direction. One <span className="text-dead-200">passive</span> listener.
           </SectionLabel>
           <div className="rounded-lg border border-dead-800 bg-dead-900 p-8">
             <Marquee
@@ -258,7 +274,6 @@ export default function TestMarqueePage() {
               direction="horizontal"
               repeat={8}
               speed={30}
-              className="justify-center"
             >
               {SCROLL_CHIPS.map((label) => (
                 <Chip key={label} label={label} />
@@ -267,6 +282,176 @@ export default function TestMarqueePage() {
           </div>
         </section>
 
+        <div className="h-[8vh]" />
+
+        <section>
+          <SectionLabel n={6}>
+            VELOCITY-LINKED SCROLL —{" "}
+            <span className="text-dead-200">scrollVelocity</span> keeps the strip
+            auto-playing and binds its speed to your scroll velocity. The strip
+            never stops: scrolling DOWN drives the default direction
+            (fast), scrolling UP reverses it (fast), and when you stop it keeps
+            moving in the last direction at normal speed.{" "}
+            <span className="text-dead-200">reverse</span> picks whether the
+            default direction is LEFT (default) or RIGHT.
+          </SectionLabel>
+          <div className="space-y-6">
+            <div className="rounded-lg border border-dead-800 bg-dead-900 p-8">
+              <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-dead-400">
+                default direction — LEFT
+              </p>
+              <Marquee
+                id="marquee-velocity-left"
+                scrollVelocity
+                direction="horizontal"
+                repeat={6}
+                speed={14}
+              >
+                {VELOCITY_LEFT_CHIPS.map((label) => (
+                  <Chip key={label} label={label} />
+                ))}
+              </Marquee>
+            </div>
+            <div className="rounded-lg border border-dead-800 bg-dead-900 p-8">
+              <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-dead-400">
+                default direction — RIGHT (reverse)
+              </p>
+              <Marquee
+                id="marquee-velocity-right"
+                scrollVelocity
+                reverse
+                direction="horizontal"
+                repeat={6}
+                speed={14}
+              >
+                {VELOCITY_RIGHT_CHIPS.map((label) => (
+                  <Chip key={label} label={label} />
+                ))}
+              </Marquee>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <SectionLabel n={7}>
+            VERTICAL MARQUEE VARIATIONS — the same set the horizontal strips
+            have, on the vertical axis.{" "}
+            <span className="text-dead-200">direction=&quot;vertical&quot;</span>{" "}
+            moves UP by default and{" "}
+            <span className="text-dead-200">reverse</span> moves DOWN. Add{" "}
+            <span className="text-dead-200">scrollLinked</span> for a strip that
+            only moves while you scroll, or{" "}
+            <span className="text-dead-200">scrollVelocity</span> for a strip that
+            keeps moving by default AND binds its speed/direction to your scroll.
+          </SectionLabel>
+          <div className="space-y-6">
+            <div className="rounded-lg border border-dead-800 bg-dead-900 p-8">
+              <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-dead-400">
+                1. autoplay — UP (default, not scroll-linked)
+              </p>
+              <Marquee
+                id="marquee-vertical-up"
+                direction="vertical"
+                speed={6}
+                gap={12}
+                className="h-[320px] items-center"
+              >
+                {VERTICAL_ITEMS.map((item) => (
+                  <VerticalItem key={item} label={item} />
+                ))}
+              </Marquee>
+            </div>
+
+            <div className="rounded-lg border border-dead-800 bg-dead-900 p-8">
+              <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-dead-400">
+                2. autoplay — DOWN (reverse, not scroll-linked)
+              </p>
+              <Marquee
+                id="marquee-vertical-down"
+                direction="vertical"
+                reverse
+                speed={6}
+                gap={12}
+                className="h-[320px] items-center"
+              >
+                {VERTICAL_ITEMS.map((item) => (
+                  <VerticalItem key={item} label={item} />
+                ))}
+              </Marquee>
+            </div>
+
+            <div className="rounded-lg border border-dead-800 bg-dead-900 p-8">
+              <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-dead-400">
+                3. scrollLinked — only moves when you scroll
+              </p>
+              <Marquee
+                id="marquee-vertical-scroll"
+                direction="vertical"
+                scrollLinked
+                repeat={6}
+                speed={6}
+                gap={12}
+                className="h-[320px] items-center"
+              >
+                {VERTICAL_ITEMS.map((item) => (
+                  <VerticalItem key={item} label={item} />
+                ))}
+              </Marquee>
+              <p className="mt-3 font-mono text-xs text-dead-400">
+                Scroll down → moves UP, scroll up → moves DOWN, idle → stays put.
+                The offset is the container&apos;s progress through the viewport
+                (wrapped to one period), so the strip never leaves its box.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-dead-800 bg-dead-900 p-8">
+              <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-dead-400">
+                4. scrollVelocity — default UP, keeps moving + scroll-bound
+              </p>
+              <Marquee
+                id="marquee-vertical-velocity-up"
+                direction="vertical"
+                scrollVelocity
+                repeat={6}
+                speed={4}
+                gap={12}
+                className="h-[320px] items-center"
+              >
+                {VERTICAL_ITEMS.map((item) => (
+                  <VerticalItem key={item} label={item} />
+                ))}
+              </Marquee>
+              <p className="mt-3 font-mono text-xs text-dead-400">
+                Scroll down → faster UP, scroll up → reverses DOWN, idle → keeps
+                going UP.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-dead-800 bg-dead-900 p-8">
+              <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-dead-400">
+                5. scrollVelocity reverse — default DOWN, keeps moving + scroll-bound
+              </p>
+              <Marquee
+                id="marquee-vertical-velocity-down"
+                direction="vertical"
+                scrollVelocity
+                reverse
+                repeat={6}
+                speed={4}
+                gap={12}
+                className="h-[320px] items-center"
+              >
+                {VERTICAL_ITEMS.map((item) => (
+                  <VerticalItem key={item} label={item} />
+                ))}
+              </Marquee>
+              <p className="mt-3 font-mono text-xs text-dead-400">
+                Scroll down → faster DOWN, scroll up → reverses UP, idle → keeps
+                going DOWN.
+              </p>
+            </div>
+          </div>
+        </section>
         <div className="h-[30vh]" />
 
         <footer className="w-full pb-24 text-center">
@@ -275,7 +460,8 @@ export default function TestMarqueePage() {
             translate exactly one copy — so <span className="text-dead-200">repeat</span>{" "}
             still costs DOM and nothing else. With{" "}
             <span className="text-dead-200">scrollLinked</span> the animation is
-            replaced by a compositor transform fed from the scroll listener, and
+            replaced by a compositor transform scrubbed from the container&apos;s
+            viewport progress, and
             under prefers-reduced-motion autoplay strips render static.
           </p>
         </footer>

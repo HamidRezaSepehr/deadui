@@ -15,6 +15,13 @@ import { cn } from '@/lib/utils'
 const TILT_RETURN_DURATION = '300ms'
 
 /**
+ * Duration (in milliseconds) for the animated gradient color transition.
+ * The color changes gradually over this interval, so the hue shifts smoothly
+ * rather than snapping to a new random value on every mouse move.
+ */
+const ANIMATED_COLOR_TRANSITION = '800ms'
+
+/**
  * Border-only mask: two identical opaque layers, the first pinned to the
  * `content-box`, the second filling the `border-box`. `mask-composite:
  * exclude` (WebKit fallback `xor`) subtracts the content box from the border
@@ -48,6 +55,8 @@ export interface SpotlightCardProps
   spotlightColor?: string // Default: 'rgba(255, 255, 255, 0.15)'
   spotlightSize?: number // Diameter in pixels. Default: 300
   spotlightOpacity?: number // 0 to 1. Default: 1
+  animatedGradient?: boolean // Default: false
+  animatedGradientOpacity?: number // 0 to 1. Default: 0.35
 
   // Glow Modes
   glowType?: 'border' | 'background' | 'both' | 'none' // Default: 'both'
@@ -67,6 +76,9 @@ interface SpotlightCardStyleVars extends CSSProperties {
   '--spotlight-color'?: string
   '--spotlight-size'?: string
   '--spotlight-opacity'?: number
+  '--animated-spotlight-color'?: string
+  '--animated-spotlight-opacity'?: number
+  '--animated-spotlight-transition'?: string
   '--border-color'?: string
   '--hovered-border-color'?: string
   '--rotate-x'?: string
@@ -81,6 +93,8 @@ export function SpotlightCard({
   spotlightColor = 'rgba(255, 255, 255, 0.15)',
   spotlightSize = 300,
   spotlightOpacity = 1,
+  animatedGradient = false,
+  animatedGradientOpacity = 0.35,
   glowType = 'both',
   borderColor = 'rgba(255, 255, 255, 0.1)',
   hoveredBorderColor = 'rgba(255, 255, 255, 0.3)',
@@ -91,6 +105,8 @@ export function SpotlightCard({
   const cardRef = useRef<HTMLDivElement>(null)
   const isTrackingRef = useRef(false)
   const prefersReducedMotionRef = useRef(false)
+  const lastMousePos = useRef({ x: 0, y: 0 })
+  const currentHue = useRef(0)
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -124,6 +140,29 @@ export function SpotlightCard({
       ? e.clientY - (rect.top + rect.height / 2) + height / 2
       : e.clientY - rect.top
 
+    // Smoothly shift the animated gradient hue based on cursor movement.
+    // The hue increments in very small steps (modulated by distance moved),
+    // so the color drifts gradually through the spectrum rather than jumping.
+    if (animatedGradient && !prefersReducedMotionRef.current) {
+      const dx = e.clientX - lastMousePos.current.x
+      const dy = e.clientY - lastMousePos.current.y
+      const distanceMoved = Math.sqrt(dx * dx + dy * dy)
+
+      if (distanceMoved > 0) {
+        // Small, gradual hue shift — the distance moved maps to a tiny hue
+        // increment so the color drifts smoothly (never a hard snap).
+        currentHue.current = (currentHue.current + distanceMoved * 0.35) % 360
+
+        const saturation = 75
+        const lightness = 60
+        const newColor = `hsl(${Math.round(currentHue.current)}, ${saturation}%, ${lightness}%)`
+
+        card.style.setProperty('--animated-spotlight-color', newColor)
+      }
+
+      lastMousePos.current = { x: e.clientX, y: e.clientY }
+    }
+
     card.style.setProperty('--mouse-x', `${x}px`)
     card.style.setProperty('--mouse-y', `${y}px`)
 
@@ -154,6 +193,17 @@ export function SpotlightCard({
     card.style.setProperty('--rotate-y', '0deg')
   }
 
+  // A stable initial color for the animated gradient. The real value is
+  // written directly to the DOM on mouse move via setProperty, so this
+  // only seeds the CSS variable before any pointer interaction.
+  const animatedSpotlightColor = animatedGradient
+    ? 'hsl(200, 75%, 60%)'
+    : undefined
+
+  const animatedSpotlightOpacity = animatedGradient
+    ? animatedGradientOpacity
+    : undefined
+
   return (
     <div
       ref={cardRef}
@@ -172,6 +222,9 @@ export function SpotlightCard({
           '--spotlight-color': spotlightColor,
           '--spotlight-size': `${spotlightSize}px`,
           '--spotlight-opacity': spotlightOpacity,
+          '--animated-spotlight-color': animatedSpotlightColor,
+          '--animated-spotlight-opacity': animatedSpotlightOpacity,
+          '--animated-spotlight-transition': ANIMATED_COLOR_TRANSITION,
           '--border-color': borderColor,
           '--hovered-border-color': hoveredBorderColor,
           '--rotate-x': '0deg',
@@ -201,8 +254,18 @@ export function SpotlightCard({
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(circle at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent var(--spotlight-size))`,
-              opacity: 'var(--spotlight-opacity)',
+              background: animatedGradient
+                ? `radial-gradient(circle at var(--mouse-x) var(--mouse-y), var(--animated-spotlight-color), transparent var(--spotlight-size))`
+                : `radial-gradient(circle at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent var(--spotlight-size))`,
+              opacity: animatedGradient
+                ? 'var(--animated-spotlight-opacity)'
+                : 'var(--spotlight-opacity)',
+              transition: animatedGradient
+                ? `background var(--animated-spotlight-transition) ease`
+                : undefined,
+              WebkitTransition: animatedGradient
+                ? `background var(--animated-spotlight-transition) ease`
+                : undefined,
             }}
           />
         </div>
@@ -224,8 +287,18 @@ export function SpotlightCard({
           <div
             className="absolute inset-0 rounded-[inherit]"
             style={{
-              background: `radial-gradient(circle at var(--mouse-x) var(--mouse-y), var(--hovered-border-color), transparent var(--spotlight-size))`,
-              opacity: 'var(--spotlight-opacity)',
+              background: animatedGradient
+                ? `radial-gradient(circle at var(--mouse-x) var(--mouse-y), var(--animated-spotlight-color), transparent var(--spotlight-size))`
+                : `radial-gradient(circle at var(--mouse-x) var(--mouse-y), var(--hovered-border-color), transparent var(--spotlight-size))`,
+              opacity: animatedGradient
+                ? 'var(--animated-spotlight-opacity)'
+                : 'var(--spotlight-opacity)',
+              transition: animatedGradient
+                ? `background var(--animated-spotlight-transition) ease`
+                : undefined,
+              WebkitTransition: animatedGradient
+                ? `background var(--animated-spotlight-transition) ease`
+                : undefined,
             }}
           />
         </div>

@@ -10,23 +10,14 @@ import { cn } from '@/lib/utils'
 gsap.registerPlugin(ScrollTrigger)
 
 /**
- * Zero-prop placeholders, so `<ScrollScrub />` demos itself the moment it is
- * installed: ten Picsum frames for image mode, a public-domain clip for video
- * mode.
- *
- * The spec's default was Google's `gtv-videos-bucket/sample/ForBiggerBlazes.mp4`.
- * That bucket is no longer public — it now answers `403 AccessDenied` for
- * anonymous callers — so a default that cannot load is not a default. MDN's
- * CC0 `flower.mp4` (5s, 960x540, 1.1MB, range-request friendly) is used
- * instead; swap this constant for your own asset.
+ * Zero-prop placeholders: 113 local frames from `image-sequence/` for image mode,
+ * and `video-sequence.mp4` for video mode. Swap these constants for your own assets.
  */
-const DEFAULT_IMAGES = Array.from(
-  { length: 10 },
-  (_, i) => `https://picsum.photos/seed/deadui${i + 1}/800/600`
+const DEFAULT_IMAGES = Array.from({ length: 113 }, (_, i) =>
+  `/image-sequence/ezgif-frame-${String(i + 1).padStart(3, "0")}.jpg`
 )
 
-const DEFAULT_VIDEO =
-  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'
+const DEFAULT_VIDEO = '/video-sequence.mp4'
 
 /**
  * Default height of the trigger section.
@@ -37,10 +28,31 @@ const DEFAULT_VIDEO =
  * 200vh scrub. Override per instance through `className`, e.g.
  * `className="h-[150vh]"`.
  */
-const DEFAULT_SCRUB_LENGTH = 'h-[300vh]'
+const DEFAULT_SCRUB_LENGTH = 'h-[600vh]'
 
 /** Backing-store scale. Capped at 2: a 3x DPR scrub only costs fill rate. */
 const MAX_DPR = 2
+
+/**
+ * Nearest scrollable ancestor, so a scrub mounted inside a scroll container
+ * (a docs preview panel, a modal, a feed) tracks that container instead of the
+ * page. Returns `null` when the media scrolls with the document, which lets
+ * ScrollTrigger fall back to the viewport.
+ */
+function findScrollContainer(start: HTMLElement | null): HTMLElement | null {
+  let node = start?.parentElement ?? null
+  while (node && node !== document.body) {
+    const { overflowY } = getComputedStyle(node)
+    if (
+      (overflowY === 'auto' || overflowY === 'scroll') &&
+      node.scrollHeight > node.clientHeight
+    ) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
+}
 
 export const scrollScrubVariants = cva(
   'relative w-full overflow-hidden rounded-lg bg-dead-800',
@@ -61,7 +73,7 @@ export const scrollScrubVariants = cva(
 
 export interface ScrollScrubProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof scrollScrubVariants> {
+  VariantProps<typeof scrollScrubVariants> {
   // Media Sources (Mutually Exclusive, but component handles fallback)
   images?: string[] // Array of image URLs for frame-by-frame scrubbing
   videoSrc?: string // URL to a video file for time-based scrubbing
@@ -296,12 +308,18 @@ export function ScrollScrub({
     const stage = stageRef.current
     if (!container || !stage) return
 
+    // A scrub inside its own scroll container pins with transforms; against the
+    // document it pins with `position: fixed`. Detection happens here, after the
+    // DOM has committed, so the container has its real scroll range to measure.
+    const scroller = findScrollContainer(container)
+
     const media = gsap.matchMedia()
 
     media.add('(prefers-reduced-motion: no-preference)', () => {
       const ctx = gsap.context(() => {
         const scrollTrigger = {
           trigger: container,
+          scroller: scroller ?? undefined,
           start,
           end,
           scrub,
