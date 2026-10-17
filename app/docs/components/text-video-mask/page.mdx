@@ -1,155 +1,64 @@
-import { ComponentCustomizer } from "@/components/docs/component-customizer"
-import { InstallTabs } from "@/components/docs/install-tabs"
-import { TextVideoMask } from "@/registry/text-video-mask"
+---
+title: Text Video Mask
+description: A component that clips a playing video into the shape of text using SVG masks
+---
 
-export const metadata = {
-  title: "Text Video Mask",
-  description:
-    "Clip a playing video into the shape of text with an SVG foreignObject mask.",
-}
+import { TextVideoMask } from "@/registry/text-video-mask/text-video-mask"
 
 # Text Video Mask
 
-Clips a playing video into the shape of text. The mask is an SVG `<mask>` whose
-content is a `<foreignObject>`, so any React markup — with any Tailwind classes —
-can cut the video.
-
-## Preview
-
-<ComponentCustomizer
-  component={TextVideoMask}
-  defaultProps={{
-    videoSrc: "/video-sequence.mp4",
-    children: "DEAD UI",
-    textClassName: "font-mono text-6xl font-black uppercase tracking-tight",
-    className: "h-[360px] w-full overflow-hidden rounded-xl",
-  }}
-  controls={{
-    children: { type: "select", options: ["DEAD UI", "MASK", "VIDEO"] },
-    textClassName: {
-      type: "select",
-      options: [
-        "font-mono text-6xl font-black uppercase tracking-tight",
-        "font-serif text-7xl italic",
-        "font-mono text-7xl font-black uppercase text-transparent [-webkit-text-stroke:2px_white]",
-      ],
-    },
-  }}
-  className="not-prose my-8"
-/>
-
-The mask reads **luminance**: light content reveals the video, dark content hides
-it. Type a word in the first control to change the shape, or switch the second to
-an outlined treatment and watch the video survive only on the strokes.
-
-## Installation
-
-<InstallTabs componentName="text-video-mask" tier="free" />
+A component that uses SVG masks with `foreignObject` to clip a playing video into the shape of text. Perfect for creating stunning hero sections and premium visual effects.
 
 ## Usage
 
 ```tsx
-import { TextVideoMask } from "@/components/ui/text-video-mask"
-
-export function Hero() {
-  return (
-    <TextVideoMask
-      videoSrc="/clips/loop.mp4"
-      className="h-[60vh] w-full"
-      textClassName="font-mono text-8xl font-black uppercase tracking-tight"
-    >
-      DEAD UI
-    </TextVideoMask>
-  )
-}
-```
-
-`children` is not limited to a string — anything that renders is a valid mask:
-
-```tsx
 <TextVideoMask
-  videoSrc="/clips/loop.mp4"
-  className="h-[420px] w-full"
-  textClassName="flex-col gap-2"
+  videoSrc="https://example.com/video.mp4"
+  textClassName="text-6xl font-black text-black"
 >
-  <span className="text-7xl font-black uppercase">Video</span>
-  <span className="font-serif text-2xl italic text-dead-200">inside text</span>
+  Your Text Here
 </TextVideoMask>
 ```
 
-Outline-only masks come from a transparent fill plus a white stroke:
+## Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `videoSrc` | `string` | - | The URL of the video to play (MP4 format recommended) |
+| `children` | `React.ReactNode` | - | The text or HTML content that will act as the mask |
+| `textClassName` | `string` | - | Additional classes for styling the text content |
+| `className` | `string` | - | Additional classes for the container |
+
+## Features
+
+- **SVG Mask Technique**: Uses `<svg><defs><mask><foreignObject>` for maximum compatibility
+- **Auto-playing Video**: Includes `autoPlay`, `loop`, `muted`, and `playsInline` for cross-browser support (including mobile Safari)
+- **Tailwind Compatible**: Style your text with any Tailwind classes through `textClassName`
+- **Complex HTML Support**: Render multi-line text, headings, or complex layouts as the mask
+- **Collision-Free**: Uses `React.useId()` to generate unique mask IDs
+
+## Example
+
+<TextVideoMask
+  videoSrc="https://videos.pexels.com/video-files/1093662/1093662-hd_1280_720_30fps.mp4"
+  className="h-[400px] w-full"
+  textClassName="text-black text-6xl md:text-8xl font-black uppercase"
+>
+  <span>MASKED</span>
+</TextVideoMask>
 
 ```tsx
 <TextVideoMask
-  videoSrc="/clips/loop.mp4"
-  textClassName="text-8xl font-black uppercase text-transparent [-webkit-text-stroke:2px_white]"
-/>
+  videoSrc="https://videos.pexels.com/video-files/1093662/1093662-hd_1280_720_30fps.mp4"
+  className="h-[400px] w-full"
+  textClassName="text-black text-6xl md:text-8xl font-black uppercase"
+>
+  <span>MASKED</span>
+</TextVideoMask>
 ```
 
-## How it works
+## Performance Notes
 
-1. A `<video>` fills the container and is `mask-image: url(#id)`-ed against an
-   SVG `<mask>` rendered in a sibling, full-bleed `<svg>`.
-2. Inside the mask, a **black** `<rect>` hides the whole frame, then a
-   `<foreignObject>` paints `children` in **white** so only the glyphs reveal the
-   clip. Swapping the two colours inverts the effect.
-3. Because the mask is a real render tree, the children can be a heading, a
-   subheading, an icon and body copy at once — mixed fonts, sizes and layout all
-   cut the same video in a single pass.
-4. `React.useId()` names the mask, so every instance on a page owns a distinct
-   `<mask>` and two masks can never collide.
-
-## Props
-
-| Prop          | Type                  | Default | Description                                                              |
-| ------------- | --------------------- | ------- | ------------------------------------------------------------------------ |
-| `videoSrc`    | `string`              | —       | URL of the video that plays through the mask. Required.                  |
-| `children`    | `React.ReactNode`     | —       | The text/markup the video is clipped into. Required.                     |
-| `textClassName` | `string`            | —       | Merged onto the mask's inner wrapper (`text-white` by default).          |
-| `className`   | `string`              | —       | Merged onto the root container — give it an explicit height.             |
-
-The root also forwards `aria-*`, `role` and every other `div` attribute, since it
-extends `React.HTMLAttributes<HTMLDivElement>`.
-
-## Dependencies
-
-- `clsx` and `tailwind-merge`, via your project's existing `cn()` helper
-
-No animation library. The only runtime dependency is the browser's own video
-decoder — the mask is SVG and CSS.
-
-## Performance
-
-- The mask is a single composited layer: the browser masks the video texture on
-  the GPU and there is **no per-frame JavaScript**, no canvas and no React
-  re-render.
-- Ship **short, optimized, muted MP4 clips**. A long or high-bitrate file is the
-  entire cost of this component; the mask itself is free.
-- Reserve the container's height (`h-[...]` or `aspect-*`) so the page does not
-  shift when the video loads — every example above sets an explicit height.
-- The `<video>` uses `object-cover`, so the clip always fills the mask box
-  regardless of its aspect ratio.
-
-## Accessibility
-
-- The `<video>` and the mask `<svg>` are `aria-hidden` — they are decoration. The
-  masked text lives inside that hidden SVG, so screen readers will not announce
-  it. Pass `role="img"` and an `aria-label` describing the text when the masked
-  words carry meaning:
-
-  ```tsx
-  <TextVideoMask
-    videoSrc="/clips/loop.mp4"
-    role="img"
-    aria-label="Dead UI"
-    className="h-[60vh] w-full"
-  >
-    Dead UI
-  </TextVideoMask>
-  ```
-
-- Autoplay is only permitted for muted video, which is why `muted` is not
-  optional. The component never plays audio.
-- The component plays continuously. If your project honours
-  `prefers-reduced-motion`, render a still image (or a paused first frame)
-  instead of the looping video for those users.
+- Use short, optimized, muted MP4 videos for best performance
+- Videos should be compressed appropriately for web use
+- Avoid very large video files as they may impact load times

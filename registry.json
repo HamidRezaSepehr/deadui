@@ -8,38 +8,38 @@
       "dependencies": [
         "gsap"
       ],
-"files": [
-    {
-      "path": "registry/cinematic-text/cinematic-text.tsx",
-      "target": "components/ui/cinematic-text.tsx"
-    },
-    {
-      "path": "registry/cinematic-text/cinematic-text.module.css",
-      "target": "components/ui/cinematic-text.module.css"
-    },
-    {
-      "path": "registry/cinematic-text/noise.png",
-      "target": "components/ui/noise.png"
-    }
-  ],
-"variants": [
-    "blur-in",
-    "fade-up",
-    "slide-stagger",
-    "scale-pop",
-    "rise-color",
-    "slide-left-color",
-    "scale-blur-color",
-    "diagonal-blur-color",
-    "flip-x-color",
-    "heavy-flip-color",
-    "flip-top-color",
-    "mask-reveal",
-    "blur-grain",
-    "blur-grain-bright",
-    "scale-blur-grain",
-    "skew-blur-grain"
-  ]
+      "files": [
+        {
+          "path": "registry/cinematic-text/cinematic-text.tsx",
+          "target": "components/ui/cinematic-text.tsx"
+        },
+        {
+          "path": "registry/cinematic-text/cinematic-text.module.css",
+          "target": "components/ui/cinematic-text.module.css"
+        },
+        {
+          "path": "registry/cinematic-text/noise.png",
+          "target": "components/ui/noise.png"
+        }
+      ],
+      "variants": [
+        "blur-in",
+        "fade-up",
+        "slide-stagger",
+        "scale-pop",
+        "rise-color",
+        "slide-left-color",
+        "scale-blur-color",
+        "diagonal-blur-color",
+        "flip-x-color",
+        "heavy-flip-color",
+        "flip-top-color",
+        "mask-reveal",
+        "blur-grain",
+        "blur-grain-bright",
+        "scale-blur-grain",
+        "skew-blur-grain"
+      ]
     },
     {
       "name": "marquee",
@@ -202,23 +202,6 @@
       ]
     },
     {
-      "name": "text-video-mask",
-      "title": "Text Video Mask",
-      "description": "Clips a playing video into the shape of text using an SVG foreignObject mask",
-      "tier": "free",
-      "dependencies": [
-        "clsx",
-        "tailwind-merge"
-      ],
-      "files": [
-        {
-          "path": "registry/text-video-mask/text-video-mask.tsx",
-          "target": "components/ui/text-video-mask.tsx"
-        }
-      ],
-      "variants": []
-    },
-    {
       "name": "webgl-image-trail",
       "title": "WebGL Image Trail",
       "description": "React Three Fiber image trail that follows the cursor, with four switchable GLSL effects (liquid, distortion, pixelate, wave), a tint colour, and a fade-out",
@@ -276,6 +259,19 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "text-video-mask",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "registry/text-video-mask/text-video-mask.tsx",
+          "type": "registry:ui",
+          "target": "components/deadui/text-video-mask.tsx"
+        }
+      ],
+      "dependencies": [],
+      "registryDependencies": []
     }
   ]
 }

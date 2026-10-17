@@ -31,7 +31,6 @@ export { ScrollScrubPreview } from "./scroll-scrub-preview";
 export { SpotlightCardPreview } from "./spotlight-card-preview";
 export { StaggeredGridPreview } from "./staggered-grid-preview";
 export { TextFillPreview } from "./text-fill-preview";
-export { TextVideoMaskPreview } from "./text-video-mask-preview";
 export { WebGLTrailPreview } from "./webgl-trail-preview";
 export { PreviewStage } from "./preview-stage";
 export type { PreviewStageProps } from "./preview-stage";
