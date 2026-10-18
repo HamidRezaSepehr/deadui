@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { ClickEffect, type ClickEffectVariant } from '@/registry/click-effect'
 
 // Local QA-page metadata — the effects table itself is mo.js-dependent and
@@ -77,21 +76,8 @@ const EFFECT_NAMES = Object.keys(VARIANT_NOTES) as Array<
 >
 
 export default function ClickEffectTestPage() {
-  const [variant, setVariant] = useState<ClickEffectVariant>('virethos')
-  const [mounted, setMounted] = useState(true)
-  const [lastClick, setLastClick] = useState<{ x: number; y: number } | null>(null)
-  const [fired, setFired] = useState(0)
-
   return (
-    <main
-      className="min-h-screen bg-dead-950 px-4 py-16 text-dead-50"
-      onClick={(event) => {
-        setLastClick({ x: event.clientX, y: event.clientY })
-        setFired((count) => count + 1)
-      }}
-    >
-      {mounted ? <ClickEffect variant={variant} /> : null}
-
+    <main className="min-h-screen bg-dead-950 px-4 py-16 text-dead-50">
       <div className="mx-auto max-w-6xl space-y-12">
         <header className="space-y-3">
           <p className="font-mono text-sm uppercase tracking-[0.35em] text-dead-400">
@@ -101,126 +87,54 @@ export default function ClickEffectTestPage() {
             Click Effect — QA
           </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-dead-400">
-            <span className="font-mono text-xs text-dead-200">ClickEffect</span>{' '}
-            renders nothing: it attaches one click listener to{' '}
-            <span className="font-mono text-xs text-dead-200">window</span> and
-            replays the armed mo.js effect at the pointer. Click anywhere on
-            this page — including on the cards — and the burst appears at
-            exactly that coordinate.
+            Every card below owns its own{' '}
+            <span className="font-mono text-xs text-dead-200">
+              &lt;ClickEffect scope=&quot;parent&quot; /&gt;
+            </span>
+            : the listener is bound to that card, so clicking a card fires only
+            its effect, inside that card, on the exact spot you click. Clicking
+            anywhere else on the page does nothing.
           </p>
         </header>
 
-        <section className="space-y-6 rounded-xl border border-dead-800 bg-dead-900 p-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <label
-                htmlFor="variant-select"
-                className="font-mono text-xs uppercase tracking-[0.2em] text-dead-400"
-              >
-                Armed variant
-              </label>
-              <select
-                id="variant-select"
-                value={variant}
-                onChange={(event) =>
-                  setVariant(event.target.value as ClickEffectVariant)
-                }
-                className="w-full rounded-lg border border-dead-800 bg-dead-950 px-4 py-3 font-mono text-sm text-dead-50 transition-colors focus:border-dead-red focus:ring-2 focus:ring-dead-red focus:ring-offset-2 focus:ring-offset-dead-950"
-              >
-                {EFFECT_NAMES.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-                <option value="none">none (listener detached)</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <span className="font-mono text-xs uppercase tracking-[0.2em] text-dead-400">
-                Component mounted
-              </span>
-              <button
-                type="button"
-                onClick={() => setMounted((value) => !value)}
-                className="w-full rounded-lg border border-dead-800 bg-dead-950 px-4 py-3 text-left font-mono text-sm text-dead-50 transition-colors hover:border-dead-red focus:ring-2 focus:ring-dead-red focus:ring-offset-2 focus:ring-offset-dead-950"
-              >
-                {mounted
-                  ? 'Mounted — clicks fire. Toggle to test unmount cleanup.'
-                  : 'Unmounted — clicks do nothing. Toggle to remount.'}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-x-8 gap-y-2 border-t border-dead-800 pt-4 font-mono text-xs text-dead-400">
-            <span>
-              armed:{' '}
-              <span className="text-dead-red">{variant}</span>
-            </span>
-            <span>
-              clicks:{' '}
-              <span className="text-dead-50">{fired}</span>
-            </span>
-            <span>
-              last:{' '}
-              <span className="text-dead-50">
-                {lastClick ? `(${lastClick.x}, ${lastClick.y})` : '—'}
-              </span>
-            </span>
-          </div>
-        </section>
-
         <section className="space-y-4">
           <p className="font-mono text-xs uppercase tracking-widest text-dead-400">
-            All 15 variants — click a card to fire at that point, or press
-            &quot;Arm&quot; to switch the armed variant without firing
+            All 15 variants — click a card to fire its effect at that point
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {EFFECT_NAMES.map((name, index) => {
-              const active = name === variant
-              return (
-                <div
-                  key={name}
-                  className={`relative flex cursor-pointer flex-col gap-3 rounded-xl border p-4 transition-colors ${
-                    active
-                      ? 'border-dead-red bg-dead-900'
-                      : 'border-dead-800 bg-dead-900/60 hover:border-dead-700'
-                  }`}
-                >
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-mono text-[10px] tracking-widest text-dead-500">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        setVariant(name)
-                      }}
-                      className="rounded border border-dead-700 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-dead-300 transition-colors hover:border-dead-red hover:text-dead-red focus:ring-2 focus:ring-dead-red focus:ring-offset-2 focus:ring-offset-dead-950"
-                    >
-                      Arm
-                    </button>
-                  </div>
-                  <h2 className="font-mono text-sm font-semibold uppercase tracking-widest text-dead-50">
-                    {name}
-                  </h2>
-                  <p className="text-xs leading-relaxed text-dead-400">
-                    {VARIANT_NOTES[name].note}
-                  </p>
-                  <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
-                    {VARIANT_NOTES[name].flags.map((flag) => (
-                      <span
-                        key={flag}
-                        className="rounded bg-dead-950 px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-dead-500"
-                      >
-                        {flag}
-                      </span>
-                    ))}
-                  </div>
+            {EFFECT_NAMES.map((name, index) => (
+              <div
+                key={name}
+                className="relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-xl border border-dead-800 bg-dead-900 p-4 transition-colors hover:border-dead-red"
+              >
+                <ClickEffect variant={name} scope="parent" />
+
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-[10px] tracking-widest text-dead-500">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                    scoped
+                  </span>
                 </div>
-              )
-            })}
+                <h2 className="font-mono text-sm font-semibold uppercase tracking-widest text-dead-50">
+                  {name}
+                </h2>
+                <p className="text-xs leading-relaxed text-dead-400">
+                  {VARIANT_NOTES[name].note}
+                </p>
+                <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
+                  {VARIANT_NOTES[name].flags.map((flag) => (
+                    <span
+                      key={flag}
+                      className="rounded bg-dead-950 px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-dead-500"
+                    >
+                      {flag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -230,12 +144,34 @@ export default function ClickEffectTestPage() {
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-5">
             <li>
-              All 15 mo.js configurations are constructed once at module load
-              in{' '}
               <span className="font-mono text-xs text-dead-200">
-                effects.ts
-              </span>
-              ; every click only calls{' '}
+                scope=&quot;parent&quot;
+              </span>{' '}
+              binds the click listener to the component&apos;s own parent
+              element instead of{' '}
+              <span className="font-mono text-xs text-dead-200">window</span>,
+              so only clicks on that card fire — and the burst is clipped to the
+              card.
+            </li>
+            <li>
+              The overlay the effect renders into is the coordinate origin:
+              clicks are mapped from{' '}
+              <span className="font-mono text-xs text-dead-200">
+                clientX/clientY
+              </span>{' '}
+              to overlay-relative values, so the burst lands exactly on the
+              pointer even when the page is scrolled.
+            </li>
+            <li>
+              Each card builds its own mo.js instances through{' '}
+              <span className="font-mono text-xs text-dead-200">
+                createEffect(variant, overlay)
+              </span>{' '}
+              and clears them on unmount — nothing is shared between cards, so
+              every variant can be alive at once.
+            </li>
+            <li>
+              Every click only calls{' '}
               <span className="font-mono text-xs text-dead-200">
                 .tune(coords).replay()
               </span>{' '}
@@ -243,17 +179,7 @@ export default function ClickEffectTestPage() {
               <span className="font-mono text-xs text-dead-200">
                 .generate()
               </span>{' '}
-              on the randomised ones) — no allocation per click.
-            </li>
-            <li>
-              <span className="font-mono text-xs text-dead-200">Arm</span>{' '}
-              stops propagation, so switching variants never fires the
-              outgoing effect.
-            </li>
-            <li>
-              Unmounting (or arming{' '}
-              <span className="font-mono text-xs text-dead-200">none</span>)
-              removes the window listener — clicks stop firing immediately.
+              on the randomised variants) — no allocation per click.
             </li>
             <li>
               mo.js is browser-only (it touches{' '}

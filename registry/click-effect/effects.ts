@@ -18,7 +18,21 @@ export type ClickEffectVariant =
   | 'elvantis'
   | 'none'
 
-export interface EffectAnimationWrapper {
+/** A constructed mo.js animation: either a `Burst` or a `Shape`. */
+export type MojsAnimation =
+  | InstanceType<typeof mojs.Burst>
+  | InstanceType<typeof mojs.Shape>
+
+/**
+ * One layer of an effect, as a factory rather than a shared instance.
+ *
+ * Every `<ClickEffect>` builds its own animations, so two instances of the
+ * same variant can animate at the same time without fighting over one DOM
+ * node. `build` receives the element the effect must render into — mo.js
+ * positions shapes in that element's coordinate space, which is what lets a
+ * pointer event map to a container-relative point and land exactly on it.
+ */
+export interface EffectAnimationDefinition {
   /**
    * Re-run `generate()` before `replay()`: the configuration contains
    * `rand(...)` values that must be re-sampled on every click.
@@ -29,7 +43,20 @@ export interface EffectAnimationWrapper {
    * repeated clicks never land on exactly the same spot.
    */
   useRandomCoords?: boolean
-  animation: InstanceType<typeof mojs.Burst> | InstanceType<typeof mojs.Shape>
+  build: (parent: HTMLElement) => MojsAnimation
+}
+
+/** A variant's layers, ready to be built against a container. */
+export interface EffectDefinition {
+  name: Exclude<ClickEffectVariant, 'none'>
+  animations: EffectAnimationDefinition[]
+}
+
+/** A built layer, ready to `tune(...).replay()`. */
+export interface EffectAnimationWrapper {
+  requiresGenerate?: boolean
+  useRandomCoords?: boolean
+  animation: MojsAnimation
 }
 
 export interface EffectConfig {
@@ -37,12 +64,12 @@ export interface EffectConfig {
   animations: EffectAnimationWrapper[]
 }
 
-export const effects: EffectConfig[] = [
+const definitions: EffectDefinition[] = [
   {
     name: 'virethos',
     animations: [
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 10: 30 },
@@ -61,7 +88,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Shape({
+        build: (parent: HTMLElement) => new mojs.Shape({ parent,
           left: 0,
           top: 0,
           stroke: { '#E5214A': '#FD7932' },
@@ -79,7 +106,7 @@ export const effects: EffectConfig[] = [
     name: 'zynthor',
     animations: [
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 5: 30 },
@@ -93,7 +120,7 @@ export const effects: EffectConfig[] = [
     name: 'elarisca',
     animations: [
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 10: 25 },
@@ -103,7 +130,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 25: 10 },
@@ -117,7 +144,7 @@ export const effects: EffectConfig[] = [
     name: 'gravonix',
     animations: [
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 10: 25 },
@@ -141,7 +168,7 @@ export const effects: EffectConfig[] = [
     animations: [
       {
         requiresGenerate: true,
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: 10,
@@ -160,7 +187,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 10: 25 },
@@ -184,7 +211,7 @@ export const effects: EffectConfig[] = [
     name: 'vorlana',
     animations: [
       {
-        animation: new mojs.Shape({
+        build: (parent: HTMLElement) => new mojs.Shape({ parent,
           left: 0,
           top: 0,
           stroke: { '#E5214A': '#CC8EF5' },
@@ -202,7 +229,7 @@ export const effects: EffectConfig[] = [
     name: 'klyntar',
     animations: [
       {
-        animation: new mojs.Shape({
+        build: (parent: HTMLElement) => new mojs.Shape({ parent,
           left: 0,
           top: 0,
           stroke: { '#E5214A': '#CC8EF5' },
@@ -215,7 +242,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Shape({
+        build: (parent: HTMLElement) => new mojs.Shape({ parent,
           left: 0,
           top: 0,
           stroke: { '#E5214A': '#CC8EF5' },
@@ -234,7 +261,7 @@ export const effects: EffectConfig[] = [
     name: 'zerionis',
     animations: [
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 10: 25 },
@@ -254,7 +281,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 10: 25 },
@@ -273,7 +300,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Shape({
+        build: (parent: HTMLElement) => new mojs.Shape({ parent,
           left: 0,
           top: 0,
           stroke: { '#E5214A': '#FD7932' },
@@ -291,7 +318,7 @@ export const effects: EffectConfig[] = [
     name: 'marnixus',
     animations: [
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           degree: 180,
@@ -317,7 +344,7 @@ export const effects: EffectConfig[] = [
     name: 'taviros',
     animations: [
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 10: 25 },
@@ -336,7 +363,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 10: 25 },
@@ -361,7 +388,7 @@ export const effects: EffectConfig[] = [
     name: 'lothira',
     animations: [
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 0: 20 },
@@ -371,7 +398,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 0: 20 },
@@ -388,7 +415,7 @@ export const effects: EffectConfig[] = [
       {
         requiresGenerate: true,
         useRandomCoords: true,
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 0: 50 },
@@ -400,7 +427,7 @@ export const effects: EffectConfig[] = [
       {
         requiresGenerate: true,
         useRandomCoords: true,
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 0: 40 },
@@ -412,7 +439,7 @@ export const effects: EffectConfig[] = [
       {
         requiresGenerate: true,
         useRandomCoords: true,
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 0: 30 },
@@ -428,7 +455,7 @@ export const effects: EffectConfig[] = [
     animations: [
       {
         requiresGenerate: true,
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: 25,
@@ -452,7 +479,7 @@ export const effects: EffectConfig[] = [
     animations: [
       {
         requiresGenerate: true,
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 0: 30 },
@@ -470,7 +497,7 @@ export const effects: EffectConfig[] = [
       },
       {
         requiresGenerate: true,
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: 28,
@@ -489,7 +516,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Shape({
+        build: (parent: HTMLElement) => new mojs.Shape({ parent,
           left: 0,
           top: 0,
           radius: { 0: 16, easing: 'sin.out' },
@@ -506,7 +533,7 @@ export const effects: EffectConfig[] = [
     name: 'elvantis',
     animations: [
       {
-        animation: new mojs.Shape({
+        build: (parent: HTMLElement) => new mojs.Shape({ parent,
           left: 0,
           top: 0,
           stroke: { '#E5214A': '#CC8EF5' },
@@ -519,7 +546,7 @@ export const effects: EffectConfig[] = [
         }),
       },
       {
-        animation: new mojs.Burst({
+        build: (parent: HTMLElement) => new mojs.Burst({ parent,
           left: 0,
           top: 0,
           radius: { 4: 32 },
@@ -552,3 +579,33 @@ export const effects: EffectConfig[] = [
     ],
   },
 ]
+
+/**
+ * Build a fresh, parented copy of one effect.
+ *
+ * Called once per `<ClickEffect>` mount — and again whenever `variant` or the
+ * container changes — never per click: a click only calls `.tune(...).replay()`
+ * (plus `.generate()` on the randomised layers), so there is no per-click
+ * allocation.
+ *
+ * `parent` is the overlay element the effect must render inside. mo.js
+ * positions its shapes in that element's coordinate space, so a caller that
+ * maps a pointer event to `parent`-relative coordinates lands the burst
+ * exactly on the pointer — with the container scrolled or not.
+ */
+export function createEffect(
+  variant: Exclude<ClickEffectVariant, 'none'>,
+  parent: HTMLElement,
+): EffectConfig | undefined {
+  const definition = definitions.find((entry) => entry.name === variant)
+  if (!definition) return undefined
+
+  return {
+    name: definition.name,
+    animations: definition.animations.map((layer) => ({
+      requiresGenerate: layer.requiresGenerate,
+      useRandomCoords: layer.useRandomCoords,
+      animation: layer.build(parent),
+    })),
+  }
+}

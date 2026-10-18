@@ -44,6 +44,9 @@ import type { StaggeredGridProps } from "@/registry/staggered-grid";
  *    content, which is what the spec asks this page for.
  * 6. `gradient-border` renders `children` flush against its border ring, and
  *    that ring is 1-10px thick, so the label needs padding to stay legible.
+ * 7. `click-effect` is scoped to the preview panel with `scope="parent"`, so a
+ *    burst renders inside the box at the exact click point (and is clipped by
+ *    it) instead of firing on every click anywhere in the docs.
  */
 
 /** `true` and `"true"` both mean true; every other value is false. */
@@ -227,7 +230,18 @@ const LazyClickEffect = dynamic(
 
 export function ClickEffectPreview(props: Record<string, unknown>) {
   const variant = (typeof props.variant === 'string' ? props.variant : 'virethos') as import('@/registry/click-effect').ClickEffectVariant
-  return <LazyClickEffect variant={variant} />
+
+  // `scope="parent"` ties the listener to this wrapper's own container — the
+  // customizer's `relative` + `overflow-hidden` preview box — so the effect
+  // fires only for clicks inside the panel and lands exactly on the pointer.
+  return (
+    <>
+      <p className="pointer-events-none select-none text-center font-mono text-[11px] uppercase tracking-[0.2em] text-dead-500">
+        Click anywhere in this panel
+      </p>
+      <LazyClickEffect variant={variant} scope="parent" />
+    </>
+  )
 }
 
 export function WebGLImageTrailPreview(props: Record<string, unknown>) {

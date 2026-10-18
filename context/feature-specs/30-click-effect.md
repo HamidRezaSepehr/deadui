@@ -152,6 +152,68 @@ Execute the git workflow for `v0.1.7`, and **CRITICALLY**, provide the manual np
 - [ ] Manual npm publish instructions are clearly provided at the end.
 - [ ] `progress-tracker.md` is updated.
 
+## Amendment 1 — overlay-scoped coordinates & per-instance effects
+
+Post-`v0.1.7` follow-up (owner report: effects landed `scrollY`-ish above the
+click). The snippets above are historical; the shipped behavior is:
+
+### Coordinate mapping
+`ClickEffect` renders its own overlay and tunes mo.js with coordinates relative
+to that overlay's `getBoundingClientRect()`, never raw `clientX/clientY`. mo.js
+places a layer's *center* at `left/top` in its parent's coordinate space
+(`margin-left/-top: -size/2`), so raw viewport coords drifted by the scroll
+offset. Click point = `{ left: clientX - rect.left, top: clientY - rect.top }`.
+
+### `scope` prop
+```tsx
+export interface ClickEffectProps {
+  variant?: ClickEffectVariant      // 15 names + 'none'
+  scope?: 'page' | 'parent'         // default 'page'
+}
+```
+| scope | overlay classes | click listener |
+| --- | --- | --- |
+| `page` | `pointer-events-none fixed inset-0 z-[9999] overflow-hidden` | `window` |
+| `parent` | `pointer-events-none absolute inset-0 z-10 overflow-hidden` | `overlay.parentElement` |
+
+`parent` requires the consumer's container to be `position: relative`. In both
+scopes the overlay is `pointer-events-none`, so it never blocks interaction.
+Cleanup replaces the overlay's children. `variant === 'none'` renders nothing.
+
+### Per-instance effects (`effects.ts`)
+Module-scope `new mojs.*` singletons cannot be shared across parents (mo.js
+renders a node only once, `_isRendered`). Each definition therefore exposes a
+factory instead:
+
+```ts
+type EffectAnimationDefinition = {
+  requiresGenerate?: boolean
+  useRandomCoords?: boolean
+  build: (parent: HTMLElement) => MojsAnimation
+}
+export function createEffect(
+  variant: ClickEffectVariant,
+  parent: HTMLElement
+): EffectConfig | undefined
+```
+
+`click-effect.tsx` calls `createEffect(variant, overlay)` after its lazy
+`import('./effects')` resolves. The `none` variant and the barrel's runtime
+exports are unchanged (the barrel still exports types only — importing the
+runtime `effects` table would re-introduce the SSR crash).
+
+### Test page & docs
+- `app/test-click-effect/page.tsx`: grid of 15 self-contained cards, each with
+  `<ClickEffect variant={name} scope="parent" />`; no variant `<select>`, no
+  Arm/Disarm buttons, no page-level listener.
+- `ClickEffectPreview` uses `scope="parent"` with a hint label; the MDX page
+  documents `scope` and shows both root (`page`) and container (`parent`) usage.
+
+### Verified
+`tsc --noEmit`, `npm run lint`, `npm run build` clean; Playwright 17/17 on the
+production build (exact landing on a scrolled page for `Shape` and `Burst`
+effects, card isolation, no outside-card firing, docs preview exact + clipped).
+
 ## Files to Create/Update
 
 1. `registry/click-effect/effects.ts` (New)

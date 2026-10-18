@@ -15,9 +15,10 @@ export const metadata = {
 
 # Click Effect
 
-A behavior-only component that listens for clicks on the window and replays
-a mo.js burst at the pointer's coordinates. It renders nothing and has no
-DOM footprint — use it to add instant, tactile feedback to any page or app.
+A behavior-only component that renders one invisible overlay and replays a
+mo.js burst at the pointer on every click. Effects are positioned in the
+overlay's coordinate space, so a burst always lands exactly where you clicked —
+scrolled or not. Point it at the whole page, or scope it to a single card.
 
 ## Preview
 
@@ -48,14 +49,18 @@ DOM footprint — use it to add instant, tactile feedback to any page or app.
   }}
 />
 
-Click anywhere in the preview above to see the selected effect fire at that
-exact point.
+The preview runs with `scope="parent"`: click anywhere inside the panel and the
+effect fires only there, on the exact point you clicked. Clicks elsewhere on
+this page do nothing.
 
 ## Installation
 
 <InstallTabs componentName="click-effect" tier="free" />
 
 ## Usage
+
+Page-wide — place it once near the root of your app (e.g. in `layout.tsx`) and
+every click fires the effect at the pointer:
 
 ```tsx
 import { ClickEffect } from "@/components/ui/click-effect"
@@ -65,9 +70,25 @@ export function RootClickEffect() {
 }
 ```
 
-Place it once near the root of your app (e.g. in `layout.tsx` or a global
-shell). It attaches a single click listener to `window` and automatically
-cleans up on unmount.
+Scoped — drop one inside any `relative` container (a card, a hero, a canvas)
+and it becomes that container's own click effect:
+
+```tsx
+import { ClickEffect } from "@/components/ui/click-effect"
+
+export function ClickableCard() {
+  return (
+    <div className="relative overflow-hidden rounded-xl border p-6">
+      <ClickEffect variant="elarisca" scope="parent" />
+      <h2>Click anywhere in this card</h2>
+    </div>
+  )
+}
+```
+
+With `scope="parent"` the listener is attached to the component's parent
+element rather than `window`, so clicks outside the container never fire, and
+the burst is clipped to the container.
 
 ## Effects
 
@@ -78,38 +99,47 @@ the listener entirely without unmounting the component.
 
 ## Props
 
-| Prop      | Type                | Default     | Description                                          |
-| --------- | ------------------- | ----------- | ---------------------------------------------------- |
-| `variant` | `ClickEffectVariant` | `"virethos"` | The effect to replay on each click. `"none"` disables the listener. |
+| Prop      | Type                 | Default      | Description                                                                                        |
+| --------- | -------------------- | ------------ | -------------------------------------------------------------------------------------------------- |
+| `variant` | `ClickEffectVariant` | `"virethos"` | The effect to replay on each click. `"none"` disables the listener.                                |
+| `scope`   | `"page" \| "parent"` | `"page"`     | `"page"` listens on `window` (fixed overlay, viewport coordinates). `"parent"` listens on the parent element and renders inside it. |
 
 ## Behavior
 
-- Renders `null` (behavior-only). No DOM elements are created.
-- Attaches exactly one `click` listener to `window` in a `useEffect`. The
-  cleanup removes it.
-- Tuned to `{ left: e.clientX, top: e.clientY }` on every click. Effects flagged
-  `requiresGenerate` call `.tune(...).generate().replay()` to re-sample
-  `rand(...)` values; effects flagged `useRandomCoords` add a random ±30px
-  offset.
+- Renders a single invisible overlay (`aria-hidden`, `pointer-events: none`) —
+  no visible DOM, no layout impact.
+- `scope="page"` (default) attaches one `click` listener to `window` and
+  renders into a fixed, viewport-sized overlay. `scope="parent"` attaches the
+  listener to the component's parent element and renders into an
+  absolutely-positioned overlay inside it, so the parent should be
+  `position: relative`.
+- Pointer coordinates are converted to overlay-relative values
+  (`clientX - rect.left`, `clientY - rect.top`). mo.js positions shapes against
+  their container, so this is what keeps the burst exactly on the click instead
+  of drifting by the page's scroll offset.
+- Every mounted instance builds its own mo.js animations via
+  `createEffect(variant, overlay)`, so several instances — including two of the
+  same variant — animate independently.
+- Effects flagged `requiresGenerate` call `.tune(...).generate().replay()` to
+  re-sample `rand(...)` values; effects flagged `useRandomCoords` add a random
+  ±30px offset.
 - Uses dynamic `import()` to load `@mojs/core` and the effect table **only in
   the browser**. It never runs during SSR, avoiding the `self`/`document`
   environment requirements of mo.js.
-- The component is idempotent and safe to remount; switching `variant` only
-  changes which effect is armed.
+- Unmounting removes the listener and clears the overlay's mo.js nodes;
+  switching `variant` rebuilds the effect in place.
 
 ## Notes
 
-- **Performance:** Effects are constructed once at module load in
-  `effects.ts`. On click, the code only calls `.tune(...).replay()` (plus
-  `.generate()` when required) — no allocations per click.
+- **Performance:** Animations are built once per mount, not per click. On click,
+  the code only calls `.tune(...).replay()` (plus `.generate()` when required) —
+  no allocations per click.
 - **Dependencies:** Requires `@mojs/core@1.3.0` (installed automatically by
   `deadui add click-effect`).
 - **Browser-only:** `@mojs/core` touches `self`, `document` and `navigator` at
   module evaluation time. This component defers that import until after
   hydration and never executes on the server.
-- **Placement:** Put it once at the app root. If you render multiple
-  `<ClickEffect>` instances, each adds its own window listener — usually you
-  only want one armed at a time.
-- **Stop propagation:** If you switch variants via UI that sits inside a
-  clickable area, call `event.stopPropagation()` on that click (as shown in
-  the test page) to avoid firing the outgoing effect.
+- **General clicks:** with `scope="page"`, remember that the listener is on
+  `window` — every click in your app fires the effect. Use `scope="parent"` if
+  you want it limited to one surface, and call `event.stopPropagation()` on any
+  control that should not trigger a burst.

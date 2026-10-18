@@ -9,11 +9,12 @@ Phase 1: Component Implementation
 
 ## Current Goal
 
-**Feature 30: Click Effect (Free)** — complete; the v0.1.7 release
-sequence is the remaining work. `registry/click-effect/` ships the
-behavior-only `ClickEffect` component (renders null, one window click
-listener, 15 pre-configured mo.js `Burst`/`Shape` effects replayed at
-`clientX/clientY`), its effect table (`effects.ts`), a barrel, and
+**Feature 30: Click Effect (Free)** — complete and released. `main`
+and tag `v0.1.7` are pushed; the GitHub Release + npm publish are the
+owner's remaining steps. `registry/click-effect/` ships the
+behavior-only `ClickEffect` component (15 pre-configured mo.js
+`Burst`/`Shape` effects replayed at the click point), its effect table
+(`effects.ts`), a barrel, and
 `mojs.d.ts` (minimal ambient typings — `@mojs/core@1.3.0` ships none).
 `registry.json` gained a free-tier entry with `@mojs/core` as the
 dependency and directory targets under `components/ui/click-effect/`
@@ -37,9 +38,15 @@ production build (`rm -rf .next && npm run build`, 32/32 routes):
 `tsc --noEmit` clean, `npm run lint` clean, CLI `tsc` clean, and 10/10
 Playwright assertions (exact-coordinate firing, select re-arm, xandura
 ±30px random path, `none`/unmount/remount listener lifecycle, Arm
-`stopPropagation`, zero console errors). Remaining: push `main` and
-the `v0.1.7` tag, then the GitHub Release + npm publish instructions
-for the owner. DEBUG NOTE: a 4-day-old stale `next dev` server was
+`stopPropagation`, zero console errors). POST-RELEASE FOLLOW-UP (see
+the last Session Note): clicks are now mapped to a dedicated overlay
+instead of `document.body` (mo.js centres each layer in its PARENT's
+coordinate space, so raw `clientX/clientY` drifted by `scrollY`), a
+`scope?: 'page' | 'parent'` prop lets one effect bind to its own
+container, effects are built per instance via
+`createEffect(variant, parent)`, and the test route is a grid of 15
+self-contained cards (no variant select, no Arm buttons). Remaining:
+the GitHub Release + npm publish instructions for the owner. DEBUG NOTE: a 4-day-old stale `next dev` server was
 squatting port 3000 and sharing `.next` with builds, producing
 contradictory browser-test results until killed — if tests behave
 impossibly, check `lsof -iTCP:3000` first.
@@ -5413,3 +5420,55 @@ Current Goal for the remaining release steps.
   at `opacity: 1`, and the split units animate (e.g. slide-stagger char
   `translateX -14 → 0`). Regression guard: `fade-up` and `blur-in` still show
   their block-level animation (unchanged). Zero console errors.
+
+### Click Effect — overlay-scoped coordinates + per-card test route
+
+  OWNER REPORT. After `v0.1.7` shipped: "the effect is displayed a bit higher
+  than the point I clicked, and if I update the effect a couple of times it
+  then lands exactly"; also asked for the test route to drop the arm/dropdown
+  controls and give every card its own effect.
+
+  ROOT CAUSE (exactness). mo.js appends its nodes to `parent` (default
+  `document.body`) and centres them there via `margin-left/-top: -size/2`, so
+  `left/top` are coordinates in the PARENT's space, not the viewport. The
+  component tuned `{ left: e.clientX, top: e.clientY }` but the nodes lived in
+  `document.body` → every burst rendered `scrollY` px too high (and drifted
+  left/up as the node's centring margin applied). The legacy "click twice and
+  it's right" feel came from re-tuning an instance that had already been moved
+  into document space.
+
+  FIX. `click-effect.tsx` now renders a dedicated overlay and uses its
+  `getBoundingClientRect()` as the coordinate origin, so
+  `left/top = clientX/Y - rect` is exact for any scroll position:
+  - `scope?: 'page' | 'parent'` (default `'page'`). `page` → overlay is
+    `pointer-events-none fixed inset-0 z-[9999] overflow-hidden` and listens on
+    `window`; `parent` → overlay is `pointer-events-none absolute inset-0 z-10
+    overflow-hidden` (so the consumer's container must be `relative`) and
+    listens on `overlay.parentElement`. Cleanup calls `overlay.replaceChildren()`.
+  - `effects.ts` refactored from module-scope singletons to
+    `build: (parent) => new mojs.*({ parent, ... })` factories behind a new
+    exported `createEffect(variant, parent)`; mo.js only renders a node once
+    (`_isRendered`), so a single instance can never serve two parents. New
+    types `MojsAnimation`, `EffectAnimationDefinition`, `EffectDefinition`.
+  - `variant === 'none'` still renders nothing, now also skipping the overlay.
+
+  TEST ROUTE. `app/test-click-effect/page.tsx` is a grid of 15 self-contained
+  cards, each rendering `<ClickEffect variant={name} scope="parent" />`; the
+  variant `<select>`, the Arm/Disarm buttons and the page-level handler are
+  gone, so clicks outside a card do nothing.
+
+  DOCS. `ClickEffectPreview` (preview-wrappers.tsx) uses `scope="parent"` plus
+  a "Click anywhere in this panel" hint; the MDX page documents `scope` and
+  shows both the root (`page`) and container (`parent`) usages.
+
+  NOTE ON MOUNT COST. mo.js builds its nodes at construction (verified: every
+  overlay holds its layers immediately, all at `scale(0)`/zero rect → visually
+  inert), so each mounted `ClickEffect` creates its instances up front and a
+  click only re-tunes them.
+
+  VERIFIED. `tsc --noEmit`, `npm run lint`, `rm -rf .next && npm run build`
+  all clean; Playwright 17/17 on the production build (scrolled shape effect
+  centre == click point to <1px, burst layer centre + 10-dot centroid == click
+  point, per-card isolation, burst stays inside its card, no outside-card
+  clicks fire, mount-time nodes invisible, docs panel effect exact + clipped +
+  outside clicks inert, zero console errors).
