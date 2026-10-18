@@ -34,8 +34,8 @@ export default function TestAvatarCirclesPage() {
 
       <section className="w-full max-w-4xl px-8">
         <p className="mb-8 font-mono text-sm text-dead-400">
-          2. WITH LINKS — avatars wrapped in <code><a></code> tags with hover lift
-          (<code>z-50</code> and <code>scale-110</code>) and increased z-index.
+          2. WITH LINKS — avatars wrapped in <a> tags with hover lift
+          (z-50 and scale-110) and increased z-index.
         </p>
 
         <div className="flex items-center justify-center gap-4 p-6 bg-dead-900 rounded-lg">
@@ -54,8 +54,8 @@ export default function TestAvatarCirclesPage() {
 
       <section className="w-full max-w-4xl px-8">
         <p className="mb-8 font-mono text-sm text-dead-400">
-          3. CUSTOM OVERLAP & RADIUS — tighter overlap ({code `overlap={24`}}) with
-          rounded corners ({code `radius="lg"`}) instead of full circles.
+          3. CUSTOM OVERLAP & RADIUS — tighter overlap (overlap={24}) with
+          rounded corners (radius="lg") instead of full circles.
         </p>
 
         <div className="flex items-center justify-center gap-4 p-6 bg-dead-900 rounded-lg">
@@ -76,7 +76,7 @@ export default function TestAvatarCirclesPage() {
 
       <section className="w-full max-w-4xl px-8">
         <p className="mb-8 font-mono text-sm text-dead-400">
-          4. NO BORDER — <code>bordered={false}</code> for a seamless blend without
+          4. NO BORDER — bordered={false} for a seamless blend without
           the separating border between avatars.
         </p>
 
@@ -97,8 +97,7 @@ export default function TestAvatarCirclesPage() {
 
       <section className="w-full max-w-4xl px-8">
         <p className="mb-8 font-mono text-sm text-dead-400">
-          5. DIFFERENT SIZES — <code>sm</code>, <code>md</code>, <code>lg</code>, and
-          <code>xl</code> variants side-by-side.
+          5. DIFFERENT SIZES — sm, md, lg, and xl variants side-by-side.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 p-6 bg-dead-900 rounded-lg">
@@ -139,10 +138,10 @@ export default function TestAvatarCirclesPage() {
 
       <footer className="w-full max-w-4xl px-8 pb-24 text-center">
         <p className="font-mono text-sm leading-relaxed text-dead-400">
-          Each avatar can optionally accept an <code>href</code> prop to wrap it in an
-          <code><a></code> tag with a hover effect. The <code>+{numPeople}</code>
-          counter badge renders at the end of the stack with exact pixel overlap control
-          via the <code>overlap</code> prop.
+          Each avatar can optionally accept an href prop to wrap it in an
+          <a> tag with a hover effect. The +{numPeople} counter badge renders
+          at the end of the stack with exact pixel overlap control via the overlap
+          prop.
         </p>
       </footer>
     </div>
