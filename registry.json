@@ -277,7 +277,29 @@
       ],
       "variants": []
     },
-{
+    {
+      "name": "avatar-circles",
+      "title": "Avatar Circles",
+      "description": "Overlapping stacked avatars with dynamic overlap, border radius, size control, and an optional +X counter badge",
+      "tier": "free",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "registry/avatar-circles/avatar-circles.tsx",
+          "target": "components/ui/avatar-circles.tsx"
+        },
+        {
+          "path": "registry/avatar-circles/index.ts",
+          "target": "components/ui/avatar-circles/index.ts"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "click-effect",
       "title": "Click Effect",
       "description": "Behavior-only mo.js click bursts with 15 pre-configured particle, ray, and ring effects that fire at the pointer",
@@ -303,7 +325,8 @@
           "target": "components/ui/click-effect/index.ts"
         }
       ],
-      "variants": [
+      "variants": [],
+      "effects": [
         "virethos",
         "zynthor",
         "elarisca",
@@ -320,21 +343,6 @@
         "voltrisca",
         "elvantis"
       ]
-    },
-    {
-      "name": "avatar-circles",
-      "title": "Avatar Circles",
-      "description": "A stack of overlapping user avatars with an optional counter badge",
-      "tier": "free",
-      "dependencies": [],
-      "files": [
-        {
-          "path": "registry/avatar-circles/avatar-circles.tsx",
-          "target": "components/ui/avatar-circles.tsx"
-        }
-      ]
-    }
-  ]
     }
   ]
 }

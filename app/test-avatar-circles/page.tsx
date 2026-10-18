@@ -1,149 +1,165 @@
+'use client'
+
 import { AvatarCircles } from '@/registry/avatar-circles'
 
-export default function TestAvatarCirclesPage() {
+const DEFAULT_AVATARS = [
+  { name: 'Alice', imageUrl: 'https://i.pravatar.cc/150?u=alice' },
+  { name: 'Bob', imageUrl: 'https://i.pravatar.cc/150?u=bob' },
+  { name: 'Carol', imageUrl: 'https://i.pravatar.cc/150?u=carol' },
+  { name: 'Dave', imageUrl: 'https://i.pravatar.cc/150?u=dave' },
+]
+
+const LINK_AVATARS = [
+  { name: 'GitHub', imageUrl: 'https://i.pravatar.cc/150?u=github', href: 'https://github.com' },
+  { name: 'Twitter', imageUrl: 'https://i.pravatar.cc/150?u=twitter', href: 'https://twitter.com' },
+  { name: 'LinkedIn', imageUrl: 'https://i.pravatar.cc/150?u=linkedin', href: 'https://linkedin.com' },
+  { name: 'Dribbble', imageUrl: 'https://i.pravatar.cc/150?u=dribbble', href: 'https://dribbble.com' },
+]
+
+const MANY_AVATARS = [
+  { name: 'Eve', imageUrl: 'https://i.pravatar.cc/150?u=eve' },
+  { name: 'Frank', imageUrl: 'https://i.pravatar.cc/150?u=frank' },
+  { name: 'Grace', imageUrl: 'https://i.pravatar.cc/150?u=grace' },
+  { name: 'Hank', imageUrl: 'https://i.pravatar.cc/150?u=hank' },
+  { name: 'Ivy', imageUrl: 'https://i.pravatar.cc/150?u=ivy' },
+  { name: 'Jack', imageUrl: 'https://i.pravatar.cc/150?u=jack' },
+]
+
+const SIZE_AVATARS = [
+  { name: 'Kate', imageUrl: 'https://i.pravatar.cc/150?u=kate' },
+  { name: 'Leo', imageUrl: 'https://i.pravatar.cc/150?u=leo' },
+  { name: 'Mia', imageUrl: 'https://i.pravatar.cc/150?u=mia' },
+  { name: 'Noah', imageUrl: 'https://i.pravatar.cc/150?u=noah' },
+]
+
+function SectionLabel({ index, title }: { index: string; title: string }) {
   return (
-    <div className="flex flex-col items-center bg-dead-950 text-dead-50">
-      <header className="flex min-h-[60vh] w-full max-w-4xl flex-col items-center justify-center gap-6 px-8 text-center">
-        <p className="font-mono text-sm uppercase tracking-[0.35em] text-dead-400">
-          Feature 31 — Free Component
-        </p>
-        <h1 className="text-5xl font-bold tracking-tight md:text-6xl">Avatar Circles</h1>
-        <p className="max-w-xl font-mono text-sm leading-relaxed text-dead-400">
-          A stack of overlapping user avatars with an optional counter badge at the end.
-        </p>
-      </header>
+    <div className="mb-4 flex items-baseline gap-3">
+      <span className="font-mono text-xs font-semibold tracking-widest text-dead-red">
+        {index}
+      </span>
+      <h2 className="font-mono text-xs uppercase tracking-widest text-dead-400">
+        {title}
+      </h2>
+    </div>
+  )
+}
 
-      <section className="w-full max-w-4xl px-8">
-        <p className="mb-8 font-mono text-sm text-dead-400">
-          1. DEFAULT — standard circular avatars with a "+12" counter.
-        </p>
+export default function AvatarCirclesTestPage() {
+  return (
+    <main className="min-h-screen bg-dead-950 px-4 py-16 text-dead-50">
+      <div className="mx-auto max-w-5xl space-y-20">
+        <header className="space-y-3">
+          <h1 className="text-3xl font-bold">Avatar Circles — QA</h1>
+          <p className="max-w-2xl text-sm text-dead-400">
+            Stacked overlapping avatars with dynamic overlap, border radius,
+            size control, and an optional +X counter badge.
+          </p>
+        </header>
 
-        <div className="flex items-center justify-center gap-4 p-6 bg-dead-900 rounded-lg">
+        {/* 1 — Default: circular avatars, overlap 16px, +12 counter */}
+        <section>
+          <SectionLabel index="01" title="Default" />
+          <AvatarCircles avatars={DEFAULT_AVATARS} numPeople={12} />
+          <p className="mt-3 text-sm text-dead-400">
+            Four circular avatars with 16px overlap and a &ldquo;+12&rdquo; counter.
+            Default props: <span className="font-mono text-xs text-dead-200">size=&quot;md&quot;</span>,
+            <span className="font-mono text-xs text-dead-200"> overlap=16</span>,
+            <span className="font-mono text-xs text-dead-200"> radius=&quot;full&quot;</span>,
+            <span className="font-mono text-xs text-dead-200"> bordered=true</span>.
+          </p>
+        </section>
+
+        {/* 2 — With Links: avatars wrapped in <a> tags */}
+        <section>
+          <SectionLabel index="02" title="With Links" />
+          <AvatarCircles avatars={LINK_AVATARS} numPeople={8} />
+          <p className="mt-3 text-sm text-dead-400">
+            Each avatar links to an external site. Hover over one to see alift
+            effect (<span className="font-mono text-xs text-dead-200">z-50</span> +{' '}
+            <span className="font-mono text-xs text-dead-200">scale-110</span>) and a
+            red border highlight.
+          </p>
+        </section >
+
+        {/* 3 — Custom Overlap & Radius */}
+        <section>
+          <SectionLabel index="03" title="Custom Overlap & Radius" />
           <AvatarCircles
-            avatars={[
-              { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg' },
-              { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg' },
-              { name: 'Emma C.', imageUrl: '/placeholder-avatar-3.jpg' },
-            ]}
-            numPeople={12}
-          />
-        </div>
-      </section>
-
-      <div className="h-[20vh]" />
-
-      <section className="w-full max-w-4xl px-8">
-        <p className="mb-8 font-mono text-sm text-dead-400">
-          2. WITH LINKS — avatars wrapped in <a> tags with hover lift
-          (z-50 and scale-110) and increased z-index.
-        </p>
-
-        <div className="flex items-center justify-center gap-4 p-6 bg-dead-900 rounded-lg">
-          <AvatarCircles
-            avatars={[
-              { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg', href: 'https://twitter.com' },
-              { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg', href: 'https://github.com' },
-              { name: 'Emma C.', imageUrl: '/placeholder-avatar-3.jpg', href: 'https://linkedin.com' },
-            ]}
-            numPeople={5}
-          />
-        </div>
-      </section>
-
-      <div className="h-[20vh]" />
-
-      <section className="w-full max-w-4xl px-8">
-        <p className="mb-8 font-mono text-sm text-dead-400">
-          3. CUSTOM OVERLAP & RADIUS — tighter overlap (overlap={24}) with
-          rounded corners (radius="lg") instead of full circles.
-        </p>
-
-        <div className="flex items-center justify-center gap-4 p-6 bg-dead-900 rounded-lg">
-          <AvatarCircles
-            avatars={[
-              { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg' },
-              { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg' },
-              { name: 'Emma C.', imageUrl: '/placeholder-avatar-3.jpg' },
-            ]}
+            avatars={MANY_AVATARS}
+            numPeople={99}
             overlap={24}
             radius="lg"
+          />
+          <p className="mt-3 text-sm text-dead-400">
+            Tighter overlap (24px) with rounded corners (
+            <span className="font-mono text-xs text-dead-200">radius=&quot;lg&quot;</span>)
+            and a &ldquo;+99&ldquo; counter showing 6 overlaaping avatars.
+          </p>
+        </section>
+
+        {/* 4 — No Border */}
+        <section>
+          <SectionLabel index="04" title="No Border" />
+          <AvatarCircles
+            avatars={DEFAULT_AVATARS}
             numPeople={8}
-          />
-        </div>
-      </section>
-
-      <div className="h-[20vh]" />
-
-      <section className="w-full max-w-4xl px-8">
-        <p className="mb-8 font-mono text-sm text-dead-400">
-          4. NO BORDER — bordered={false} for a seamless blend without
-          the separating border between avatars.
-        </p>
-
-        <div className="flex items-center justify-center gap-4 p-6 bg-dead-900 rounded-lg">
-          <AvatarCircles
-            avatars={[
-              { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg' },
-              { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg' },
-              { name: 'Emma C.', imageUrl: '/placeholder-avatar-3.jpg' },
-            ]}
+            overlap={20}
             bordered={false}
-            numPeople={15}
           />
-        </div>
-      </section>
+          <p className="mt-3 text-sm text-dead-400">
+            <span className="font-mono text-xs text-dead-200">bordered={false}</span>
+            removes the separating border for a seamless blend between avatars.
+          </p>
+        </section>
 
-      <div className="h-[20vh]" />
-
-      <section className="w-full max-w-4xl px-8">
-        <p className="mb-8 font-mono text-sm text-dead-400">
-          5. DIFFERENT SIZES — sm, md, lg, and xl variants side-by-side.
-        </p>
-
-        <div className="flex flex-wrap items-center justify-center gap-4 p-6 bg-dead-900 rounded-lg">
-          <AvatarCircles
-            avatars={[
-              { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg' },
-              { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg' },
-            ]}
-            size="sm"
-            numPeople={4}
-          />
-          <AvatarCircles
-            avatars={[
-              { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg' },
-              { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg' },
-            ]}
-            size="md"
-            numPeople={4}
-          />
-          <AvatarCircles
-            avatars={[
-              { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg' },
-              { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg' },
-            ]}
-            size="lg"
-            numPeople={4}
-          />
-          <AvatarCircles
-            avatars={[
-              { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg' },
-              { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg' },
-            ]}
-            size="xl"
-            numPeople={4}
-          />
-        </div>
-      </section>
-
-      <footer className="w-full max-w-4xl px-8 pb-24 text-center">
-        <p className="font-mono text-sm leading-relaxed text-dead-400">
-          Each avatar can optionally accept an href prop to wrap it in an
-          <a> tag with a hover effect. The +{numPeople} counter badge renders
-          at the end of the stack with exact pixel overlap control via the overlap
-          prop.
-        </p>
-      </footer>
-    </div>
+        {/* 5 — Different Sizes */}
+        <section>
+          <SectionLabel index="05" title="Different Sizes" />
+          <div className="space-y-6">
+            <div>
+              <p className="mb-2 text-xs text-dead-400 font-mono">sm</p>
+              <AvatarCircles
+                avatars={SIZE_AVATARS}
+                numPeople={12}
+                size="sm"
+                overlap={10}
+              />
+            </div>
+            <div>
+              <p className="mb-2 text-xs text-dead-400 font-mono">md</p>
+              <AvatarCircles
+                avatars={SIZE_AVATARS}
+                numPeople={12}
+                size="md"
+                overlap={14}
+              />
+            </div>
+            <div>
+              <p className="mb-2 text-xs text-dead-400 font-mono">lg</p>
+              <AvatarCircles
+                avatars={SIZE_AVATARS}
+                numPeople={12}
+                size="lg"
+                overlap={18}
+              />
+            </div>
+            <div>
+              <p className="mb-2 text-xs text-dead-400 font-mono">xl</p>
+              <AvatarCircles
+                avatars={SIZE_AVATARS}
+                numPeople={12}
+                size="xl"
+                overlap={24}
+              />
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-dead-400">
+            Four size variants (sm, md, lg, xl) each with an appropriately
+            scaled overlap.
+          </p>
+        </section>
+      </div>
+    </main>
   )
 }

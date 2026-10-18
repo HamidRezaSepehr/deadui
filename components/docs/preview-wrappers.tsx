@@ -10,6 +10,7 @@ import { ScrollScrub } from "@/registry/scroll-scrub";
 import { SpotlightCard } from "@/registry/spotlight-card";
 import { StaggeredGrid, StaggeredItem } from "@/registry/staggered-grid";
 import type { StaggeredGridProps } from "@/registry/staggered-grid";
+import { AvatarCircles } from "@/registry/avatar-circles";
 
 /**
  * Preview adapters for `<ComponentCustomizer>`.
@@ -253,6 +254,25 @@ export function WebGLImageTrailPreview(props: Record<string, unknown>) {
       images={DEMO_IMAGES}
       distortionStrength={Number(distortion)}
       className="h-[360px] w-full"
+/>
+  );
+}
+
+export function AvatarCirclesPreview(props: Record<string, unknown>) {
+  const avatars = [
+    { name: "Alice", imageUrl: "https://i.pravatar.cc/150?u=alice" },
+    { name: "Bob", imageUrl: "https://i.pravatar.cc/150?u=bob" },
+    { name: "Carol", imageUrl: "https://i.pravatar.cc/150?u=carol" },
+    { name: "Dave", imageUrl: "https://i.pravatar.cc/150?u=dave" },
+  ];
+
+  return (
+    <AvatarCircles
+      avatars={avatars}
+      numPeople={12}
+      size={props.size as 'sm' | 'md' | 'lg' | 'xl'}
+      overlap={props.overlap as number}
+      radius={props.radius as 'sm' | 'md' | 'lg' | 'full'}
     />
   );
 }

@@ -11,11 +11,11 @@ export interface AvatarItem {
 
 export interface AvatarCirclesProps extends React.HTMLAttributes<HTMLDivElement> {
   avatars: AvatarItem[]
-  numPeople?: number // Number to display in the last badge (e.g., 99 for "+99")
+  numPeople?: number
   size?: 'sm' | 'md' | 'lg' | 'xl'
-  overlap?: number // Exact pixels of overlap (translates to negative margin-left)
+  overlap?: number
   radius?: 'sm' | 'md' | 'lg' | 'full'
-  bordered?: boolean // Adds a solid border to separate overlapping avatars
+  bordered?: boolean
 }
 
 const sizeClasses = {
@@ -36,20 +36,19 @@ export function AvatarCircles({
   avatars,
   numPeople,
   size = 'md',
-  overlap = 16, // Default 16px overlap
+  overlap = 16,
   radius = 'full',
   bordered = true,
   className,
   ...props
 }: AvatarCirclesProps) {
-  const displayAvatars = numPeople ? avatars : avatars
   const showCounter = numPeople !== undefined && numPeople > 0
 
   return (
     <div className={cn('flex items-center', className)} {...props}>
-      {displayAvatars.map((avatar, index) => {
+      {avatars.map((avatar, index) => {
         const style = index === 0 ? {} : { marginLeft: `-${overlap}px` }
-        const zIndex = 10 + index // Ensure later avatars stack on top
+        const zIndex = 10 + index
 
         const avatarContent = (
           <div
@@ -93,7 +92,7 @@ export function AvatarCircles({
             radiusClasses[radius],
             bordered && 'border-2 border-dead-surface'
           )}
-          style={{ marginLeft: `-${overlap}px`, zIndex: 10 + displayAvatars.length }}
+          style={{ marginLeft: `-${overlap}px`, zIndex: 10 + avatars.length }}
         >
           +{numPeople}
         </div>

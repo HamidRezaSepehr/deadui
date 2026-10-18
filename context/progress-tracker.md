@@ -5,51 +5,30 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation
+Phase 1: Component Implementation — Feature 31 (Avatar Circles)
 
 ## Current Goal
 
-**Feature 30: Click Effect (Free)** — complete and released. `main`
-and tag `v0.1.7` are pushed; the GitHub Release + npm publish are the
-owner's remaining steps. `registry/click-effect/` ships the
-behavior-only `ClickEffect` component (15 pre-configured mo.js
-`Burst`/`Shape` effects replayed at the click point), its effect table
-(`effects.ts`), a barrel, and
-`mojs.d.ts` (minimal ambient typings — `@mojs/core@1.3.0` ships none).
-`registry.json` gained a free-tier entry with `@mojs/core` as the
-dependency and directory targets under `components/ui/click-effect/`
-(manifest now 12 components). Test page at
-`app/test-click-effect/page.tsx`, docs page at
-`app/docs/components/click-effect/page.mdx` with a live
-`ComponentCustomizer` preview via the new `ClickEffectPreview` adapter
-in `components/docs/preview-wrappers.tsx`. CLI bumped to `0.1.7` and
-builds clean. Two deviations from the spec, both empirically forced:
-(1) `@mojs/core` executes browser-only DOM code (`self`, `document`,
-`navigator`) at module evaluation, so the spec's static import crashes
-`next build` prerendering (`ReferenceError: self is not defined`,
-reproduced) — the component loads its table with `import('./effects')`
-inside its `useEffect` and the barrel exports no runtime `effects`
-value, keeping every importer SSR-safe while click behavior stays
-exactly per spec; (2) the reference's virethos config carried both
-`animation` and `animation2` keys in one object, which the spec's
-player never reads — it is split into two `animations` entries so both
-the dashed-line burst and the ring replay. Verification on a clean
-production build (`rm -rf .next && npm run build`, 32/32 routes):
-`tsc --noEmit` clean, `npm run lint` clean, CLI `tsc` clean, and 10/10
-Playwright assertions (exact-coordinate firing, select re-arm, xandura
-±30px random path, `none`/unmount/remount listener lifecycle, Arm
-`stopPropagation`, zero console errors). POST-RELEASE FOLLOW-UP (see
-the last Session Note): clicks are now mapped to a dedicated overlay
-instead of `document.body` (mo.js centres each layer in its PARENT's
-coordinate space, so raw `clientX/clientY` drifted by `scrollY`), a
-`scope?: 'page' | 'parent'` prop lets one effect bind to its own
-container, effects are built per instance via
-`createEffect(variant, parent)`, and the test route is a grid of 15
-self-contained cards (no variant select, no Arm buttons). Remaining:
-the GitHub Release + npm publish instructions for the owner. DEBUG NOTE: a 4-day-old stale `next dev` server was
-squatting port 3000 and sharing `.next` with builds, producing
-contradictory browser-test results until killed — if tests behave
-impossibly, check `lsof -iTCP:3000` first.
+**Feature 31: Avatar Circles (Free)** — complete and released. `main`
+and tag `v0.1.8` are pushed; the GitHub Release + npm publish are the
+owner's remaining steps. `registry/avatar-circles/` ships the
+`AvatarCircles` component (full prop control: `avatars`, `numPeople`,
+`size`, `overlap`, `radius`, `bordered`) with dynamic inline
+`marginLeft` overlap, `<a>` link support with hover lift, and a
+`+{numPeople}` counter badge. `registry.json` gained a free-tier entry
+(manifest now 13 components). Test page at
+`app/test-avatar-circles/page.tsx` (5 variations: default, with links,
+custom overlap & radius, no border, different sizes). Docs page at
+`app/docs/components/avatar-circles/page.mdx` with a live
+`ComponentCustomizer` preview controlling `size`, `overlap`, and
+`radius` via the new `AvatarCirclesPreview` adapter in
+`components/docs/preview-wrappers.tsx`. CLI bumped to `0.1.8` and
+builds clean.
+
+## In Progress
+
+None. Feature 31 (Avatar Circles) is complete. v0.1.8 is committed
+and tagged — see Current Goal for the remaining release steps.
 
 ## Completed
 
@@ -1158,6 +1137,7 @@ Current Goal for the remaining release steps.
 | 9 | Horizontal Parallax Pin Gallery | Pro | Not started | ❌ (Soon) | deep, subtle, cards |
 | 10 | 3D Perspective Card Stack | Pro | Not started | ❌ (Soon) | fan, cascade, flip-through |
 | 11 | Text Fill Animation | Pro | COMPLETE (Feature 08) | ✅ (F20, Pro badge) | — (configurable via props, no cva variants) |
+| 12 | Avatar Circles | Free | COMPLETE (Feature 31) | ✅ (F31) | — (configurable via props: size, overlap, radius, bordered) |
 
 ## Open Questions
 
@@ -5472,3 +5452,57 @@ Current Goal for the remaining release steps.
   point, per-card isolation, burst stays inside its card, no outside-card
   clicks fire, mount-time nodes invisible, docs panel effect exact + clipped +
   outside clicks inert, zero console errors).
+
+- Feature 31 (feature spec `31-avatar-circles.md`): Avatar Circles, the
+  Free overlapping-avatars component. Created: `registry/avatar-circles/
+  avatar-circles.tsx` (component with dynamic `marginLeft` overlap, `<a>`
+  link support, counter badge), `registry/avatar-circles/index.ts` (barrel),
+  `app/test-avatar-circles/page.tsx` (5 required variations: default, with
+  links, custom overlap & radius, no border, different sizes),
+  `app/docs/components/avatar-circles/page.mdx` (preview with
+  `ComponentCustomizer` for `size`/`overlap`/`radius`, InstallTabs, usage,
+  linked avatars section, props table, performance and accessibility notes).
+  Modified: `registry.json` (new free-tier entry with two file targets,
+  manifest now 13 components), `components/docs/preview-wrappers.tsx`
+  (new `AvatarCirclesPreview` import + adapter function), `packages/cli/
+  package.json` (`0.1.7` → `0.1.8`), `context/progress-tracker.md` (this
+  note). No new dependencies. Full verification: `npx tsc --noEmit` clean,
+  `npm run lint` clean, `npm run build` 34/34 routes (avatar-circles test +
+  docs page prerendered static). Git tag `v0.1.8` pushed.
+
+  **DYNAMIC OVERLAP IS INLINE `marginLeft`, AND IT IS THE SPEC'S EXACT
+  MECHANISM.** Every avatar except the first receives
+  `style={{ marginLeft: -\`${overlap}px\` }}`, giving callers exact pixel
+  control. The `z-index` increases with each avatar (`10 + index`), so
+  later ones stack on top. The counter badge inherits the same overlap and
+  sits at `zIndex: 10 + avatars.length`.
+
+  **LINK SUPPORT IS CONDITIONAL WRAPPING.** An avatar with an `href` is
+  wrapped in `<a href={href} title={name}>` with `hover:z-50 hover:scale-110`
+  and a red border highlight (`hover:border-dead-accent`). Avatars without
+  `href` are plain `<div>` elements, preserving the uniform visual stack.
+
+  **THE COMPONENT USES `bg-dead-elevated` AND `text-dead-muted` WHICH ARE
+  SEMANTIC TOKENS NOT IN THE NUMERIC SCALE.** Unlike most existing components
+  that use `bg-dead-950` etc., the avatar circles spec uses the semantic
+  `dead-elevated`/`dead-surface`/`dead-muted` tokens. These tokens are
+  defined in `app/globals.css` via the `@theme static` block (they were
+  added during the light-mode palette rework in Feature 26), so they resolve
+  at build time. The CLI `init` command's Tailwind injection already ships
+  these semantic names. Verified: computed style reads
+  `background-color: var(--color-dead-elevated)` and the value resolves.
+
+  **REGISTRY ENTRY IS MINIMAL — NO VARIANTS, NO EFFECTS.** The Avatar Circles
+  component has no cva variant system or effect table. Its polymorphism is
+  entirely prop-based (`size`, `radius`, `overlap`, `bordered`). The
+  `registry.json` entry therefore declares `variants: []` and carries no
+  `effects` key, matching the pattern of `text-video-mask` and `click-effect`.
+  Two file targets: the component itself and its barrel index.
+
+  **VERIFIED.**
+  `npx tsc --noEmit` clean, `npm run lint` clean (0 errors, 0 warnings),
+  `rm -rf .next && npm run build` 34/34 routes — including the two new
+  routes (`/test-avatar-circles`, `/docs/components/avatar-circles`) both
+  `○ (Static)`. `cd packages/cli && npm run build` clean. All created files
+  read back correctly. Git operations completed: commit pushed, tag `v0.1.8`
+  pushed.
