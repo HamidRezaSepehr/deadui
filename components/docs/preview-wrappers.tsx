@@ -14,6 +14,7 @@ import type { StaggeredGridProps } from "@/registry/staggered-grid";
 import { AvatarCircles } from "@/registry/avatar-circles";
 import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles";
 import { ScrollProgress } from "@/registry/scroll-progress";
+import { SpinningText } from "@/registry/spinning-text";
 
 /**
  * Preview adapters for `<ComponentCustomizer>`.
@@ -311,15 +312,54 @@ export function OrbitingCirclesPreview(props: Record<string, unknown>) {
 }
 
 export function ScrollProgressPreview(props: Record<string, unknown>) {
+  const colorStyle = props.colorStyle as string
+  const customColor = props.customColor as string
+  const resolvedColor = colorStyle === "custom" ? customColor : colorStyle
+
   return (
-    <ScrollProgress
-      variant={props.variant as "horizontal" | "circular"}
-      color={props.color as string}
-      showPercentage={toBool(props.showPercentage)}
-      size={Number(props.size) || 48}
-      strokeWidth={Number(props.strokeWidth) || 4}
-      className="!relative"
-      style={undefined as unknown as React.CSSProperties}
-    />
+    <div className="flex w-full flex-col gap-3">
+      <p className="font-mono text-[11px] leading-relaxed text-dead-400">
+        Scroll inside the panel below to see the progress indicator respond to the
+        container&apos;s own scroll position.
+      </p>
+      <div className="relative h-[420px] w-full overflow-y-auto overscroll-contain rounded-lg border border-dead-800 bg-dead-950">
+        <ScrollProgress
+          variant={props.variant as "horizontal" | "circular"}
+          color={resolvedColor}
+          showPercentage={toBool(props.showPercentage)}
+          size={Number(props.size) || 48}
+          strokeWidth={Number(props.strokeWidth) || 4}
+          className={props.variant === "circular" ? "top-4 right-4" : "bg-dead-900/60"}
+        />
+        <div className="flex flex-col gap-6 p-8 pb-12">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div
+              key={i}
+              className="flex h-[160px] items-center justify-center rounded-lg border border-dead-800 bg-dead-900"
+            >
+              <span className="font-mono text-sm text-dead-500">
+                Section {i + 1}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SPINNING_DEMO = ['SPIN', '•', 'DEAD', '•', 'UI', '•'];
+
+export function SpinningTextPreview(props: Record<string, unknown>) {
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center">
+      <SpinningText
+        radius={Number(props.radius) || 120}
+        duration={Number(props.duration) || 10}
+        direction={(props.direction as "clockwise" | "counter-clockwise") || "clockwise"}
+      >
+        {SPINNING_DEMO}
+      </SpinningText>
+    </div>
   );
 }

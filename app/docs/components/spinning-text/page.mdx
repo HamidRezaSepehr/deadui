@@ -1,0 +1,165 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { SpinningTextPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Spinning Text",
+  description:
+    "CSS-driven circular text spinner that arranges text, icons, or images in a perfect, continuously rotating ring with a customizable center element.",
+}
+
+# Spinning Text
+
+Arrange text, icons, or images in a perfect circle and rotate them continuously.
+Powered by pure CSS transforms — no JavaScript animation frames, no SVG text
+paths, and no extra Tailwind config.
+
+## Preview
+
+<ComponentCustomizer
+  component={SpinningTextPreview}
+  defaultProps={{
+    radius: 120,
+    duration: 10,
+    direction: "clockwise",
+  }}
+  controls={{
+    radius: { type: "slider", min: 60, max: 200, step: 5, unit: "px" },
+    duration: { type: "slider", min: 3, max: 30, step: 1, unit: "s" },
+    direction: { type: "select", options: ["clockwise", "counter-clockwise"] },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="spinning-text" tier="free" />
+
+## Usage
+
+Pass an **array of React nodes** as `children`. Each element is placed at an
+equal angular distance on the circumference:
+
+```tsx
+import { SpinningText } from "@/components/ui/spinning-text"
+
+export function HeroRing() {
+  return (
+    <SpinningText radius={120} duration={10}>
+      {["DEAD", "•", "UI", "•", "ANIMATIONS", "•"]}
+    </SpinningText>
+  )
+}
+```
+
+### Mixed media (icons as separators)
+
+Mix strings, icon components, and any other React node freely. The component
+renders whatever you pass — each item sits on its own spot on the circle:
+
+```tsx
+import { Heart, Zap, Star } from "lucide-react"
+import { SpinningText } from "@/components/ui/spinning-text"
+
+export function MixedRing() {
+  return (
+    <SpinningText radius={140} duration={12}>
+      {[
+        <span key="a" className="text-lg font-bold">DEAD</span>,
+        <Heart key="h1" size={16} className="text-red-500" />,
+        <span key="b" className="text-lg font-bold">UI</span>,
+        <Zap key="z" size={16} className="text-yellow-400" />,
+        <span key="c" className="text-lg font-bold">COMPONENTS</span>,
+        <Star key="s" size={16} className="text-blue-400" />,
+      ]}
+    </SpinningText>
+  )
+}
+```
+
+### Custom center content
+
+Replace the default black circle with any React node using the `centerContent`
+prop:
+
+```tsx
+import { Command } from "lucide-react"
+import { SpinningText } from "@/components/ui/spinning-text"
+
+export function BrandedRing() {
+  return (
+    <SpinningText
+      radius={130}
+      duration={15}
+      centerContent={
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500 shadow-lg">
+          <Command size={24} className="text-white" />
+        </div>
+      }
+    >
+      {["CREATE", "•", "SHIP", "•", "REPEAT", "•"]}
+    </SpinningText>
+  )
+}
+```
+
+### Direction and speed
+
+`direction` accepts `"clockwise"` (default) or `"counter-clockwise"`.
+`duration` controls the time for one full rotation in seconds:
+
+```tsx
+<SpinningText radius={120} duration={5} direction="counter-clockwise">
+  {["FAST", "•", "REVERSE", "•", "LOOP", "•"]}
+</SpinningText>
+```
+
+## How the transform math works
+
+Each item is positioned with two CSS properties:
+
+1. **`transformOrigin: center {radius}px`** — pivots every item around the
+   centre of the circle, not its own centre.
+2. **`transform: rotate({index × angleStep}deg)`** — fans each item to its
+   angular slot, where `angleStep = 360 / totalItems`.
+
+The outer container rotates continuously via Tailwind's built-in
+`@keyframes spin` (`0 → 360deg`, `linear`, `infinite`). Because the
+`transformOrigin` is set to the circle centre, the whole ring turns as one
+rigid body — each item keeps its upright orientation as it travels.
+
+The center content sits in a `relative z-10` layer above the rotating ring,
+so it stays static and never spins.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `children` | `React.ReactNode[]` | — | Array of items to place on the circumference. Strings, icons, images — any React node. |
+| `radius` | `number` | `120` | Radius of the circle in pixels. Determines the container size (`2 × radius`). |
+| `duration` | `number` | `10` | Seconds per full rotation. Lower is faster. |
+| `direction` | `"clockwise" \| "counter-clockwise"` | `"clockwise"` | Spin direction. Reversed via `animation-direction`. |
+| `centerContent` | `React.ReactNode` | A black `w-16 h-16` circle | Content rendered in the static centre of the ring. Pass any React node. |
+| `className` | `string` | — | Additional classes for the outer container. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the container. |
+
+## Dependencies
+
+- `clsx`
+- `tailwind-merge`
+
+## Performance
+
+- Zero JavaScript per frame — the rotation is a pure CSS `animation` on the
+  compositor thread.
+- Each item is a plain `<div>` with a `transformOrigin` — no layout thrashing,
+  no DOM writes during animation.
+- Because Tailwind's `@keyframes spin` is built-in, no Tailwind config
+  injection is needed and the component has zero setup cost.
+
+## Accessibility
+
+- Under `prefers-reduced-motion: reduce` the rotation stops and the full
+  circle is revealed as a static arrangement.
+- The rotating ring is `absolute inset-0` (decorative). Add `aria-label` or
+  real text inside the `centerContent` when the circle carries semantic meaning.

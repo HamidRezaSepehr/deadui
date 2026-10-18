@@ -406,6 +406,27 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "spinning-text",
+      "title": "Spinning Text",
+      "description": "CSS-driven circular text spinner that arranges text, icons, or images in a perfect, continuously rotating ring with a customizable center element",
+      "tier": "free",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "registry/spinning-text/spinning-text.tsx",
+          "target": "components/ui/spinning-text.tsx"
+        },
+        {
+          "path": "registry/spinning-text/index.ts",
+          "target": "components/ui/spinning-text/index.ts"
+        }
+      ],
+      "variants": []
     }
   ]
 }

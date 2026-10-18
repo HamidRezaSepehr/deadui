@@ -5,28 +5,25 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 34 (Scroll Progress)
+Phase 1: Component Implementation — Feature 35 (Spinning Text)
 
 ## Current Goal
 
-**Feature 34: Scroll Progress (Free)** — complete. `registry/scroll-progress/`
-ships `ScrollProgress` with two variants (`horizontal` bar and `circular` SVG)
-driven by `requestAnimationFrame` for 60fps updates. The horizontal variant
-supports `"default"` (solid `bg-dead-accent`) and `"gradient"` (gradient fill)
-colors. The circular variant renders an SVG `<circle>` with correct
-`circumference = 2 × π × (size − strokeWidth) / 2` and
-`strokeDashoffset = circumference − (progress / 100) × circumference`, rotated
-`−90deg` to start at 12 o'clock. Optional `showPercentage` renders centered
-`Math.round(progress)%` text. Test page at `app/test-scroll-progress/` shows all
-5 variations (horizontal default, horizontal gradient, circular default,
-circular with percentage, circular gradient larger). Docs page at
-`app/docs/components/scroll-progress/` with live `ComponentCustomizer` preview.
-CLI bumped to `v0.1.11`.
+**Feature 35: Spinning Text (Free)** — complete. `registry/spinning-text/`
+ships `SpinningText` with pure CSS transforms: each child is positioned via
+`transformOrigin: center {radius}px` and `rotate({index * angleStep}deg)`,
+and the container rotates using Tailwind's built-in `@keyframes spin`. Props:
+`radius` (default 120), `duration` (default 10s), `direction` (`clockwise` |
+`counter-clockwise`), and `centerContent` (defaults to `bg-dead-black` circle).
+`children` accepts `React.ReactNode[]` — strings, icons, images, or any mix.
+Test page at `app/test-spinning-text/` shows 4 sections (basic text, mixed
+media with icon separators, custom center content, counter-clockwise + fast).
+Docs page at `app/docs/components/spinning-text/` with live
+`ComponentCustomizer` preview. CLI bumped to `v0.1.12`.
 
 ## In Progress
 
-None. Feature 34 (Scroll Progress) is complete — see Current Goal for the
-remaining GitHub-Release + manual-publish steps.
+None.
 
 ## In Progress
 
@@ -1282,6 +1279,7 @@ Current Goal for the remaining release steps.
 | 13 | Orbiting Circles | Free | COMPLETE (Feature 32) | ✅ (F32) | — (configurable via props: radius, duration, reverse, path, angle) |
 | 14 | Ripple | Free | COMPLETE (Feature 33) | ✅ (F33) | — (configurable via props: mainCircleSize, mainCircleOpacity, numCircles, color) |
 | 15 | Scroll Progress | Free | COMPLETE (Feature 34) | ✅ (F34) | horizontal, circular (props: color, showPercentage, size, strokeWidth) |
+| 16 | Spinning Text | Free | COMPLETE (Feature 35) | ✅ (F35) | — (configurable via props: radius, duration, direction, centerContent)
 
 ## Open Questions
 
@@ -1445,6 +1443,40 @@ Current Goal for the remaining release steps.
 - **ARCHIVE (moot):** the question about `melting-blur-text`
   having no `COMPONENT_META` entry is obsolete — the
   component was removed from the project (see Completed #36).
+
+- Feature 35 (feature spec `35-spinning-text.md`): Spinning Text
+  — a new Free component. Created:
+  `registry/spinning-text/spinning-text.tsx` (component),
+  `registry/spinning-text/index.ts` (barrel),
+  `app/test-spinning-text/page.tsx` (4 sections: basic text, mixed media
+  with icon separators, custom center content, counter-clockwise + fast),
+  `app/docs/components/spinning-text/page.mdx` (customizer preview, install
+  tabs, usage snippets for basic/mixed-media/custom-center/direction-speed,
+  how-the-transform-math-works, props table, dependencies, performance,
+  accessibility). Modified: `registry.json` (+ `spinning-text` entry),
+  `packages/cli/package.json` (`0.1.11` → `0.1.12`),
+  `components/docs/preview-wrappers.tsx` (+ `SpinningTextPreview` adapter),
+  `context/progress-tracker.md`. No new dependencies, no Tailwind config
+  injection needed — the component uses Tailwind's built-in `@keyframes spin`.
+
+  **THE TRANSFORM MATH IS TWO PROPERTIES.** Each child is positioned with
+  `transformOrigin: center {radius}px` (pivoting about the circle centre)
+  and `transform: rotate({index × angleStep}deg)` (fanning to the angular
+  slot). The container rotates with Tailwind's native `spin` keyframe — no
+  custom CSS, no `init.ts` changes, and zero JS per frame.
+
+  **`centerContent` DEFAULTS TO A `bg-dead-black` CIRCLE** but accepts any
+  React node. It sits in a `relative z-10` flex container above the rotating
+  ring, so it stays static and the user can replace it freely.
+
+  **`React.Children.count` AND `React.Children.map` ARE USED** rather than
+  `children.length` or `children.map`, because `children: React.ReactNode[]`
+  makes `children` an array-like structure that `React.Children` handles
+  uniformly (including null/undefined filtering via the explicit guard).
+
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` clean,
+  `npm run build` passes. Manifest now describes **16 components** (14 Free
+  + 2 Pro), with all file paths existing on disk.
 
 ## Resolved Decisions
 
