@@ -277,7 +277,7 @@
       ],
       "variants": []
     },
-    {
+{
       "name": "click-effect",
       "title": "Click Effect",
       "description": "Behavior-only mo.js click bursts with 15 pre-configured particle, ray, and ring effects that fire at the pointer",
@@ -303,8 +303,7 @@
           "target": "components/ui/click-effect/index.ts"
         }
       ],
-      "variants": [],
-      "effects": [
+      "variants": [
         "virethos",
         "zynthor",
         "elarisca",
@@ -321,6 +320,21 @@
         "voltrisca",
         "elvantis"
       ]
+    },
+    {
+      "name": "avatar-circles",
+      "title": "Avatar Circles",
+      "description": "A stack of overlapping user avatars with an optional counter badge",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/avatar-circles/avatar-circles.tsx",
+          "target": "components/ui/avatar-circles.tsx"
+        }
+      ]
+    }
+  ]
     }
   ]
 }

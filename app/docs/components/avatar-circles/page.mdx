@@ -1,0 +1,135 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { AvatarCircles } from "@/registry/avatar-circles"
+
+export const metadata = {
+  title: "Avatar Circles",
+  description:
+    "A stack of overlapping user avatars with an optional counter badge at the end.",
+}
+
+# Avatar Circles
+
+A stack of overlapping user avatars with an optional counter badge at the end.
+Inspired by Magic UI, the component is fully adjustable, allowing developers
+to control the overlap amount, border radius, size, and whether individual
+avatars are clickable links.
+
+## Preview
+
+<ComponentCustomizer
+  component={AvatarCircles}
+  defaultProps={{
+    children: undefined,
+    avatars: [
+      { name: 'Sarah J.', imageUrl: '/placeholder-avatar-1.jpg' },
+      { name: 'Mike R.', imageUrl: '/placeholder-avatar-2.jpg' },
+    ],
+    numPeople: 12,
+    size: 'md',
+    overlap: 16,
+    radius: 'full',
+    bordered: true,
+  }}
+  controls={{
+    size: { type: 'select', options: ['sm', 'md', 'lg', 'xl'] },
+    overlap: { type: 'slider', min: 0, max: 50, step: 1, unit: 'px' },
+    radius: { type: 'select', options: ['sm', 'md', 'lg', 'full'] },
+    bordered: { type: 'select', options: [true, false] },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="avatar-circles" tier="free" />
+
+### One-time setup
+
+The component has no external dependencies. It uses Tailwind CSS classes
+from the Dead UI theme.
+
+```bash
+npx deadui@latest init
+```
+
+If you already ran `init` before this component existed, re-run it — it is
+idempotent and will add only what is missing.
+
+## Usage
+
+```tsx
+import { AvatarCircles } from "@/components/ui/avatar-circles"
+
+export function Profile() {
+  return (
+    <AvatarCircles
+      avatars={[
+        { name: 'Sarah J.', imageUrl: '/avatar1.jpg' },
+        { name: 'Mike R.', imageUrl: '/avatar2.jpg' },
+        { name: 'Emma C.', imageUrl: '/avatar3.jpg', href: 'https://twitter.com' },
+      ]}
+      numPeople={8}
+      size="lg"
+      overlap={20}
+      radius="md"
+      bordered={true}
+    />
+  )
+}
+```
+
+### Linked avatars
+
+If an avatar object has an `href` prop, it will be wrapped in an `<a>` tag
+with `title={avatar.name}` and a hover effect (`z-index` bump and slight scale):
+
+```tsx
+<AvatarCircles
+  avatars={[
+    { name: 'Sarah J.', imageUrl: '/avatar1.jpg', href: 'https://twitter.com' },
+    { name: 'Mike R.', imageUrl: '/avatar2.jpg' },
+  ]}
+  numPeople={5}
+/>
+```
+
+The hover effect adds `z-50` and `scale-110` on hover, and a `border-dead-accent`
+outline when `bordered={true}`.
+
+## Controls
+
+| Control | Type | Options / Range |
+| ------- | ---- | --------------- |
+| `size` | select | `sm`, `md`, `lg`, `xl` |
+| `overlap` | slider | `0` to `50` (px) |
+| `radius` | select | `sm`, `md`, `lg`, `full` |
+| `bordered` | select | `true`, `false` |
+
+## Props
+
+| Prop | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| `avatars` | `AvatarItem[]` | — | Array of avatar objects with `name`, `imageUrl`, and optional `href` |
+| `numPeople` | `number` | `undefined` | Number to display in the counter badge (e.g., `8` for `"+8"`) |
+| `size` | `'sm' \| 'md' \| 'lg' \| 'xl'` | `'md'` | Size of the avatars and counter badge |
+| `overlap` | `number` | `16` | Exact pixels of overlap (translates to negative margin-left) |
+| `radius` | `'sm' \| 'md' \| 'lg' \| 'full'` | `'full'` | Border radius of avatars and badge |
+| `bordered` | `boolean` | `true` | Adds a solid border to separate overlapping avatars |
+| `className` | `string` | — | Additional CSS classes |
+| `...props` | `React.HTMLAttributes<HTMLDivElement>` | — | Standard div attributes |
+
+## Dependencies
+
+- No external dependencies beyond Tailwind CSS and the Dead UI theme.
+
+## How it works
+
+- The `overlap` prop translates to an inline `marginLeft: -${overlap}px` for all
+  items except the first one, allowing exact pixel control over the stacking.
+- Later avatars have higher `z-index` values (10 + index) so they stack on top.
+- The counter badge (`+{numPeople}`) renders at the end of the stack with
+  `marginLeft: -${overlap}px` and `z-index: 10 + displayAvatars.length` so it
+  appears on top of the last avatar.
+- Avatars with an `href` prop are wrapped in `<a>` tags with `title={avatar.name}`
+  and a hover effect (`hover:z-50 hover:scale-110`).
