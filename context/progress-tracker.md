@@ -9,30 +9,40 @@ Phase 1: Component Implementation
 
 ## Current Goal
 
-**Feature 29: Text Video Mask (Free)** — the `TextVideoMask` component
-is implemented with a **deviation approved by the owner**: the spec's
-`<video>` + CSS `mask: url(#id)` + `<svg><defs><mask><foreignObject>`
-technique was proven empirically broken in Chromium (foreignObject
-content never paints inside a `<mask>`, so the video can never be
-clipped to the text — pixel-matrix evidence: masked video renders as a
-full unmasked rectangle or fully hidden, never text-shaped). With the
-owner's go-ahead the mask is implemented with `mix-blend-multiply`
-instead: an opaque text layer (default black field) blends over the
-video inside an `isolation: isolate` container — white reveals, black
-hides, same luminance semantics, full HTML/Tailwind children, works
-uniformly in Chrome/Safari/Firefox. Files: `registry/text-video-mask/`
-(component + barrel), `registry.json` entry (free tier, 11 components
-total), `app/test-text-video-mask/page.tsx` (4 sections: bold text /
-outlined stroke / multi-line complex HTML / inverted cut-out) and docs
-MDX at `app/docs/components/text-video-mask/page.mdx`. CLI already at
-`0.1.6`. Verification passed: `npx tsc --noEmit` clean, `npm run lint`
-clean, `npm run build` 30/30 routes, and Playwright/PIL pixel proofs on
-the production server — video visible only inside glyphs (bold: 86% of
-the video box hidden, kept pixels confined to the centered text bands;
-outline: strokes reveal; multi-line: 87% hidden, kept pixels in the two
-text bands; inverted: 97% kept with glyph holes; docs preview: video
-only inside the "DEAD" text). Remaining: git tag re-cut at the new
-commit, GitHub Release + manual npm publish for v0.1.6.
+**Feature 30: Click Effect (Free)** — complete; the v0.1.7 release
+sequence is the remaining work. `registry/click-effect/` ships the
+behavior-only `ClickEffect` component (renders null, one window click
+listener, 15 pre-configured mo.js `Burst`/`Shape` effects replayed at
+`clientX/clientY`), its effect table (`effects.ts`), a barrel, and
+`mojs.d.ts` (minimal ambient typings — `@mojs/core@1.3.0` ships none).
+`registry.json` gained a free-tier entry with `@mojs/core` as the
+dependency and directory targets under `components/ui/click-effect/`
+(manifest now 12 components). Test page at
+`app/test-click-effect/page.tsx`, docs page at
+`app/docs/components/click-effect/page.mdx` with a live
+`ComponentCustomizer` preview via the new `ClickEffectPreview` adapter
+in `components/docs/preview-wrappers.tsx`. CLI bumped to `0.1.7` and
+builds clean. Two deviations from the spec, both empirically forced:
+(1) `@mojs/core` executes browser-only DOM code (`self`, `document`,
+`navigator`) at module evaluation, so the spec's static import crashes
+`next build` prerendering (`ReferenceError: self is not defined`,
+reproduced) — the component loads its table with `import('./effects')`
+inside its `useEffect` and the barrel exports no runtime `effects`
+value, keeping every importer SSR-safe while click behavior stays
+exactly per spec; (2) the reference's virethos config carried both
+`animation` and `animation2` keys in one object, which the spec's
+player never reads — it is split into two `animations` entries so both
+the dashed-line burst and the ring replay. Verification on a clean
+production build (`rm -rf .next && npm run build`, 32/32 routes):
+`tsc --noEmit` clean, `npm run lint` clean, CLI `tsc` clean, and 10/10
+Playwright assertions (exact-coordinate firing, select re-arm, xandura
+±30px random path, `none`/unmount/remount listener lifecycle, Arm
+`stopPropagation`, zero console errors). Remaining: push `main` and
+the `v0.1.7` tag, then the GitHub Release + npm publish instructions
+for the owner. DEBUG NOTE: a 4-day-old stale `next dev` server was
+squatting port 3000 and sharing `.next` with builds, producing
+contradictory browser-test results until killed — if tests behave
+impossibly, check `lsof -iTCP:3000` first.
 
 ## Completed
 
@@ -882,10 +892,76 @@ both packages, 7 curl cases against the live route, and
     (`currentTime` advancing), computed `mix-blend-mode: multiply` and
     `isolation: isolate` confirmed, zero console/page errors.
 
+46. **Feature 30: Click Effect (Free)** —
+    `registry/click-effect/click-effect.tsx` (behavior-only client
+    component: renders `null`, attaches ONE `click` listener to
+    `window`, tunes each animation to `{ left: e.clientX, top:
+    e.clientY }` and replays — `.tune(coords).generate().replay()` when
+    the wrapper sets `requiresGenerate`, random ±30px offset coords
+    when `useRandomCoords`, listener removed on unmount or when
+    `variant="none"`), `registry/click-effect/effects.ts` (all 15
+    pre-configured mo.js `Burst`/`Shape` effects — virethos, zynthor,
+    elarisca, gravonix, xypheris, vorlana, klyntar, zerionis, marnixus,
+    taviros, lothira, xandura, dravonix, voltrisca, elvantis — plus the
+    `ClickEffectVariant` / `EffectConfig` / `EffectAnimationWrapper`
+    types), `registry/click-effect/mojs.d.ts` (minimal ambient typings
+    for `@mojs/core@1.3.0`, which ships no `.d.ts`), barrel
+    `index.ts`, `registry.json` entry (`tier: "free"`,
+    `dependencies: ["@mojs/core"]`, four file targets into
+    `components/ui/click-effect/`, `effects:` listing the 15 names —
+    manifest now 12 components), root `package.json` gains
+    `@mojs/core` for the docs/test pages, test page
+    `app/test-click-effect/page.tsx` (variant select, mount/unmount
+    toggle, armed/clicks/last-coords readout, 15-card grid with Arm
+    buttons that `stopPropagation`) and docs page
+    `app/docs/components/click-effect/page.mdx` (live
+    `ComponentCustomizer` preview through the new `ClickEffectPreview`
+    adapter in `preview-wrappers.tsx`, InstallTabs, usage, variants,
+    props table, behavior/performance/accessibility notes). CLI bumped
+    to `0.1.7` (`packages/cli/package.json`) and builds clean.
+
+    **TWO DEVIATIONS, both empirically forced.** (1) SSR: `@mojs/core`'s
+    UMD evaluates browser-only code (`self`, `document.createElement`,
+    `navigator`) at module scope, so the spec's static `import mojs
+    from '@mojs/core'` crashes `next build` prerendering with
+    `ReferenceError: self is not defined` (reproduced on the first
+    build). The component now uses a type-only import of its table and
+    loads it with `import('./effects')` inside its `useEffect` —
+    browser-only, after hydration — and the barrel re-exports only the
+    component and types (a runtime `effects` export would reintroduce
+    the crash for any importer). Click behavior is unchanged from the
+    spec. (2) The legacy virethos config wrapped TWO mo.js objects as
+    `animation` + `animation2` in one object; the spec's player only
+    reads `animation`, so it is split into two `animations` entries —
+    the dashed-line burst and the ring both replay, preserving the
+    reference visuals (excess-property checking on `EffectConfig`
+    would have rejected the extra key anyway).
+
+    Full verification on a CLEAN production build (`rm -rf .next &&
+    npm run build`, 32/32 routes): `npx tsc --noEmit` clean, `npm run
+    lint` clean, `cd packages/cli && npm run build` clean, and 10/10
+    Playwright assertions against `next start` — virethos fires at
+    exact `clientX/clientY` (verified via the tuned elements' inline
+    `left/top` styles), select re-arms, xandura's random-coords path
+    lands within ±30px of the click, `variant="none"` and unmount
+    detach the listener, remount resumes firing, Arm switches without
+    firing, zero console/page errors. DEBUG WAR STORY: for a stretch
+    of the session every post-variant-change assertion failed or
+    contradicted itself because a 4-day-old `next dev` server (started
+    Oct 14) was squatting port 3000 and sharing `.next` with
+    `next build` / `next start` — probes were silently hitting mixed
+    dev/prod artifacts (dev HMR chunks, StrictMode double-mount,
+    `next start` failing EADDRINUSE while `with_server.py` saw the
+    port "ready"). After killing the stale server and rebuilding clean,
+    everything passed 10/10 on the first run. If browser tests behave
+    impossibly, check `lsof -iTCP:3000` before doubting the code.
+
 ## In Progress
 
-None. Feature 28 (Advanced Marquee) and Feature 29 (Text Video Mask)
-are complete; awaiting GitHub Release + manual npm publish for v0.1.6.
+None. Feature 28 (Advanced Marquee), Feature 29 (Text Video Mask) and
+Feature 30 (Click Effect) are complete. v0.1.7 (which carries Text
+Video Mask + Click Effect) is committed and tagged locally — see
+Current Goal for the remaining release steps.
 
 ## Next Up
 
