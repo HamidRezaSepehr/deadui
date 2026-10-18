@@ -3,9 +3,9 @@ title: Orbiting Circles
 description: Concentric rings with icons, images, or any React node orbiting a center point, kept perfectly upright via CSS counter-rotation.
 ---
 
-import { Bell, Globe, Heart, Rocket, Star, Zap } from "lucide-react"
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
 import { InstallTabs } from "@/components/docs/install-tabs"
-import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles"
+import { OrbitingCirclesPreview } from "@/components/docs/preview-wrappers"
 
 export const metadata = {
   title: "Orbiting Circles",
@@ -22,32 +22,27 @@ beneath it, using pure CSS counter-rotation.
 
 ## Preview
 
-<div className="not-prose my-8">
-  <div className="relative h-[420px] overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40">
-    <OrbitingCircles>
-      <Orbit radius={130} duration={24}>
-        <OrbitItem angle={0}>
-          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dead-800 bg-dead-900 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
-            <Zap size={22} strokeWidth={1.5} />
-          </div>
-        </OrbitItem>
-        <OrbitItem angle={120}>
-          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dead-800 bg-dead-900 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
-            <Heart size={22} strokeWidth={1.5} />
-          </div>
-        </OrbitItem>
-        <OrbitItem angle={240}>
-          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dead-800 bg-dead-900 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
-            <Star size={22} strokeWidth={1.5} />
-          </div>
-        </OrbitItem>
-      </Orbit>
-    </OrbitingCircles>
-  </div>
-</div>
+<ComponentCustomizer
+  component={OrbitingCirclesPreview}
+  defaultProps={{
+    radius: 110,
+    duration: 20,
+    reverse: "false",
+    path: "true",
+  }}
+  controls={{
+    radius: { type: "slider", min: 40, max: 170, step: 5, unit: "px" },
+    duration: { type: "slider", min: 5, max: 40, step: 1, unit: "s" },
+    reverse: { type: "select", options: ["true", "false"] },
+    path: { type: "select", options: ["true", "false"] },
+  }}
+  className="not-prose my-8"
+/>
 
-Watch closely: the ring turns, but the three icons never tip over. That is the
-counter-rotation at work.
+Watch closely as `radius` grows or `reverse` flips: the ring turns, but the
+three icons never tip over. That is the counter-rotation at work. `duration`
+is the time for one full revolution, so lower is faster; `path={false}`
+hides the track border.
 
 ## Installation
 

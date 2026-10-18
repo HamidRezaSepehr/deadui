@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { Heart, Star, Zap } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { GradientBorder } from "@/registry/gradient-border";
@@ -11,6 +12,7 @@ import { SpotlightCard } from "@/registry/spotlight-card";
 import { StaggeredGrid, StaggeredItem } from "@/registry/staggered-grid";
 import type { StaggeredGridProps } from "@/registry/staggered-grid";
 import { AvatarCircles } from "@/registry/avatar-circles";
+import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles";
 
 /**
  * Preview adapters for `<ComponentCustomizer>`.
@@ -274,5 +276,35 @@ export function AvatarCirclesPreview(props: Record<string, unknown>) {
       overlap={props.overlap as number}
       radius={props.radius as 'sm' | 'md' | 'lg' | 'full'}
     />
+  );
+}
+
+// The customizer needs something to orbit: the playground exposes Orbit props
+// (`radius`, `duration`, `reverse`, `path`) but has no control for the items
+// themselves, so a fixed 3-icon ring stands in — same demo on every config.
+const ORBIT_DEMO_ICONS = [
+  { Icon: Zap, angle: 0 },
+  { Icon: Heart, angle: 120 },
+  { Icon: Star, angle: 240 },
+];
+
+export function OrbitingCirclesPreview(props: Record<string, unknown>) {
+  return (
+    <OrbitingCircles>
+      <Orbit
+        radius={Number(props.radius) || 110}
+        duration={Number(props.duration) || 20}
+        reverse={toBool(props.reverse)}
+        path={toBool(props.path)}
+      >
+        {ORBIT_DEMO_ICONS.map(({ Icon, angle }) => (
+          <OrbitItem key={angle} angle={angle}>
+            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dead-800 bg-dead-900 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
+              <Icon size={22} strokeWidth={1.5} />
+            </div>
+          </OrbitItem>
+        ))}
+      </Orbit>
+    </OrbitingCircles>
   );
 }

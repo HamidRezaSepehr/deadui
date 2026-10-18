@@ -5,38 +5,25 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 32 (Orbiting Circles)
+Phase 1: Component Implementation — Feature 33 (Ripple)
 
 ## Current Goal
 
-**Feature 32: Orbiting Circles (Free)** — complete, committed, tagged
-`v0.1.9` and pushed; the GitHub Release + manual npm publish are the
-owner's remaining steps. `registry/orbiting-circles/` ships
-`OrbitingCircles` (relative container) + `Orbit` (one ring: `radius`,
-`duration`, `reverse`, `path`) + `OrbitItem` (`angle`) with the spec's
-nested API `<OrbitingCircles><Orbit radius><OrbitItem angle><Icon/></OrbitItem></Orbit></OrbitingCircles>`.
-**Upright icons verified live**: items are positioned with
-`translate(-50%,-50%) rotate(a) translateX(var(--orbit-radius)) rotate(-a)`
-(the leading translate puts each box centre EXACTLY on the ring — measured
-120.0px for radius 120 — and the trailing `-a` aligns local axes), the ring
-runs `orbit-spin` 0→360, and each item's inner div runs `orbit-counter-spin`
-over the same duration so `−θ + θ = 0` every frame. The counter target is a
-**keyframe value, not `animation-direction: reverse`**: reverse rings set
-`--orbit-counter-target: 360deg` (normal) vs `-360deg`, because reversing the
-direction of a `0→-360` animation shifts phase and the two cancellations stop
-matching mid-cycle. Keyframes ship embedded in the component (plain
-`<style>`, NOT styled-jsx — the App Router requires a
-`StyledJsxRegistry` wrapper for styled-jsx that this repo does not have, so
-the spec's `<style jsx>` was replaced by an identical inline `<style>` that
-is SSR-safe and self-contained for CLI installs). Reduced motion falls back
-to a static upright diagram (`animation: none !important`). `registry.json`
-gained a free-tier entry (manifest now **14 components**, 25/25 files present
-on disk). Test page at `app/test-orbiting-circles/page.tsx` (4 sections:
-basic 3-icon orbit / multi-ring with a `reverse` fast inner ring + slow outer
-ring + center badge / `<img>` avatars / `path={false}`). Docs page at
-`app/docs/components/orbiting-circles/page.mdx` with a live preview,
-"how the upright icon trick works", and full props tables. CLI bumped to
-`0.1.9` and builds clean.
+**Feature 33: Ripple (Free)** — complete, committed, tagged
+`v0.1.10` and pushed; the GitHub Release + manual npm publish are the
+owner's remaining steps. `registry/ripple/` ships
+`Ripple` (expanding concentric circles behind centered `children`) with
+four demos on the test page (text / icon + custom color / custom sizes /
+button integration). The `ripple` keyframe and `animate-ripple` utility
+are injected by `deadui init` into consumer Tailwind configs (both v3
+`theme.extend` and v4 `@layer utilities`). The component, init script update,
+docs page and test page are all created. CLI bumped to `0.1.10` and builds clean.
+
+## In Progress
+
+None. Feature 33 (Ripple) is complete and released in this
+session: `v0.1.10` is committed, tagged and pushed — see Current Goal for the remaining
+GitHub-Release + manual-publish steps.
 
 ## In Progress
 
@@ -1031,6 +1018,68 @@ both packages, 7 curl cases against the live route, and
     upright item, docs page renders one live ring + 3 items, zero
     console/page errors everywhere.
 
+**FOLLOW-UP (docs customizer):** the first F32 pass shipped the docs
+    page with a hand-rolled static preview instead of the live playground
+    every other component page carries. Added the same
+    `<ComponentCustomizer>` pattern: a new `OrbitingCirclesPreview` adapter
+    in `components/docs/preview-wrappers.tsx` renders the real
+    `OrbitingCircles` + `Orbit` + `OrbitItem` with a fixed 3-icon
+    (Zap/Heart/Star) demo ring, mapping the playground's `radius`
+    (slider 40–170), `duration` (slider 5–40), `reverse` and `path`
+    (boolean selects via `toBool`) onto `Orbit` props; the MDX `Preview`
+    section now uses `<ComponentCustomizer>` (no static demo). Verified
+    live: `reverse=true` flips the ring to `animation-direction: reverse`
+    AND the counter to `--orbit-counter-target: 360deg` (the F32
+    keyframe-value change), `path=false` renders `border-color:
+    transparent`, the item counter-rotation is unchanged, zero console/page
+    errors. Docs-site-only: no registry file, no CLI file, no `registry.json`
+    entry changed, so the published `v0.1.9` npm package is unaffected.
+
+48. **Feature 33: Ripple (Free)** —
+    `registry/ripple/ripple.tsx` (component) + `registry/ripple/index.ts`
+    (barrel), a `registry.json` entry (`tier: "free"`,
+    `dependencies: ["clsx", "tailwind-merge"]`,
+    two file targets into `components/ui/ripple/`, `variants: []` —
+    manifest now **15 components**, 27/27 files on disk),
+    `app/test-ripple/page.tsx` (4 sections: 01 large bold text / 02 Heart
+    icon with blue custom color / 03 custom sizes — `mainCircleSize=80` vs
+    `300` / 04 button integration with purple accent) and docs page
+    `app/docs/components/ripple/page.mdx` (live preview,
+    `<InstallTabs tier="free">`, usage with three snippets — text, icon,
+    button — full props table, dependencies, performance and accessibility).
+    CLI bumped to `0.1.10` and builds clean.
+
+    **THE COMPONENT ACCEPTS `children` AND RENDERS IT IN A `relative z-10`
+    CONTAINER.** The centered content layer sits above the decorative ripple
+    circles, which are `pointer-events-none` and `select-none`. This means
+    any React children — text, icons, buttons, forms — pass through
+    normally and remain interactive.
+
+    **COLOR HANDLING.** The `color` prop defaults to
+    `var(--dead-accent, #ef4444)`. A helper `toRgba()` converts CSS color
+    strings to rgba with alpha 0.1 for the background fill:
+    `#hex` → `rgba(r, g, b, 0.1)`, `rgb(...)` → `rgba(..., 0.1)`,
+    `hsl(...)` → `hsla(..., 0.1)`, and falls back to
+    `rgba(239, 68, 68, 0.1)` for unrecognised values (including
+    `var(--dead-accent)`).
+
+    **TAILWIND INJECTION.** `packages/cli/src/commands/init.ts` gained a
+    `ripple` entry in both the v3 `THEME_PROPERTIES` keyframes + animation
+    arrays and the v4 `THEME_CSS_BLOCK`. The keyframe scales from
+    `translate(-50%, -50%) scale(1)` at opacity `var(--initial-opacity,
+    0.24)` to `scale(2.5)` at opacity 0, driven by `animate-ripple` with
+    a 3s `cubic-bezier(0, 0.5, 0.5, 1)` timing function. The unlayered
+    reduced-motion block was extended to include `.animate-ripple`.
+
+    **GLOBALS CSS.** `app/globals.css` gained `@keyframes ripple` and
+    `.animate-ripple` in `@layer utilities`, plus `.animate-ripple` in the
+    unlayered reduced-motion block. The site's own preview uses these
+    keyframes, and `deadui init` writes them identically.
+
+    Full verification: `npx tsc --noEmit` clean, `npm run lint` clean,
+    (0 errors), `npm run build` clean, `cd packages/cli && npm run build`
+    clean.
+
 ## In Progress
 
 None. Feature 28 (Advanced Marquee), Feature 29 (Text Video Mask) and
@@ -1228,6 +1277,7 @@ Current Goal for the remaining release steps.
 | 11 | Text Fill Animation | Pro | COMPLETE (Feature 08) | ✅ (F20, Pro badge) | — (configurable via props, no cva variants) |
 | 12 | Avatar Circles | Free | COMPLETE (Feature 31) | ✅ (F31) | — (configurable via props: size, overlap, radius, bordered) |
 | 13 | Orbiting Circles | Free | COMPLETE (Feature 32) | ✅ (F32) | — (configurable via props: radius, duration, reverse, path, angle) |
+| 14 | Ripple | Free | COMPLETE (Feature 33) | ✅ (F33) | — (configurable via props: mainCircleSize, mainCircleOpacity, numCircles, color) |
 
 ## Open Questions
 

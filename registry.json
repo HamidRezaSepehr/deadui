@@ -364,6 +364,27 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "ripple",
+      "title": "Ripple",
+      "description": "Expanding, fading concentric circles behind centered content. Perfect for hero sections, logos, or any visual that needs a living halo.",
+      "tier": "free",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "registry/ripple/ripple.tsx",
+          "target": "components/ui/ripple.tsx"
+        },
+        {
+          "path": "registry/ripple/index.ts",
+          "target": "components/ui/ripple/index.ts"
+        }
+      ],
+      "variants": []
     }
   ]
 }

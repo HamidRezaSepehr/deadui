@@ -1,0 +1,123 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { Ripple } from "@/registry/ripple"
+
+export const metadata = {
+  title: "Ripple",
+  description: "Expanding, fading concentric circles behind centered content. Perfect for hero sections, logos, or any visual that needs a living halo.",
+}
+
+# Ripple
+
+Expanding, fading concentric circles behind centered content. Perfect for hero sections,
+logos, or any visual that needs a living halo.
+
+## Preview
+
+<ComponentCustomizer
+  component={Ripple}
+  defaultProps={{
+    children: "Dead UI",
+    className: "h-[300px] w-full max-w-md",
+  }}
+  controls={{
+    mainCircleSize: { type: "range", min: 50, max: 400, step: 10 },
+    numCircles: { type: "range", min: 2, max: 16, step: 1 },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="ripple" tier="free" />
+
+### One-time setup
+
+The ripple animation needs a `ripple` keyframe that `deadui init` injects into
+your Tailwind config:
+
+```bash
+npx deadui@latest init
+```
+
+If you already ran `init` before this component existed, re-run it — it is
+idempotent and will add only what is missing.
+
+## Usage
+
+```tsx
+import { Ripple } from "@/components/ui/ripple"
+
+export function Hero() {
+  return (
+    <Ripple className="h-[500px] w-full" color="#a855f7">
+      <h1 className="text-5xl font-bold">Build Something Great</h1>
+    </Ripple>
+  )
+}
+```
+
+### With an icon
+
+```tsx
+import { Sparkles } from "lucide-react"
+import { Ripple } from "@/components/ui/ripple"
+
+export function IconHero() {
+  return (
+    <Ripple className="h-[400px] w-full" mainCircleSize={150} color="#3b82f6">
+      <Sparkles className="size-16 text-blue-400" strokeWidth={1.5} />
+    </Ripple>
+  )
+}
+```
+
+### With a button
+
+```tsx
+import { Ripple } from "@/components/ui/ripple"
+
+export function CtaSection() {
+  return (
+    <Ripple className="h-[400px] w-full">
+      <button className="rounded-lg bg-white px-8 py-4 text-lg font-semibold text-black">
+        Get Started
+      </button>
+    </Ripple>
+  )
+}
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `children` | `React.ReactNode` | — | Content rendered in the centre of the ripple. |
+| `mainCircleSize` | `number` | `210` | Diameter (in px) of the innermost circle. Each subsequent circle adds 70px. |
+| `mainCircleOpacity` | `number` | `0.24` | Opacity of the innermost circle. Each subsequent circle subtracts 0.03. |
+| `numCircles` | `number` | `8` | Number of concentric ripple circles. |
+| `color` | `string` | `var(--dead-accent, #ef4444)` | CSS colour for the border and background fill of the circles. |
+| `className` | `string` | — | Tailwind classes for the outer container. |
+
+## Dependencies
+
+- `clsx`
+- `tailwind-merge`
+
+## Performance
+
+- The ripple is pure CSS — a single `animate-ripple` class drives every circle via
+  shared keyframes. No JavaScript runs during the animation.
+- Custom properties (`--initial-opacity`) control per-circle values entirely in
+  the CSS engine.
+- Only the inner circles are sized; the component does not measure or poll the
+  container.
+
+## Accessibility
+
+- The content layer renders at `relative z-10` above the decorative circles,
+  which are `pointer-events-none` and `select-none`.
+- The children pass through normally — text, icons, and form controls announce
+  themselves to assistive technology without interference.
+- Under `prefers-reduced-motion` the `animate-ripple` animation stops and the
+  content remains fully legible against a static diagram.

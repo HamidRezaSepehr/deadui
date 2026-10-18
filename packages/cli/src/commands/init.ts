@@ -185,6 +185,15 @@ const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
           '},',
         ],
       },
+      {
+        key: 'ripple',
+        lines: [
+          'ripple: {',
+          "  '0%': { transform: 'translate(-50%, -50%) scale(1)', opacity: 'var(--initial-opacity, 0.24)' },",
+          "  '100%': { transform: 'translate(-50%, -50%) scale(2.5)', opacity: '0' },",
+          '},',
+        ],
+      },
     ],
   },
   {
@@ -218,6 +227,10 @@ const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
       {
         key: 'rainbow',
         lines: ["rainbow: 'rainbow var(--speed, 2s) infinite linear',"],
+      },
+      {
+        key: 'ripple',
+        lines: ["ripple: 'ripple 3s cubic-bezier(0, 0.5, 0.5, 1) infinite',"],
       },
     ],
   },
@@ -304,6 +317,17 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
   }
 }
 
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: var(--initial-opacity, 0.24);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
 @layer utilities {
   .animate-marquee {
     animation-name: marquee;
@@ -341,6 +365,13 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
     animation-timing-function: linear;
     animation-iteration-count: infinite;
   }
+
+  .animate-ripple {
+    animation-name: ripple;
+    animation-duration: 3s;
+    animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1);
+    animation-iteration-count: infinite;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -348,7 +379,8 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
   .animate-marquee-vertical,
   .animate-gradient-rotate,
   .animate-gradient-pulse,
-  .animate-rainbow {
+  .animate-rainbow,
+  .animate-ripple {
     animation: none;
   }
 }

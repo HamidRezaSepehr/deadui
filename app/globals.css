@@ -242,6 +242,27 @@ body {
   }
 }
 
+/* Ripple
+   Expands a series of concentric circles outward and fades them to zero. The
+   circle at index `i` starts at `i * 0.06s` delay so the ripples travel in
+   sequence. `--initial-opacity` is set per-circle by the Ripple component. */
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: var(--initial-opacity, 0.24);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .animate-ripple {
+    animation: ripple 3s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+  }
+}
+
 /* Reduced motion (code-standards non-negotiable). Deliberately UNLAYERED: in
    the cascade, unlayered declarations outrank declarations inside a layer, so
    this beats the `@layer utilities` rules above without needing `!important`
@@ -251,7 +272,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-gradient-rotate,
   .animate-gradient-pulse,
-  .animate-rainbow {
+  .animate-rainbow,
+  .animate-ripple {
     animation: none;
   }
 }
