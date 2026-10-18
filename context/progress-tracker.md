@@ -5,30 +5,44 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 31 (Avatar Circles)
+Phase 1: Component Implementation — Feature 32 (Orbiting Circles)
 
 ## Current Goal
 
-**Feature 31: Avatar Circles (Free)** — complete and released. `main`
-and tag `v0.1.8` are pushed; the GitHub Release + npm publish are the
-owner's remaining steps. `registry/avatar-circles/` ships the
-`AvatarCircles` component (full prop control: `avatars`, `numPeople`,
-`size`, `overlap`, `radius`, `bordered`) with dynamic inline
-`marginLeft` overlap, `<a>` link support with hover lift, and a
-`+{numPeople}` counter badge. `registry.json` gained a free-tier entry
-(manifest now 13 components). Test page at
-`app/test-avatar-circles/page.tsx` (5 variations: default, with links,
-custom overlap & radius, no border, different sizes). Docs page at
-`app/docs/components/avatar-circles/page.mdx` with a live
-`ComponentCustomizer` preview controlling `size`, `overlap`, and
-`radius` via the new `AvatarCirclesPreview` adapter in
-`components/docs/preview-wrappers.tsx`. CLI bumped to `0.1.8` and
-builds clean.
+**Feature 32: Orbiting Circles (Free)** — complete, committed, tagged
+`v0.1.9` and pushed; the GitHub Release + manual npm publish are the
+owner's remaining steps. `registry/orbiting-circles/` ships
+`OrbitingCircles` (relative container) + `Orbit` (one ring: `radius`,
+`duration`, `reverse`, `path`) + `OrbitItem` (`angle`) with the spec's
+nested API `<OrbitingCircles><Orbit radius><OrbitItem angle><Icon/></OrbitItem></Orbit></OrbitingCircles>`.
+**Upright icons verified live**: items are positioned with
+`translate(-50%,-50%) rotate(a) translateX(var(--orbit-radius)) rotate(-a)`
+(the leading translate puts each box centre EXACTLY on the ring — measured
+120.0px for radius 120 — and the trailing `-a` aligns local axes), the ring
+runs `orbit-spin` 0→360, and each item's inner div runs `orbit-counter-spin`
+over the same duration so `−θ + θ = 0` every frame. The counter target is a
+**keyframe value, not `animation-direction: reverse`**: reverse rings set
+`--orbit-counter-target: 360deg` (normal) vs `-360deg`, because reversing the
+direction of a `0→-360` animation shifts phase and the two cancellations stop
+matching mid-cycle. Keyframes ship embedded in the component (plain
+`<style>`, NOT styled-jsx — the App Router requires a
+`StyledJsxRegistry` wrapper for styled-jsx that this repo does not have, so
+the spec's `<style jsx>` was replaced by an identical inline `<style>` that
+is SSR-safe and self-contained for CLI installs). Reduced motion falls back
+to a static upright diagram (`animation: none !important`). `registry.json`
+gained a free-tier entry (manifest now **14 components**, 25/25 files present
+on disk). Test page at `app/test-orbiting-circles/page.tsx` (4 sections:
+basic 3-icon orbit / multi-ring with a `reverse` fast inner ring + slow outer
+ring + center badge / `<img>` avatars / `path={false}`). Docs page at
+`app/docs/components/orbiting-circles/page.mdx` with a live preview,
+"how the upright icon trick works", and full props tables. CLI bumped to
+`0.1.9` and builds clean.
 
 ## In Progress
 
-None. Feature 31 (Avatar Circles) is complete. v0.1.8 is committed
-and tagged — see Current Goal for the remaining release steps.
+None. Feature 32 (Orbiting Circles) is complete and released in this
+session: `v0.1.9` is committed, tagged and pushed — see Current Goal for the
+remaining GitHub-Release + manual-publish steps.
 
 ## Completed
 
@@ -942,6 +956,81 @@ both packages, 7 curl cases against the live route, and
     everything passed 10/10 on the first run. If browser tests behave
     impossibly, check `lsof -iTCP:3000` before doubting the code.
 
+47. **Feature 32: Orbiting Circles (Free)** —
+    `registry/orbiting-circles/orbiting-circles.tsx` (component) +
+    `registry/orbiting-circles/index.ts` (barrel), a `registry.json`
+    entry (`tier: "free"`, `dependencies: ["clsx", "tailwind-merge"]`,
+    two file targets into `components/ui/orbiting-circles/`,
+    `variants: []` — manifest now **14 components**, 25/25 files
+    on disk), test page `app/test-orbiting-circles/page.tsx`
+    (4 sections: 01 basic 3-icon orbit on radius 120 / 02 multi-ring —
+    inner `reverse` ring at 10s + outer ring at 30s + red center
+    `Command` badge / 03 four `<img>` pravatar avatars / 04
+    `path={false}` invisible track with a `Globe` center) and docs page
+    `app/docs/components/orbiting-circles/page.mdx` (live preview,
+    `<InstallTabs tier="free">`, usage with the spec's nested API,
+    multi-ring + `path={false}` snippets, a "How the upright icon
+    trick works" section with the keyframes, three props tables —
+    `OrbitingCircles` / `Orbit` / `OrbitItem`, performance and
+    accessibility). CLI bumped to `0.1.9` and builds clean.
+
+    **THE COUNTER-ROTATION IS TWO CANCELLING ROTATIONS, AND ITS
+    KEYFRAME TARGET, NOT ITS DIRECTION, CHANGES WHEN THE RING GOES
+    REVERSE.** The ring rotates `0→360°` (`orbit-spin`, `linear`,
+    `infinite`) and every item's inner div rotates `0→-360°`
+    (`orbit-counter-spin`) over the SAME duration, so `−θ + θ = 0` at
+    every frame and the icon never spins about its own centre. One
+    subtlety the spec's own reference code gets wrong: the spec
+    implements the reverse case as `animation-direction: reverse`,
+    but reversing the direction of a `0→-360` animation PLAY IT
+    BACKWARDS, shifting its phase — the two rotations then disagree
+    mid-cycle and the icon tilts (derived by hand, then proven: at p=0.25
+    a reversed ring at 270° with a reversed counter at −90° nets 180°).
+    The correct primitive is a keyframe VALUE change: normal rings set
+    `--orbit-counter-target: -360deg`, reverse rings set `+360deg`, and
+    the counter animation always runs `normal`. Verified live on the
+    reverse inner ring: `ring02` reports `orbit-spin 10s linear infinite
+    reverse` and the inner counter reports `--orbit-counter-target:
+    360deg`, with the icon's bounding width constant at 38px over 2s.
+    The normal ring's icon holds 44px across a 3s sample — a rotating
+    44px badge would have swung toward 60px. **The second bug the
+    browser caught (invisible to `tsc`+`build`): the item was NOT on
+    its ring.** The first implementation used
+    `rotate(a) translateX(r) rotate(-a)` on an item whose box was
+    top-left anchored at the ring centre, so the box centre sat at
+    `√(r² + half²) = 143.7px` for `r = 120` — on the wrong circle AND
+    at angle `atan(half/r)` off. The fix `translate(-50%, -50%) rotate(a)
+    translateX(r) rotate(-a)` centres the box on the ring centre first
+    and measures back exactly `120.0px`. The counter-rotation pivot is
+    the item's own box centre, which now sits precisely on the ring.
+    **Deviations from the spec, both justified:** (1) `<style jsx>` →
+    plain embedded `<style dangerouslySetInnerHTML>` — App Router
+    styled-jsx requires a `StyledJsxRegistry` in the root layout that
+    this repo lacks, and the plain tag is SSR-safe, hydration-safe and
+    still makes the installed component fully self-contained;
+    (2) reduced-motion block ships inside the component's own CSS
+    (`.deadui-orbit-ring`/`-item-inner { animation: none !important }`,
+    `!important` because the animation is an inline style). Both ring
+    centring and the keyframes were moved off animated-translate so a
+    still frame is exactly the ring diagram, upright. Deviation on the
+    docs/spec API is none: the exact nested
+    `<OrbitingCircles><Orbit><OrbitItem>` API ships as specified.
+
+    Full verification on a clean production build (`rm -rf .next && npm
+    run build`, 36/36 routes, both new routes `○ (Static)`):
+    `npx tsc --noEmit` clean, `npm run lint` clean (0 errors; the four
+    `<img>` warnings are the same precedent `avatar-circles` already
+    carries and the spec mandates raw `<img>` for the Images demo),
+    `cd packages/cli && npm run build` clean. Playwright/Chromium
+    against `next start` on port 3001 (the port-3000 stale `next-server`
+    was killed first — the Feature 30 trap): normal ring upright
+    (44px constant over 3s), reverse ring upright (38px constant over
+    2s), item centre exactly `120.0px` from the ring centre at
+    `radius=120`, ring/counter animation names + targets correct,
+    reduced-motion context reports `animation: none` with a still 44px
+    upright item, docs page renders one live ring + 3 items, zero
+    console/page errors everywhere.
+
 ## In Progress
 
 None. Feature 28 (Advanced Marquee), Feature 29 (Text Video Mask) and
@@ -1138,6 +1227,7 @@ Current Goal for the remaining release steps.
 | 10 | 3D Perspective Card Stack | Pro | Not started | ❌ (Soon) | fan, cascade, flip-through |
 | 11 | Text Fill Animation | Pro | COMPLETE (Feature 08) | ✅ (F20, Pro badge) | — (configurable via props, no cva variants) |
 | 12 | Avatar Circles | Free | COMPLETE (Feature 31) | ✅ (F31) | — (configurable via props: size, overlap, radius, bordered) |
+| 13 | Orbiting Circles | Free | COMPLETE (Feature 32) | ✅ (F32) | — (configurable via props: radius, duration, reverse, path, angle) |
 
 ## Open Questions
 

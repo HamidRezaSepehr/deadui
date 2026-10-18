@@ -57,7 +57,7 @@ export function AvatarCircles({
               sizeClasses[size],
               radiusClasses[radius],
               bordered && 'border-2 border-dead-surface',
-              avatar.href && 'hover:z-50 hover:scale-110 hover:border-dead-accent cursor-pointer'
+              avatar.href && 'hover:z-50 hover:scale-110 hover:border-dead-red cursor-pointer'
             )}
             style={{ zIndex }}
           >
@@ -87,7 +87,7 @@ export function AvatarCircles({
       {showCounter && (
         <div
           className={cn(
-            'relative flex-shrink-0 flex items-center justify-center bg-dead-accent text-white font-medium transition-all duration-200',
+            'relative flex-shrink-0 flex items-center justify-center bg-dead-red text-white font-medium transition-all duration-200',
             sizeClasses[size],
             radiusClasses[radius],
             bordered && 'border-2 border-dead-surface'

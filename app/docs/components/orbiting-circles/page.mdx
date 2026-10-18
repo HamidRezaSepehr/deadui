@@ -1,0 +1,225 @@
+---
+title: Orbiting Circles
+description: Concentric rings with icons, images, or any React node orbiting a center point, kept perfectly upright via CSS counter-rotation.
+---
+
+import { Bell, Globe, Heart, Rocket, Star, Zap } from "lucide-react"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles"
+
+export const metadata = {
+  title: "Orbiting Circles",
+  description:
+    "Concentric rings with icons, images, or any React node orbiting a center point, kept perfectly upright via CSS counter-rotation.",
+}
+
+# Orbiting Circles
+
+Concentric rings that carry icons, images, or any React node around a center
+point. The headline feature: **every orbiting item stays perfectly upright**
+— its top always points at the top of the viewport — while the ring spins
+beneath it, using pure CSS counter-rotation.
+
+## Preview
+
+<div className="not-prose my-8">
+  <div className="relative h-[420px] overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40">
+    <OrbitingCircles>
+      <Orbit radius={130} duration={24}>
+        <OrbitItem angle={0}>
+          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dead-800 bg-dead-900 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
+            <Zap size={22} strokeWidth={1.5} />
+          </div>
+        </OrbitItem>
+        <OrbitItem angle={120}>
+          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dead-800 bg-dead-900 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
+            <Heart size={22} strokeWidth={1.5} />
+          </div>
+        </OrbitItem>
+        <OrbitItem angle={240}>
+          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-dead-800 bg-dead-900 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
+            <Star size={22} strokeWidth={1.5} />
+          </div>
+        </OrbitItem>
+      </Orbit>
+    </OrbitingCircles>
+  </div>
+</div>
+
+Watch closely: the ring turns, but the three icons never tip over. That is the
+counter-rotation at work.
+
+## Installation
+
+<InstallTabs componentName="orbiting-circles" tier="free" />
+
+## Usage
+
+Orbiting Circles is three nested components:
+
+- `<OrbitingCircles>` — the relative, full-size container.
+- `<Orbit radius={…}>` — one ring. Handles the rotation animation and the
+  visible track.
+- `<OrbitItem angle={…}>` — one item on a ring (any React node: icons,
+  images, SVGs, plain divs).
+
+```tsx
+import { OrbitingCircles, Orbit, OrbitItem } from "@/components/ui/orbiting-circles"
+import { Heart, Star, Zap } from "lucide-react"
+
+export function Planets() {
+  return (
+    <OrbitingCircles>
+      <Orbit radius={120} duration={20}>
+        <OrbitItem angle={0}>
+          <Zap />
+        </OrbitItem>
+        <OrbitItem angle={120}>
+          <Heart />
+        </OrbitItem>
+        <OrbitItem angle={240}>
+          <Star />
+        </OrbitItem>
+      </Orbit>
+    </OrbitingCircles>
+  )
+}
+```
+
+`angle` is measured clockwise from 3 o'clock: `0` is right, `90` is bottom,
+`180` is left, `270` is top.
+
+### Multiple rings with different speeds and directions
+
+Nest any number of `<Orbit>`s. Give each its own `radius`, `duration` and
+`reverse`, and add a center node as an ordinary positioned child:
+
+```tsx
+import { OrbitingCircles, Orbit, OrbitItem } from "@/components/ui/orbiting-circles"
+
+export function SolarSystem() {
+  return (
+    <OrbitingCircles>
+      {/* center */}
+      <div className="absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-dead-red" />
+
+      {/* inner ring, fast + counter-clockwise */}
+      <Orbit radius={70} duration={10} reverse>
+        <OrbitItem angle={0}><IconA /></OrbitItem>
+        <OrbitItem angle={90}><IconB /></OrbitItem>
+        <OrbitItem angle={180}><IconC /></OrbitItem>
+        <OrbitItem angle={270}><IconD /></OrbitItem>
+      </Orbit>
+
+      {/* outer ring, slow + clockwise */}
+      <Orbit radius={150} duration={30}>
+        <OrbitItem angle={30}><IconE /></OrbitItem>
+        <OrbitItem angle={150}><IconF /></OrbitItem>
+        <OrbitItem angle={270}><IconG /></OrbitItem>
+      </Orbit>
+    </OrbitingCircles>
+  )
+}
+```
+
+### Hiding the track
+
+Set `path={false}` on an `<Orbit>` to make its ring border invisible — the
+items keep orbiting over an empty canvas:
+
+```tsx
+<Orbit radius={110} duration={18} path={false}>
+  <OrbitItem angle={0}><Heart /></OrbitItem>
+</Orbit>
+```
+
+## How the "upright icon" trick works
+
+Keeping an item upright while it orbits is a **counter-rotation**, and it needs
+three moving parts that stay in perfect sync:
+
+1. `<OrbitItem>`'s outer div places the item on the ring with the static
+   transform `translate(-50%, -50%) rotate(angle) translateX(radius) rotate(-angle)`.
+   The leading `translate(-50%, -50%)` centres the item's box on the ring
+   centre first — so the item's own centre lands exactly on the circle of
+   `radius` — and the trailing `-angle` unwinds the placement rotation, so at
+   ring-rotation 0 the item's local axes are already aligned with the viewport.
+2. The ring rotates `0 → 360deg` over `duration` (`orbit-spin`,
+   `linear`, `infinite`), carrying every item around the center.
+3. **The counter-rotation:** `<OrbitItem>`'s inner div rotates
+   `0 → -360deg` over the *same* `duration`, also `linear`, starting at the
+   same time (`orbit-counter-spin`). Ring `+θ`, content `−θ`, and the two
+   cancel at every frame: `−θ + θ = 0`.
+
+```css
+@keyframes orbit-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes orbit-counter-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(var(--orbit-counter-target, -360deg)); }
+}
+```
+
+For `reverse` (counter-clockwise) rings the counter target flips to
+`+360deg`. This is a **keyframe-value change, not
+`animation-direction: reverse`** — reversing the direction of a
+`0 → -360` animation shifts its phase, so the two cancelling rotations stop
+matching mid-cycle and the icon tilts. Changing the target sign keeps the two
+rotations exact opposites at every frame in both directions. The keyframes
+ship inside the component (an embedded `<style>`), so a CLI install is fully
+self-contained.
+
+The rings are centered with negative margins, and the whole component is GPU
+compositor-driven (`transform` only) — zero JavaScript per frame.
+
+## Props
+
+### `OrbitingCircles`
+
+| Prop       | Type                     | Default | Description                                      |
+| ---------- | ------------------------ | ------- | ------------------------------------------------ |
+| `children` | `React.ReactNode`        | —       | `<Orbit>` rings (and optional center content).   |
+| `className`| `string`                 | —       | Additional classes for the container.            |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the container.                       |
+
+### `Orbit`
+
+| Prop                | Type      | Default | Description                                       |
+| ------------------- | --------- | ------- | ------------------------------------------------- |
+| `radius`            | `number`  | — (required) | Ring radius in pixels.                        |
+| `duration`          | `number`  | `20`    | Seconds per full revolution.                      |
+| `reverse`           | `boolean` | `false` | Orbits counter-clockwise.                         |
+| `path`              | `boolean` | `true`  | Shows the ring's border (the visible track).      |
+| `children`          | `React.ReactNode` | — | `<OrbitItem>`s on this ring.              |
+| `className`         | `string`  | —       | Additional classes for the ring div.              |
+| `...props`          | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the ring div.              |
+
+### `OrbitItem`
+
+| Prop       | Type      | Default | Description                                       |
+| ---------- | --------- | ------- | ------------------------------------------------- |
+| `angle`    | `number`  | — (required) | Position clockwise from 3 o'clock, in degrees. |
+| `children` | `React.ReactNode` | — | The icon/image/HTML to orbit.          |
+| `className`| `string`  | —       | Additional classes for the positioned wrapper.    |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the wrapper.               |
+
+## Performance
+
+- Pure CSS — the ring and each item's content animate `transform` only,
+  so every frame is composited on the GPU with no JavaScript.
+- Because the counter-rotation runs a second animation per item, large rings
+  of many items cost more compositor work; keep heavy rings under a few dozen
+  items on mid-range hardware.
+- The component ships its keyframes in an embedded `<style>`, so it carries
+  no styled-jsx, Tailwind config, or `globals.css` requirement.
+
+## Accessibility
+
+- Under `prefers-reduced-motion: reduce` the animations stop entirely
+  (`animation: none`) and the diagram falls back to its static layout: items
+  still at their `angle`s, upright, on their tracks.
+- The rings and items are decorative by default. Give your icons `aria-label`
+  or use real text/`alt` on images when the visuals carry meaning, since
+  screen readers will not describe the motion.
