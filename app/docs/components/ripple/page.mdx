@@ -19,10 +19,16 @@ logos, or any visual that needs a living halo.
   defaultProps={{
     children: "Dead UI",
     className: "h-[300px] w-full max-w-md",
+    mainCircleSize: 210,
+    numCircles: 8,
+    mainCircleOpacity: 0.24,
+    color: "#ef4444",
   }}
   controls={{
-    mainCircleSize: { type: "range", min: 50, max: 400, step: 10 },
-    numCircles: { type: "range", min: 2, max: 16, step: 1 },
+    mainCircleSize: { type: "slider", min: 50, max: 400, step: 10, unit: "px" },
+    numCircles: { type: "slider", min: 2, max: 16, step: 1 },
+    mainCircleOpacity: { type: "slider", min: 0.05, max: 0.5, step: 0.01 },
+    color: { type: "color" },
   }}
   className="not-prose my-8"
 />

@@ -25,6 +25,18 @@ None. Feature 33 (Ripple) is complete and released in this
 session: `v0.1.10` is committed, tagged and pushed — see Current Goal for the remaining
 GitHub-Release + manual-publish steps.
 
+**POST-RELEASE FIX (not yet shipped to npm):** the Ripple docs page's
+`<ComponentCustomizer>` used `type: "range"` for its two sliders, but the
+customizer only recognises `"slider"` / `"select"` / `"color"` — so no control
+UI rendered and the props list was inert text. Re-typed the `mainCircleSize`
+and `numCircles` controls to `"slider"` and added two more: a
+`mainCircleOpacity` slider (0.05–0.5) and a `color` control (`type: "color"`),
+with `defaultProps` seeded with `mainCircleSize: 210`, `numCircles: 8`,
+`mainCircleOpacity: 0.24` and `color: "#ef4444"` so every control has a live
+initial value. Verified: `npx tsc --noEmit` and `npm run lint` clean (the five
+warnings are all pre-existing `<img>` warnings from orbiting-circles and
+avatar-circles). This change is uncommitted and will ride the next release.
+
 ## In Progress
 
 None. Feature 32 (Orbiting Circles) is complete and released in this
