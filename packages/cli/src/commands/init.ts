@@ -230,7 +230,7 @@ const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
       },
       {
         key: 'ripple',
-        lines: ["ripple: 'ripple 3s cubic-bezier(0, 0.5, 0.5, 1) infinite',"],
+        lines: ["ripple: 'ripple 3s ease-in-out infinite alternate',"],
       },
     ],
   },
@@ -369,8 +369,9 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
   .animate-ripple {
     animation-name: ripple;
     animation-duration: 3s;
-    animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1);
+    animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
+    animation-direction: alternate;
   }
 }
 

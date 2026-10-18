@@ -243,9 +243,11 @@ body {
 }
 
 /* Ripple
-   Expands a series of concentric circles outward and fades them to zero. The
-   circle at index `i` starts at `i * 0.06s` delay so the ripples travel in
-   sequence. `--initial-opacity` is set per-circle by the Ripple component. */
+   Expands a series of concentric circles outward and fades them to zero, then
+   smoothly contracts back to the start — `alternate` makes the loop seamless
+   (no snap from 100% back to 0%). The circle at index `i` starts at `i * 0.06s`
+   delay so the ripples travel in sequence. `--initial-opacity` is set per-circle
+   by the Ripple component. */
 @keyframes ripple {
   0% {
     transform: translate(-50%, -50%) scale(1);
@@ -259,7 +261,7 @@ body {
 
 @layer utilities {
   .animate-ripple {
-    animation: ripple 3s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+    animation: ripple 3s ease-in-out infinite alternate;
   }
 }
 

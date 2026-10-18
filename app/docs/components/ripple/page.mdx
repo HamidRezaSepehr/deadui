@@ -19,16 +19,18 @@ logos, or any visual that needs a living halo.
   defaultProps={{
     children: "Dead UI",
     className: "h-[300px] w-full max-w-md",
-    mainCircleSize: 210,
+    mainCircleSize: 100,
     numCircles: 8,
     mainCircleOpacity: 0.24,
     color: "#ef4444",
+    fillColor: "rgba(239, 68, 68, 0.08)",
   }}
   controls={{
-    mainCircleSize: { type: "slider", min: 50, max: 400, step: 10, unit: "px" },
+    mainCircleSize: { type: "slider", min: 40, max: 300, step: 10, unit: "px" },
     numCircles: { type: "slider", min: 2, max: 16, step: 1 },
     mainCircleOpacity: { type: "slider", min: 0.05, max: 0.5, step: 0.01 },
     color: { type: "color" },
+    fillColor: { type: "color" },
   }}
   className="not-prose my-8"
 />
@@ -99,10 +101,11 @@ export function CtaSection() {
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `children` | `React.ReactNode` | — | Content rendered in the centre of the ripple. |
-| `mainCircleSize` | `number` | `210` | Diameter (in px) of the innermost circle. Each subsequent circle adds 70px. |
+| `mainCircleSize` | `number` | `100` | Diameter (in px) of the innermost circle. Each subsequent circle adds 40px. |
 | `mainCircleOpacity` | `number` | `0.24` | Opacity of the innermost circle. Each subsequent circle subtracts 0.03. |
 | `numCircles` | `number` | `8` | Number of concentric ripple circles. |
-| `color` | `string` | `var(--dead-accent, #ef4444)` | CSS colour for the border and background fill of the circles. |
+| `color` | `string` | `var(--dead-accent, #ef4444)` | CSS color for the circle borders. |
+| `fillColor` | `string` | — | CSS color for the circle background fill. Defaults to the same as `color`. |
 | `className` | `string` | — | Tailwind classes for the outer container. |
 
 ## Dependencies
