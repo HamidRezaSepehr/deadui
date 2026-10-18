@@ -1,0 +1,115 @@
+---
+title: Click Effect
+description: Behavior-only mo.js click bursts with 15 pre-configured effects that fire at the pointer.
+---
+
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { ClickEffectPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Click Effect",
+  description:
+    "Behavior-only mo.js click bursts with 15 pre-configured effects that fire at the pointer.",
+}
+
+# Click Effect
+
+A behavior-only component that listens for clicks on the window and replays
+a mo.js burst at the pointer's coordinates. It renders nothing and has no
+DOM footprint — use it to add instant, tactile feedback to any page or app.
+
+## Preview
+
+<ComponentCustomizer
+  component={ClickEffectPreview}
+  defaultProps={{ variant: "virethos" }}
+  controls={{
+    variant: {
+      type: "select",
+      options: [
+        "virethos",
+        "zynthor",
+        "elarisca",
+        "gravonix",
+        "xypheris",
+        "vorlana",
+        "klyntar",
+        "zerionis",
+        "marnixus",
+        "taviros",
+        "lothira",
+        "xandura",
+        "dravonix",
+        "voltrisca",
+        "elvantis",
+      ],
+    },
+  }}
+/>
+
+Click anywhere in the preview above to see the selected effect fire at that
+exact point.
+
+## Installation
+
+<InstallTabs componentName="click-effect" tier="free" />
+
+## Usage
+
+```tsx
+import { ClickEffect } from "@/components/ui/click-effect"
+
+export function RootClickEffect() {
+  return <ClickEffect variant="virethos" />
+}
+```
+
+Place it once near the root of your app (e.g. in `layout.tsx` or a global
+shell). It attaches a single click listener to `window` and automatically
+cleans up on unmount.
+
+## Effects
+
+All 15 presets are available: `virethos`, `zynthor`, `elarisca`, `gravonix`,
+`xypheris`, `vorlana`, `klyntar`, `zerionis`, `marnixus`, `taviros`, `lothira`,
+`xandura`, `dravonix`, `voltrisca`, `elvantis`. Set `variant="none"` to disable
+the listener entirely without unmounting the component.
+
+## Props
+
+| Prop      | Type                | Default     | Description                                          |
+| --------- | ------------------- | ----------- | ---------------------------------------------------- |
+| `variant` | `ClickEffectVariant` | `"virethos"` | The effect to replay on each click. `"none"` disables the listener. |
+
+## Behavior
+
+- Renders `null` (behavior-only). No DOM elements are created.
+- Attaches exactly one `click` listener to `window` in a `useEffect`. The
+  cleanup removes it.
+- Tuned to `{ left: e.clientX, top: e.clientY }` on every click. Effects flagged
+  `requiresGenerate` call `.tune(...).generate().replay()` to re-sample
+  `rand(...)` values; effects flagged `useRandomCoords` add a random ±30px
+  offset.
+- Uses dynamic `import()` to load `@mojs/core` and the effect table **only in
+  the browser**. It never runs during SSR, avoiding the `self`/`document`
+  environment requirements of mo.js.
+- The component is idempotent and safe to remount; switching `variant` only
+  changes which effect is armed.
+
+## Notes
+
+- **Performance:** Effects are constructed once at module load in
+  `effects.ts`. On click, the code only calls `.tune(...).replay()` (plus
+  `.generate()` when required) — no allocations per click.
+- **Dependencies:** Requires `@mojs/core@1.3.0` (installed automatically by
+  `deadui add click-effect`).
+- **Browser-only:** `@mojs/core` touches `self`, `document` and `navigator` at
+  module evaluation time. This component defers that import until after
+  hydration and never executes on the server.
+- **Placement:** Put it once at the app root. If you render multiple
+  `<ClickEffect>` instances, each adds its own window listener — usually you
+  only want one armed at a time.
+- **Stop propagation:** If you switch variants via UI that sits inside a
+  clickable area, call `event.stopPropagation()` on that click (as shown in
+  the test page) to avoid firing the outgoing effect.

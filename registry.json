@@ -276,6 +276,51 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "click-effect",
+      "title": "Click Effect",
+      "description": "Behavior-only mo.js click bursts with 15 pre-configured particle, ray, and ring effects that fire at the pointer",
+      "tier": "free",
+      "dependencies": [
+        "@mojs/core"
+      ],
+      "files": [
+        {
+          "path": "registry/click-effect/click-effect.tsx",
+          "target": "components/ui/click-effect/click-effect.tsx"
+        },
+        {
+          "path": "registry/click-effect/effects.ts",
+          "target": "components/ui/click-effect/effects.ts"
+        },
+        {
+          "path": "registry/click-effect/mojs.d.ts",
+          "target": "components/ui/click-effect/mojs.d.ts"
+        },
+        {
+          "path": "registry/click-effect/index.ts",
+          "target": "components/ui/click-effect/index.ts"
+        }
+      ],
+      "variants": [],
+      "effects": [
+        "virethos",
+        "zynthor",
+        "elarisca",
+        "gravonix",
+        "xypheris",
+        "vorlana",
+        "klyntar",
+        "zerionis",
+        "marnixus",
+        "taviros",
+        "lothira",
+        "xandura",
+        "dravonix",
+        "voltrisca",
+        "elvantis"
+      ]
     }
   ]
 }

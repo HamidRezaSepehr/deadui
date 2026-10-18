@@ -220,6 +220,16 @@ const LazyWebGLImageTrail = dynamic(
   },
 );
 
+const LazyClickEffect = dynamic(
+  () => import("@/registry/click-effect").then((module) => module.ClickEffect),
+  { ssr: false },
+);
+
+export function ClickEffectPreview(props: Record<string, unknown>) {
+  const variant = (typeof props.variant === 'string' ? props.variant : 'virethos') as import('@/registry/click-effect').ClickEffectVariant
+  return <LazyClickEffect variant={variant} />
+}
+
 export function WebGLImageTrailPreview(props: Record<string, unknown>) {
   const { distortion, ...rest } = props;
 
