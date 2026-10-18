@@ -1,0 +1,158 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { MouseLensEffectPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Mouse Lens Effect",
+  description:
+    "Premium WebGL mouse-following square lens with localized barrel distortion and radial RGB chromatic aberration. Pro component.",
+}
+
+<div className="not-prose mt-2 inline-flex items-center gap-2 rounded-full border border-dead-red/40 bg-dead-red/10 px-3 py-1 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-dead-red">
+  <span aria-hidden="true">🔒</span>
+  <span>Pro Component</span>
+</div>
+
+# Mouse Lens Effect
+
+A grayscale background image and a vibrant foreground image. A square lens
+follows the mouse with smooth easing and reveals the vibrant image through
+localized barrel distortion and radial RGB chromatic aberration.
+
+<div className="not-prose my-6 rounded-lg border border-dead-red/30 bg-dead-red/5 p-4 text-sm text-dead-200 [&_p]:m-0 [&_p]:leading-7">
+  <div className="mb-2 font-semibold text-dead-red">This is a Pro component.</div>
+  <div>
+    Installing it needs a license key. Run the command below and paste your key
+    when prompted, or pass it straight through with{" "}
+    <code className="rounded border border-dead-800 bg-dead-900 px-1.5 py-0.5 font-mono text-[0.85em] text-dead-50">
+      --token
+    </code>
+    . The preview below is fully interactive — move your pointer through the
+    panel.
+  </div>
+</div>
+
+## Preview
+
+<ComponentCustomizer
+  component={MouseLensEffectPreview}
+  defaultProps={{
+    squareSize: 0.3,
+    lensDistortion: 0.2,
+    rgbShiftIntensity: 0.015,
+    mouseEasing: 0.08,
+  }}
+  controls={{
+    squareSize: { type: "slider", min: 0.1, max: 0.5, step: 0.01 },
+    lensDistortion: { type: "slider", min: 0, max: 1, step: 0.01 },
+    rgbShiftIntensity: { type: "slider", min: 0, max: 0.05, step: 0.001 },
+    mouseEasing: { type: "slider", min: 0.01, max: 0.2, step: 0.01 },
+  }}
+  className="not-prose my-8"
+/>
+
+Move the pointer through the panel — the square lens glides to the cursor
+(eased, never snapped) and the vibrant rose shows inside it, warped by the
+lens distortion with red and blue channels peeled apart at the edges.
+
+## Installation
+
+<InstallTabs componentName="mouse-lens-effect" tier="pro" />
+
+The component ships with its React Three Fiber dependencies. The CLI installs
+them for you; to add them by hand run:
+
+```bash
+npm install three @react-three/fiber @react-three/drei
+```
+
+## Usage
+
+```tsx
+"use client"
+
+import dynamic from "next/dynamic"
+
+const MouseLensEffect = dynamic(
+  () =>
+    import("@/components/ui/mouse-lens-effect").then(
+      (m) => m.MouseLensEffect
+    ),
+  { ssr: false, loading: () => <div className="h-[500px] bg-dead-900" /> }
+)
+
+const OUTSIDE =
+  "https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=1200&q=80&sat=-100"
+const INSIDE =
+  "https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=1200&q=80"
+
+export function Lens() {
+  return (
+    <MouseLensEffect srcOutside={OUTSIDE} srcInside={INSIDE} />
+  )
+}
+```
+
+`ssr: false` matters for correctness, not just bundle size: the component
+mounts a WebGL `<Canvas>` that can only exist in the browser. The loading
+fallback reserves the same `500px` box so the chunk never shifts layout.
+
+## How the effect works
+
+- **Square mask.** The pointer position is converted to `-1..1` screen space
+  and compared against the mouse with an aspect-corrected square boundary.
+  A smoothstep mask is `1` inside the square and `0` outside, and the final
+  color is `mix(outside, inside, mask)`.
+- **Lens distortion.** Inside the square, UVs are remapped with
+  `getCCLensUv`: each UV is pushed outward by `distance × distortion`, so
+  content balloons toward the center of the lens.
+- **RGB shift.** Before sampling, red and blue channels are offset in
+  opposite directions along the vector from the center of the lens, scaled by
+  `rgbShiftIntensity`. The chromatic aberration is strongest at the corners,
+  exactly where the displacement is largest.
+
+## Props
+
+| Prop                 | Type     | Default  | Description                                                        |
+| -------------------- | -------- | -------- | ------------------------------------------------------------------ |
+| `srcOutside`         | `string` | —        | Image URL shown outside the lens. Grayscale works best. Required.  |
+| `srcInside`          | `string` | —        | Image URL revealed inside the lens. Required.                      |
+| `squareSize`         | `number` | `0.3`    | Half the lens size in normalized screen units (`0.1`–`0.5`).       |
+| `lensDistortion`     | `number` | `0.2`    | Barrel distortion strength (`0`–`1`). Higher = more bulge.         |
+| `rgbShiftIntensity`  | `number` | `0.015`  | Chromatic aberration magnitude (`0`–`0.05`).                       |
+| `mouseEasing`        | `number` | `0.08`   | Lerp factor per frame (`0.01`–`0.2`). Lower = smoother, slower.    |
+
+`srcOutside` is loaded into `u_texture2` and `srcInside` into `u_texture1`.
+The two images can be the same asset — the classic pairing is one URL plus the
+same URL with Unsplash's `&sat=-100` grayscale filter for the outside.
+
+## Dependencies
+
+- `three` ^0.170+
+- `@react-three/fiber` ^9+
+- `@react-three/drei` ^10+ (`useTexture`)
+
+Ships as a single file that installs to `components/ui/mouse-lens-effect.tsx`.
+Budget roughly 150KB gzipped for `three` plus R3F before your own code, which
+is why lazy-loading it is recommended.
+
+## Performance
+
+- **Shader work is minimal.** One full-screen quad, two texture samples per
+  channel (three RGB samples of the inside texture plus one of the outside),
+  no loops and no branching beyond the mask function.
+- **The render loop only writes uniforms.** `useFrame` lerps the eased mouse
+  value and updates `u_aspect` when the canvas resizes; nothing in the slot
+  allocates or re-renders React.
+- **Easing is frame-rate independent enough for a lens.** The lerp factor is
+  applied per frame (matching the spec), so a slower display shows a slightly
+  smoother chase — the difference is imperceptible for pointer-following.
+
+## Accessibility
+
+- Respects `prefers-reduced-motion` if your project opts the canvas out via
+  CSS; the component itself is a decorative WebGL scene and the standard
+  guidance is to disable automatic guests of the cursor where the pointer is
+  not the primary input.
+- The effect is decorative and duplicated from content already on the page.
+  It is not announced and it is not focusable.

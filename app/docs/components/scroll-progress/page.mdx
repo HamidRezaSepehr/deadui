@@ -18,20 +18,25 @@ variants, driven by `requestAnimationFrame` for 60fps performance.
   component={ScrollProgressPreview}
   defaultProps={{
     variant: "circular",
-    color: "default",
+    colorStyle: "default",
+    customColor: "#ef4444",
     showPercentage: "true",
     size: 48,
     strokeWidth: 4,
   }}
   controls={{
     variant: { type: "select", options: ["horizontal", "circular"] },
-    color: { type: "select", options: ["default", "gradient"] },
+    colorStyle: { type: "select", options: ["default", "gradient", "custom"] },
+    customColor: { type: "color" },
     showPercentage: { type: "select", options: ["true", "false"] },
     size: { type: "slider", min: 32, max: 120, step: 4, unit: "px" },
     strokeWidth: { type: "slider", min: 2, max: 12, step: 1, unit: "px" },
   }}
   className="not-prose my-8"
 />
+
+Scroll inside the preview panel above to see the indicator respond to the
+container's own scroll position — not the page's.
 
 ## Installation
 
@@ -77,6 +82,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 ```
 
+### Scoped to a container
+
+```tsx
+import { useRef } from "react"
+import { ScrollProgress } from "@/components/ui/scroll-progress"
+
+export function ScrollableSection() {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <div ref={containerRef} className="relative h-[400px] overflow-y-auto">
+      <ScrollProgress
+        variant="horizontal"
+        color="default"
+        containerRef={containerRef}
+        className="!sticky top-0"
+      />
+      <div className="h-[1200px] p-8">
+        {/* tall content */}
+      </div>
+    </div>
+  )
+}
+```
+
 ### Gradient bar
 
 ```tsx
@@ -105,7 +135,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 | `showPercentage` | `boolean` | `false` | When `true`, renders the current percentage text centred inside the circular variant. |
 | `size` | `number` | `48` | Diameter in pixels of the circular SVG. |
 | `strokeWidth` | `number` | `4` | Thickness of the circular stroke in pixels. |
-| `className` | `string` | — | Tailwind classes for the outer fixed container. |
+| `containerRef` | `RefObject<HTMLElement \| null>` | — | When provided, tracks this element's scroll position instead of `window` and uses `absolute` positioning within it. The container must have `position: relative` and `overflow`. |
+| `className` | `string` | — | Tailwind classes for the outer container. |
 
 ## Dependencies
 
@@ -115,19 +146,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 ## Performance
 
 - The scroll listener uses `requestAnimationFrame` — a single rAF loop reads
-  `window.scrollY` and computes the ratio once per frame, so the callback runs
-  at most 60 times per second and never queues redundant re-renders.
+  the scroll position and computes the ratio once per frame, so the callback
+  runs at most 60 times per second and never queues redundant re-renders.
 - The horizontal variant writes `width` as a percentage; the circular variant
   writes SVG `strokeDashoffset` — both are GPU-composited properties that
   trigger only a paint (no layout recalc).
-- The 75ms CSS transition (`transition-all duration-75 ease-out`) smooths out
-  frame-to-frame jitter without adding perceptible latency.
+- No CSS transitions are applied to the progress elements, so the indicator
+  updates instantly with zero perceptible lag.
 
 ## Accessibility
 
 - The component is decorative — it provides no interactive functionality and
   does not trap focus.
-- Under `prefers-reduced-motion`, the 75ms transition is removed by stripping
-  the `transition-all` class via a media query in a future iteration. For now,
-  the component continues to update but with minimal visual disruption since the
-  transition is already sub-100ms.
+- Under `prefers-reduced-motion` the component continues to update visually
+  since its motion is a direct reflection of scroll position rather than a
+  decorative animation.

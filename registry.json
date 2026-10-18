@@ -241,6 +241,24 @@
       ]
     },
     {
+      "name": "mouse-lens-effect",
+      "title": "Mouse Lens Effect",
+      "description": "A premium WebGL mouse-following square lens with distortion and RGB shift.",
+      "tier": "pro",
+      "dependencies": [
+        "three",
+        "@react-three/fiber",
+        "@react-three/drei"
+      ],
+      "files": [
+        {
+          "path": "registry/pro/mouse-lens-effect/mouse-lens-effect.tsx",
+          "target": "components/ui/mouse-lens-effect.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "text-fill-animation",
       "title": "Text Fill Animation",
       "description": "Scroll-linked sticky text fill with velocity-reactive gradient",

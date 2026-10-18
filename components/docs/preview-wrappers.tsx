@@ -262,6 +262,42 @@ export function WebGLImageTrailPreview(props: Record<string, unknown>) {
   );
 }
 
+/**
+ * `ssr: false` for the same reason as `WebGLImageTrail` above: the component
+ * mounts a R3F `<Canvas>` that only exists in the browser, so a server render
+ * would emit placeholder markup and the hydration render would replace it.
+ */
+const LazyMouseLensEffect = dynamic(
+  () =>
+    import("@/registry/pro/mouse-lens-effect").then(
+      (module) => module.MouseLensEffect,
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="h-[500px] w-full rounded-xl bg-dead-900" />,
+  },
+);
+
+/** The rose pair the lens playground reveals. */
+const LENS_OUTSIDE =
+  "https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=1200&q=80&sat=-100";
+const LENS_INSIDE =
+  "https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=1200&q=80";
+
+export function MouseLensEffectPreview(props: Record<string, unknown>) {
+  return (
+    <LazyMouseLensEffect
+      srcOutside={LENS_OUTSIDE}
+      srcInside={LENS_INSIDE}
+      squareSize={Number(props.squareSize) || 0.3}
+      lensDistortion={Number(props.lensDistortion) || 0.2}
+      rgbShiftIntensity={Number(props.rgbShiftIntensity) || 0.015}
+      mouseEasing={Number(props.mouseEasing) || 0.08}
+      className="h-[500px] w-full"
+    />
+  );
+}
+
 export function AvatarCirclesPreview(props: Record<string, unknown>) {
   const avatars = [
     { name: "Alice", imageUrl: "https://i.pravatar.cc/150?u=alice" },

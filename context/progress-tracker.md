@@ -5,31 +5,29 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 35 (Spinning Text)
+Phase 1: Component Implementation — Feature 36 (Mouse Lens Effect)
 
 ## Current Goal
 
-**Feature 35: Spinning Text (Free)** — complete. `registry/spinning-text/`
-ships `SpinningText` with pure CSS transforms: each child is positioned via
-`transformOrigin: center {radius}px` and `rotate({index * angleStep}deg)`,
-and the container rotates using Tailwind's built-in `@keyframes spin`. Props:
-`radius` (default 120), `duration` (default 10s), `direction` (`clockwise` |
-`counter-clockwise`), and `centerContent` (defaults to `bg-dead-black` circle).
-`children` accepts `React.ReactNode[]` — strings, icons, images, or any mix.
-Test page at `app/test-spinning-text/` shows 4 sections (basic text, mixed
-media with icon separators, custom center content, counter-clockwise + fast).
-Docs page at `app/docs/components/spinning-text/` with live
-`ComponentCustomizer` preview. CLI bumped to `v0.1.12`.
+**Feature 36: Mouse Lens Effect (Pro)** — complete.
+`registry/pro/mouse-lens-effect/mouse-lens-effect.tsx` ships `MouseLensEffect`
+with a custom GLSL shader material (the spec's exact `LensMaterial`): a square
+mask follows the pointer with per-frame `lerp` easing (`mouseEasing`), the
+mask is aspect-corrected so it stays square on any viewport, `getCCLensUv`
+applies localized barrel distortion, and the RGB channels are shifted
+radially from the lens centre. Props: `srcOutside` (grayscale), `srcInside`
+(vibrant), `squareSize` (default 0.3), `lensDistortion` (0.2),
+`rgbShiftIntensity` (0.015), `mouseEasing` (0.08). Test page
+`app/test-mouse-lens-effect/` has 3 sections (Default / High Distortion /
+Fast Easing). Docs page at `app/docs/components/mouse-lens-effect/` with
+live `ComponentCustomizer` preview. `registry.json` entry lists `three`,
+`@react-three/fiber`, `@react-three/drei` and ships a single file →
+`components/ui/mouse-lens-effect.tsx`. CLI bumped to **`v0.1.13`**.
 
 ## In Progress
 
-None.
-
-## In Progress
-
-None. Feature 32 (Orbiting Circles) is complete and released in this
-session: `v0.1.9` is committed, tagged and pushed — see Current Goal for the
-remaining GitHub-Release + manual-publish steps.
+None. Feature 36 is committed, tagged (`v0.1.13`) and pushed — see Current
+Goal for the remaining GitHub-Release + manual npm publish steps.
 
 ## Completed
 
@@ -1080,6 +1078,58 @@ both packages, 7 curl cases against the live route, and
     (0 errors), `npm run build` clean, `cd packages/cli && npm run build`
     clean.
 
+49. **Feature 36: Mouse Lens Effect (Pro)** —
+    `registry/pro/mouse-lens-effect/mouse-lens-effect.tsx` (component +
+    barrel `index.ts`, both with the `🔒 PRO COMPONENT` header), the spec's
+    `registry.json` entry (`tier: "pro"`, `dependencies: ["three",
+    "@react-three/fiber", "@react-three/drei"]`, single file →
+    `components/ui/mouse-lens-effect.tsx` — manifest now **17 components**),
+    test page `app/test-mouse-lens-effect/page.tsx` (3 sections: 01 Default /
+    02 High Distortion `lensDistortion 0.85, rgbShiftIntensity 0.04` /
+    03 Fast Easing `mouseEasing 0.2`, using the same Unsplash rose URL with
+    `&sat=-100` for the desaturated outside texture) and docs page
+    `app/docs/components/mouse-lens-effect/page.mdx` (Pro badge, Pro licence
+    notice, `ComponentCustomizer` preview through the new
+    `MouseLensEffectPreview` adapter in `preview-wrappers.tsx` with sliders
+    for all four controls, `<InstallTabs tier="pro">`, usage, how-the-
+    shader-works, props table, dependencies, performance, accessibility).
+    `packages/cli` `0.1.12` → `0.1.13`.
+
+    **SHADER.** The spec's `LensMaterial` is shipped verbatim: the fragment
+    shader normalises UV to `-1..1`, flips Y, computes `mouseRel` against the
+    eased `u_mouse`, aspect-corrects it via `aspectScale` (so the mask stays
+    a true square), builds the square mask with four `step()` checks on
+    `halfSize = u_squareSize`, maps the inside UV with
+    `squareUv = corrected/ (halfSize*2) + 0.5`, applies the `getCCLensUv`
+    barrel distortion (`uv + centered * dist * distortion`), then samples
+    the inside texture three times with `shiftDir * u_rgbShift` offsets for
+    radial RGB separation. The outside is sampled plainly (`u_texture2` at
+    `vUv`) and `gl_FragColor = mix(outside, inside, mask)`.
+
+    **TWO DEVIATIONS FROM THE SPEC'S REFERENCE CODE, both rendering fixes
+    the spec itself would fail on.** (1) The spec renders a bare `2×2` plane
+    with a perspective camera at `z=1` (R3F's default fov 75). At the
+    component's real size (1104×500) the viewport is ~3.4 world units wide
+    against a 2-unit plane, so the quad only covered the middle ~59% of the
+    canvas — a pure-white/background strip on each side, visible in the
+    first browser pass. The mesh is now scaled by the canvas aspect
+    (`size.width / size.height`) so the quad always fills the viewport.
+    (2) `bg-dead-black` → `bg-dead-950`, the same 1:1 token mapping the
+    earlier registry components use (the exported `@theme static` palette
+    has no `dead-black` token).
+
+    Full verification: `npx tsc --noEmit` clean, `npm run lint` clean
+    (0 errors; only the pre-existing `<img>` warnings), `npm run build`
+    44/44 routes (both new routes `○ (Static)`), `cd packages/cli && npm
+    run build` clean (`deadui@0.1.13`), and Playwright/Chromium against
+    `next start` on port 3001 — 3 canvases render with WebGL content (no
+    GL errors, no console/page errors), the saturated lens blob tracks the
+    pointer across the stage (center → top-left → bottom-right pixel diffs
+    0.12+ vs 0.02 settle noise), the eased glide moves progressively over
+    ~300 ms (lens centroid y 391 → 450 → 456 → 461) proving the lerp rather
+    than a snap, and the docs page mounts its live preview canvas with zero
+    errors.
+
 ## In Progress
 
 None. Feature 28 (Advanced Marquee), Feature 29 (Text Video Mask) and
@@ -1280,6 +1330,7 @@ Current Goal for the remaining release steps.
 | 14 | Ripple | Free | COMPLETE (Feature 33) | ✅ (F33) | — (configurable via props: mainCircleSize, mainCircleOpacity, numCircles, color) |
 | 15 | Scroll Progress | Free | COMPLETE (Feature 34) | ✅ (F34) | horizontal, circular (props: color, showPercentage, size, strokeWidth) |
 | 16 | Spinning Text | Free | COMPLETE (Feature 35) | ✅ (F35) | — (configurable via props: radius, duration, direction, centerContent)
+| 17 | Mouse Lens Effect | Pro | COMPLETE (Feature 36) | ✅ (F36) | — (configurable via props: srcOutside, srcInside, squareSize, lensDistortion, rgbShiftIntensity, mouseEasing)
 
 ## Open Questions
 
@@ -1477,6 +1528,37 @@ Current Goal for the remaining release steps.
   Full verification: `npx tsc --noEmit` clean, `npm run lint` clean,
   `npm run build` passes. Manifest now describes **16 components** (14 Free
   + 2 Pro), with all file paths existing on disk.
+
+- Feature 36 (feature spec `36-mouse-lens-effect.md`): Mouse Lens Effect —
+  a new Pro WebGL component. Created:
+  `registry/pro/mouse-lens-effect/mouse-lens-effect.tsx` (custom GLSL
+  shader material + component + props interface, `🔒 PRO COMPONENT`
+  header), `registry/pro/mouse-lens-effect/index.ts` (barrel),
+  `app/test-mouse-lens-effect/page.tsx` (3 sections: Default / High
+  Distortion / Fast Easing, all with the desaturated-vs-vibrant rose pair),
+  `app/docs/components/mouse-lens-effect/page.mdx` (Pro badge + licence
+  notice, customizer preview, install tabs, usage, how-the-shader-works,
+  props table, dependencies, performance, accessibility). Modified:
+  `registry.json` (+ `mouse-lens-effect` entry — manifest now **17
+  components**), `packages/cli/package.json` (`0.1.12` → `0.1.13`),
+  `components/docs/preview-wrappers.tsx` (+ `MouseLensEffectPreview`
+  adapter), `context/progress-tracker.md`. The three R3F dependencies were
+  already present in the app for `webgl-image-trail`, so no install step
+  was needed.
+
+  **SMOOTH MOUSE FOLLOWING.** Every frame the scene copies `state.pointer`
+  into a target vector and lerps a current vector toward it with the
+  `mouseEasing` factor, then writes the eased value into the shader's
+  `u_mouse` uniform — the raw pointer never reaches the GPU, so the lens
+  glides behind it instead of snapping. Verified in-browser: after a jump
+  to the opposite corner the saturated lens centroid travels progressively
+  (y 391 → 450 → 456 → 461 over ~300ms) rather than landing in one frame.
+
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` clean (0
+  errors), `npm run build` 44/44 routes, `cd packages/cli && npm run
+  build` clean, and Playwright/Chromium against `next start` — canvases
+  render with WebGL content, the lens tracks the pointer, no GL/console/
+  page errors anywhere.
 
 ## Resolved Decisions
 
