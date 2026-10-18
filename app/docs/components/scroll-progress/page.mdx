@@ -1,0 +1,133 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { ScrollProgressPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Scroll Progress",
+  description: "A lightweight scroll progress indicator with horizontal bar and circular SVG variants, driven by requestAnimationFrame for 60fps performance.",
+}
+
+# Scroll Progress
+
+A lightweight scroll progress indicator with horizontal bar and circular SVG
+variants, driven by `requestAnimationFrame` for 60fps performance.
+
+## Preview
+
+<ComponentCustomizer
+  component={ScrollProgressPreview}
+  defaultProps={{
+    variant: "circular",
+    color: "default",
+    showPercentage: "true",
+    size: 48,
+    strokeWidth: 4,
+  }}
+  controls={{
+    variant: { type: "select", options: ["horizontal", "circular"] },
+    color: { type: "select", options: ["default", "gradient"] },
+    showPercentage: { type: "select", options: ["true", "false"] },
+    size: { type: "slider", min: 32, max: 120, step: 4, unit: "px" },
+    strokeWidth: { type: "slider", min: 2, max: 12, step: 1, unit: "px" },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="scroll-progress" tier="free" />
+
+## Usage
+
+### Horizontal bar (navbar integration)
+
+```tsx
+import { ScrollProgress } from "@/components/ui/scroll-progress"
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <ScrollProgress variant="horizontal" color="default" />
+      <nav>{/* your navbar */}</nav>
+      <main>{children}</main>
+    </>
+  )
+}
+```
+
+### Circular indicator (corner floating)
+
+```tsx
+import { ScrollProgress } from "@/components/ui/scroll-progress"
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <ScrollProgress
+        variant="circular"
+        color="default"
+        showPercentage
+        size={56}
+        strokeWidth={5}
+        className="top-4 right-4"
+      />
+      <main>{children}</main>
+    </>
+  )
+}
+```
+
+### Gradient bar
+
+```tsx
+<ScrollProgress variant="horizontal" color="gradient" className="h-2" />
+```
+
+### Gradient circle (larger, bottom-right)
+
+```tsx
+<ScrollProgress
+  variant="circular"
+  color="gradient"
+  size={72}
+  strokeWidth={6}
+  showPercentage
+  className="bottom-6 right-6 top-auto"
+/>
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `variant` | `"horizontal" \| "circular"` | `"horizontal"` | Which indicator style to render. |
+| `color` | `"default" \| "gradient" \| string` | `"default"` | `"default"` uses `bg-dead-accent` (horizontal) or `text-dead-accent` (circular). `"gradient"` uses `from-dead-accent to-dead-border`. Any other string is passed as a Tailwind class or CSS color. |
+| `showPercentage` | `boolean` | `false` | When `true`, renders the current percentage text centred inside the circular variant. |
+| `size` | `number` | `48` | Diameter in pixels of the circular SVG. |
+| `strokeWidth` | `number` | `4` | Thickness of the circular stroke in pixels. |
+| `className` | `string` | — | Tailwind classes for the outer fixed container. |
+
+## Dependencies
+
+- `clsx`
+- `tailwind-merge`
+
+## Performance
+
+- The scroll listener uses `requestAnimationFrame` — a single rAF loop reads
+  `window.scrollY` and computes the ratio once per frame, so the callback runs
+  at most 60 times per second and never queues redundant re-renders.
+- The horizontal variant writes `width` as a percentage; the circular variant
+  writes SVG `strokeDashoffset` — both are GPU-composited properties that
+  trigger only a paint (no layout recalc).
+- The 75ms CSS transition (`transition-all duration-75 ease-out`) smooths out
+  frame-to-frame jitter without adding perceptible latency.
+
+## Accessibility
+
+- The component is decorative — it provides no interactive functionality and
+  does not trap focus.
+- Under `prefers-reduced-motion`, the 75ms transition is removed by stripping
+  the `transition-all` class via a media query in a future iteration. For now,
+  the component continues to update but with minimal visual disruption since the
+  transition is already sub-100ms.

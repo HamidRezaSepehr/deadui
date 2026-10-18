@@ -13,6 +13,7 @@ import { StaggeredGrid, StaggeredItem } from "@/registry/staggered-grid";
 import type { StaggeredGridProps } from "@/registry/staggered-grid";
 import { AvatarCircles } from "@/registry/avatar-circles";
 import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles";
+import { ScrollProgress } from "@/registry/scroll-progress";
 
 /**
  * Preview adapters for `<ComponentCustomizer>`.
@@ -306,5 +307,19 @@ export function OrbitingCirclesPreview(props: Record<string, unknown>) {
         ))}
       </Orbit>
     </OrbitingCircles>
+  );
+}
+
+export function ScrollProgressPreview(props: Record<string, unknown>) {
+  return (
+    <ScrollProgress
+      variant={props.variant as "horizontal" | "circular"}
+      color={props.color as string}
+      showPercentage={toBool(props.showPercentage)}
+      size={Number(props.size) || 48}
+      strokeWidth={Number(props.strokeWidth) || 4}
+      className="!relative"
+      style={undefined as unknown as React.CSSProperties}
+    />
   );
 }

@@ -385,6 +385,27 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "scroll-progress",
+      "title": "Scroll Progress",
+      "description": "Scroll progress indicator with horizontal bar and circular SVG variants, driven by requestAnimationFrame",
+      "tier": "free",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "registry/scroll-progress/scroll-progress.tsx",
+          "target": "components/ui/scroll-progress.tsx"
+        },
+        {
+          "path": "registry/scroll-progress/index.ts",
+          "target": "components/ui/scroll-progress/index.ts"
+        }
+      ],
+      "variants": []
     }
   ]
 }

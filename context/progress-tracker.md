@@ -5,37 +5,28 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 33 (Ripple)
+Phase 1: Component Implementation — Feature 34 (Scroll Progress)
 
 ## Current Goal
 
-**Feature 33: Ripple (Free)** — complete, committed, tagged
-`v0.1.10` and pushed; the GitHub Release + manual npm publish are the
-owner's remaining steps. `registry/ripple/` ships
-`Ripple` (expanding concentric circles behind centered `children`) with
-four demos on the test page (text / icon + custom color / custom sizes /
-button integration). The `ripple` keyframe and `animate-ripple` utility
-are injected by `deadui init` into consumer Tailwind configs (both v3
-`theme.extend` and v4 `@layer utilities`). The component, init script update,
-docs page and test page are all created. CLI bumped to `0.1.10` and builds clean.
+**Feature 34: Scroll Progress (Free)** — complete. `registry/scroll-progress/`
+ships `ScrollProgress` with two variants (`horizontal` bar and `circular` SVG)
+driven by `requestAnimationFrame` for 60fps updates. The horizontal variant
+supports `"default"` (solid `bg-dead-accent`) and `"gradient"` (gradient fill)
+colors. The circular variant renders an SVG `<circle>` with correct
+`circumference = 2 × π × (size − strokeWidth) / 2` and
+`strokeDashoffset = circumference − (progress / 100) × circumference`, rotated
+`−90deg` to start at 12 o'clock. Optional `showPercentage` renders centered
+`Math.round(progress)%` text. Test page at `app/test-scroll-progress/` shows all
+5 variations (horizontal default, horizontal gradient, circular default,
+circular with percentage, circular gradient larger). Docs page at
+`app/docs/components/scroll-progress/` with live `ComponentCustomizer` preview.
+CLI bumped to `v0.1.11`.
 
 ## In Progress
 
-None. Feature 33 (Ripple) is complete and released in this
-session: `v0.1.10` is committed, tagged and pushed — see Current Goal for the remaining
-GitHub-Release + manual-publish steps.
-
-**POST-RELEASE FIX (not yet shipped to npm):** the Ripple docs page's
-`<ComponentCustomizer>` used `type: "range"` for its two sliders, but the
-customizer only recognises `"slider"` / `"select"` / `"color"` — so no control
-UI rendered and the props list was inert text. Re-typed the `mainCircleSize`
-and `numCircles` controls to `"slider"` and added two more: a
-`mainCircleOpacity` slider (0.05–0.5) and a `color` control (`type: "color"`),
-with `defaultProps` seeded with `mainCircleSize: 210`, `numCircles: 8`,
-`mainCircleOpacity: 0.24` and `color: "#ef4444"` so every control has a live
-initial value. Verified: `npx tsc --noEmit` and `npm run lint` clean (the five
-warnings are all pre-existing `<img>` warnings from orbiting-circles and
-avatar-circles). This change is uncommitted and will ride the next release.
+None. Feature 34 (Scroll Progress) is complete — see Current Goal for the
+remaining GitHub-Release + manual-publish steps.
 
 ## In Progress
 
@@ -1290,6 +1281,7 @@ Current Goal for the remaining release steps.
 | 12 | Avatar Circles | Free | COMPLETE (Feature 31) | ✅ (F31) | — (configurable via props: size, overlap, radius, bordered) |
 | 13 | Orbiting Circles | Free | COMPLETE (Feature 32) | ✅ (F32) | — (configurable via props: radius, duration, reverse, path, angle) |
 | 14 | Ripple | Free | COMPLETE (Feature 33) | ✅ (F33) | — (configurable via props: mainCircleSize, mainCircleOpacity, numCircles, color) |
+| 15 | Scroll Progress | Free | COMPLETE (Feature 34) | ✅ (F34) | horizontal, circular (props: color, showPercentage, size, strokeWidth) |
 
 ## Open Questions
 
