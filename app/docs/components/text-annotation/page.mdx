@@ -1,0 +1,189 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { TextAnnotationPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Text Annotation",
+  description:
+    "Hand-drawn, sketchy annotation effects for text using rough-notation.",
+}
+
+# Text Annotation
+
+Hand-drawn, sketchy annotation effects wrapped around
+[`rough-notation`](https://github.com/pshihn/rough-notation). Draw underlines,
+boxes, circles, highlights and more — manually controlled, grouped into a
+sequence, or triggered automatically when they scroll into view.
+
+## Preview
+
+<ComponentCustomizer
+  component={TextAnnotationPreview}
+  defaultProps={{
+    type: "underline",
+    color: "#ef4444",
+    iterations: 2,
+    strokeWidth: 2,
+    padding: 5,
+    animationDuration: 1500,
+    show: true,
+  }}
+  controls={{
+    type: {
+      type: "select",
+      options: [
+        "underline",
+        "box",
+        "circle",
+        "highlight",
+        "strike-through",
+        "crossed-off",
+        "bracket",
+        "multi-line",
+      ],
+    },
+    color: { type: "color" },
+    iterations: { type: "slider", min: 1, max: 6, step: 1 },
+    strokeWidth: { type: "slider", min: 1, max: 8, step: 1, unit: "px" },
+    padding: { type: "slider", min: 0, max: 24, step: 1, unit: "px" },
+    animationDuration: { type: "slider", min: 200, max: 3000, step: 100, unit: "ms" },
+  }}
+/>
+
+Move any control and the annotation redraws itself with the new options.
+
+## Installation
+
+<InstallTabs componentName="text-annotation" tier="free" />
+
+## Usage
+
+```tsx
+import { TextAnnotation } from "@/components/ui/text-annotation"
+
+export function Example() {
+  return (
+    <p>
+      This is a{" "}
+      <TextAnnotation type="highlight" color="#ef4444">
+        highlighted phrase
+      </TextAnnotation>{" "}
+      inside a sentence.
+    </p>
+  )
+}
+```
+
+### All eight types
+
+```tsx
+<TextAnnotation type="underline">underline</TextAnnotation>
+<TextAnnotation type="box">box</TextAnnotation>
+<TextAnnotation type="circle">circle</TextAnnotation>
+<TextAnnotation type="highlight">highlight</TextAnnotation>
+<TextAnnotation type="strike-through">strike-through</TextAnnotation>
+<TextAnnotation type="crossed-off">crossed-off</TextAnnotation>
+<TextAnnotation type="bracket">bracket</TextAnnotation>
+<TextAnnotation type="multi-line">multi-line</TextAnnotation>
+```
+
+`multi-line` is a Dead UI alias: `rough-notation` has no such type, so it is
+mapped to an `underline` with the library's `multiline` flag forced on — the
+annotation then follows every line box of a wrapping element.
+
+### In-view triggering
+
+Pass `inView` to draw the annotation automatically once **50%** of the element
+is visible. `triggerOnce` (default `true`) stops it from replaying after the
+first reveal; set it to `false` to hide when the element leaves and re-draw on
+the next entry.
+
+```tsx
+<TextAnnotation type="underline" inView color="#34d399">
+  Revealed on scroll
+</TextAnnotation>
+
+<TextAnnotation type="circle" inView triggerOnce={false} color="#a78bfa">
+  Scroll away and back to replay
+</TextAnnotation>
+```
+
+### Grouped, sequential annotations
+
+<code>TextAnnotationGroup</code> collects every nested <code>TextAnnotation</code> into a
+single `rough-notation` group and reveals them one after another. Give the group
+`inView` and the whole sequence fires when the group enters the viewport.
+
+```tsx
+import { TextAnnotation, TextAnnotationGroup } from "@/components/ui/text-annotation"
+
+export function GroupedExample() {
+  return (
+    <TextAnnotationGroup inView>
+      <p>
+        Dead UI ships{" "}
+        <TextAnnotation type="highlight" color="#ef4444">
+          copy-paste
+        </TextAnnotation>{" "}
+        animations that are{" "}
+        <TextAnnotation type="underline" color="#34d399">
+          production ready
+        </TextAnnotation>
+        .
+      </p>
+    </TextAnnotationGroup>
+  )
+}
+```
+
+## Props
+
+### `TextAnnotation`
+
+| Prop                | Type                                                                                                | Default       | Description                                                              |
+| ------------------- | --------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------ |
+| `children`          | `ReactNode`                                                                                         | — (required)  | The text (or inline node) to annotate.                                   |
+| `type`              | `"underline" \| "box" \| "circle" \| "highlight" \| "strike-through" \| "crossed-off" \| "bracket" \| "multi-line"` | — (required)  | The annotation style.                                                    |
+| `show`              | `boolean`                                                                                           | `true`        | Manually show or hide the annotation. Ignored while `inView` is `true`.  |
+| `inView`            | `boolean`                                                                                           | `false`       | Automatically draw when 50% of the element is visible.                   |
+| `triggerOnce`       | `boolean`                                                                                           | `true`        | When `true`, the in-view animation never replays.                        |
+| `color`             | `string`                                                                                            | `currentColor`| Stroke/fill colour of the annotation.                                    |
+| `iterations`        | `number`                                                                                            | `2`           | How many times the stroke is drawn over itself.                          |
+| `strokeWidth`       | `number`                                                                                            | `2`           | Stroke width in pixels.                                                  |
+| `padding`           | `number`                                                                                            | `5`           | Padding between the element and the annotation.                          |
+| `multiline`         | `boolean`                                                                                           | `false`       | Draw the annotation per line box for wrapping content.                   |
+| `animationDuration` | `number`                                                                                            | `800`         | Draw duration in milliseconds.                                           |
+| `className`         | `string`                                                                                            | —             | Merged after the component's base classes.                               |
+| `...props`          | `React.HTMLAttributes<HTMLSpanElement>`                                                             | —             | Spread onto the wrapper `<span>`.                                        |
+
+### `TextAnnotationGroup`
+
+| Prop          | Type        | Default  | Description                                                        |
+| ------------- | ----------- | -------- | ------------------------------------------------------------------ |
+| `children`    | `ReactNode` | —        | Nested `TextAnnotation`s. Required.                                |
+| `show`        | `boolean`   | `true`   | Manually show or hide the whole group.                             |
+| `inView`      | `boolean`   | `false`  | Reveal the group when 50% of it is visible.                        |
+| `triggerOnce` | `boolean`   | `true`   | When `true`, the in-view reveal never replays.                     |
+| `className`   | `string`    | —        | Merged after the group wrapper's base classes.                     |
+
+## Dependencies
+
+- `rough-notation` — the sketchy SVG renderer and animation engine.
+
+## Performance
+
+- One `IntersectionObserver` per annotated element, disconnected on unmount, so
+  an off-screen page holds no observers and no animation frames.
+- The annotation instance is created once per option change and removed on
+  unmount — no leaked SVG nodes between remounts.
+- rough-notation draws into a single absolutely-positioned SVG per target; the
+  wrapper is `inline-block` so it does not disturb the surrounding text flow.
+
+## Accessibility
+
+- Annotations are decorative SVG overlays with `pointer-events: none`; the
+  annotated text itself remains fully selectable and readable by screen readers.
+- Nothing is communicated by the annotation alone — the text is the message.
+- Respect your own `prefers-reduced-motion` policy at the call site by passing
+  `animationDuration={0}` (rough-notation then draws instantly) or by leaving
+  `inView` off for a statically shown annotation.

@@ -1,6 +1,22 @@
 {
   "components": [
     {
+      "name": "text-annotation",
+      "title": "Text Annotation",
+      "description": "Hand-drawn, sketchy annotation effects for text using rough-notation.",
+      "tier": "free",
+      "dependencies": [
+        "rough-notation"
+      ],
+      "files": [
+        {
+          "path": "registry/text-annotation/text-annotation.tsx",
+          "target": "components/ui/text-annotation.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "dock",
       "title": "Dock",
       "description": "A macOS-style magnifying dock component with smooth Framer Motion physics.",

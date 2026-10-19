@@ -1,7 +1,6 @@
 import { ComponentCustomizer } from "@/components/docs/component-customizer"
 import { InstallTabs } from "@/components/docs/install-tabs"
-import { Dock, DockIcon } from "@/registry/dock"
-import { Zap, Heart, Star } from "lucide-react"
+import { DockPreview } from "@/components/docs/preview-wrappers"
 
 export const metadata = {
   title: "Dock",
@@ -17,7 +16,7 @@ Icons scale up smoothly based on cursor proximity using spring physics.
 ## Preview
 
 <ComponentCustomizer
-  component={Dock}
+  component={DockPreview}
   defaultProps={{
     iconSize: 40,
     iconMagnification: 60,
@@ -53,9 +52,9 @@ import { Zap, Heart, Star } from "lucide-react"
 export function AppDock() {
   return (
     <Dock>
-      <DockIcon><Zap size={24} /></DockIcon>
-      <DockIcon><Heart size={24} /></DockIcon>
-      <DockIcon><Star size={24} /></DockIcon>
+      <DockIcon tooltip="Lightning"><Zap size={24} /></DockIcon>
+      <DockIcon tooltip="Favourite"><Heart size={24} /></DockIcon>
+      <DockIcon tooltip="Bookmark"><Star size={24} /></DockIcon>
     </Dock>
   )
 }
@@ -78,6 +77,7 @@ export function AppDock() {
 | Prop        | Type                 | Default     | Description                                                  |
 | ----------- | -------------------- | ----------- | ------------------------------------------------------------ |
 | `children`  | `React.ReactNode`    | —           | Icon content (typically a Lucide icon). Required.            |
+| `tooltip`  | `string`             | —           | Custom styled tooltip text displayed on hover.               |
 | `className` | `string`             | —           | Merged after the icon's base classes.                        |
 
 ## Dependencies

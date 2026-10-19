@@ -29,22 +29,22 @@ export default function TestDockPage() {
         <section>
           <SectionLabel index="01" title="Default Dock" />
           <Dock>
-            <DockIcon>
+            <DockIcon tooltip="Lightning">
               <Zap size={24} className="text-dead-50" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Favourite">
               <Heart size={24} className="text-dead-red" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Bookmark">
               <Star size={24} className="text-dead-200" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Command">
               <Command size={24} className="text-dead-400" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Brightness">
               <Sun size={24} className="text-dead-300" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Night Mode">
               <Moon size={24} className="text-dead-400" />
             </DockIcon>
           </Dock>
@@ -60,19 +60,19 @@ export default function TestDockPage() {
         <section>
           <SectionLabel index="02" title="Disabled Magnification" />
           <Dock disableMagnification>
-            <DockIcon>
+            <DockIcon tooltip="Smile">
               <Smile size={24} className="text-dead-50" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Sparkles">
               <Sparkles size={24} className="text-dead-200" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Lightning">
               <Zap size={24} className="text-dead-300" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Favourite">
               <Heart size={24} className="text-dead-red" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Bookmark">
               <Star size={24} className="text-dead-400" />
             </DockIcon>
           </Dock>
@@ -89,22 +89,22 @@ export default function TestDockPage() {
         <section>
           <SectionLabel index="03" title="Extreme Magnification" />
           <Dock iconMagnification={120} iconDistance={300}>
-            <DockIcon>
+            <DockIcon tooltip="Brightness">
               <Sun size={24} className="text-dead-300" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Night Mode">
               <Moon size={24} className="text-dead-400" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Bookmark">
               <Star size={24} className="text-dead-200" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Lightning">
               <Zap size={24} className="text-dead-50" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Command">
               <Command size={24} className="text-dead-400" />
             </DockIcon>
-            <DockIcon>
+            <DockIcon tooltip="Favourite">
               <Heart size={24} className="text-dead-red" />
             </DockIcon>
           </Dock>
@@ -128,39 +128,39 @@ export default function TestDockPage() {
           <div className="flex flex-col items-center gap-6">
             <p className="font-mono text-xs text-dead-400 uppercase tracking-widest">top</p>
             <Dock direction="top">
-              <DockIcon>
+              <DockIcon tooltip="Lightning">
                 <Zap size={24} className="text-dead-50" />
               </DockIcon>
-              <DockIcon>
+              <DockIcon tooltip="Favourite">
                 <Heart size={24} className="text-dead-red" />
               </DockIcon>
-              <DockIcon>
+              <DockIcon tooltip="Bookmark">
                 <Star size={24} className="text-dead-200" />
               </DockIcon>
             </Dock>
 
             <p className="font-mono text-xs text-dead-400 uppercase tracking-widest">middle</p>
             <Dock direction="middle">
-              <DockIcon>
+              <DockIcon tooltip="Lightning">
                 <Zap size={24} className="text-dead-50" />
               </DockIcon>
-              <DockIcon>
+              <DockIcon tooltip="Favourite">
                 <Heart size={24} className="text-dead-red" />
               </DockIcon>
-              <DockIcon>
+              <DockIcon tooltip="Bookmark">
                 <Star size={24} className="text-dead-200" />
               </DockIcon>
             </Dock>
 
             <p className="font-mono text-xs text-dead-400 uppercase tracking-widest">bottom</p>
             <Dock direction="bottom">
-              <DockIcon>
+              <DockIcon tooltip="Lightning">
                 <Zap size={24} className="text-dead-50" />
               </DockIcon>
-              <DockIcon>
+              <DockIcon tooltip="Favourite">
                 <Heart size={24} className="text-dead-red" />
               </DockIcon>
-              <DockIcon>
+              <DockIcon tooltip="Bookmark">
                 <Star size={24} className="text-dead-200" />
               </DockIcon>
             </Dock>

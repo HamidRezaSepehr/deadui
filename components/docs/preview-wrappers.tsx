@@ -11,10 +11,16 @@ import { ScrollScrub } from "@/registry/scroll-scrub";
 import { SpotlightCard } from "@/registry/spotlight-card";
 import { StaggeredGrid, StaggeredItem } from "@/registry/staggered-grid";
 import type { StaggeredGridProps } from "@/registry/staggered-grid";
+import { Dock, DockIcon } from "@/registry/dock";
 import { AvatarCircles } from "@/registry/avatar-circles";
 import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles";
 import { ScrollProgress } from "@/registry/scroll-progress";
 import { SpinningText } from "@/registry/spinning-text";
+import {
+  TextAnnotation,
+  TextAnnotationGroup,
+  type AnnotationType,
+} from "@/registry/text-annotation";
 
 /**
  * Preview adapters for `<ComponentCustomizer>`.
@@ -393,6 +399,87 @@ export function SpinningTextPreview(props: Record<string, unknown>) {
         duration={Number(props.duration) || 10}
         direction={(props.direction as "clockwise" | "counter-clockwise") || "clockwise"}
       />
+    </div>
+  );
+}
+
+/**
+ * `TextAnnotation`'s defining behaviour is a one-shot reveal — invisible until
+ * its SVG is drawn — so an empty `inView` playground would look broken before
+ * the user scrolled to it. The customizer's preview box is on screen the moment
+ * the page mounts, so the demo runs with the manual `show` control instead and
+ * a group row shows the nested-registration path.
+ *
+ * `triggerOnce` is a string-valued boolean control and is coerced here for the
+ * same reason `toBool` exists for the marquee.
+ */
+export function TextAnnotationPreview(props: Record<string, unknown>) {
+  const type: AnnotationType = (props.type as AnnotationType) || "underline";
+  const show = toBool(props.show ?? true);
+
+  return (
+    <div className="flex w-full flex-col items-center gap-8">
+      <p className="text-3xl text-dead-100">
+        <TextAnnotation
+          type={type}
+          show={show}
+          color={props.color as string}
+          iterations={Number(props.iterations) || undefined}
+          strokeWidth={Number(props.strokeWidth) || undefined}
+          padding={Number(props.padding) || undefined}
+          animationDuration={Number(props.animationDuration) || 1500}
+        >
+          Hand-drawn annotations
+        </TextAnnotation>
+      </p>
+
+      <p className="max-w-xl text-center text-base leading-loose text-dead-300">
+        Annotations can be grouped —{" "}
+        <TextAnnotationGroup>
+          <TextAnnotation type="highlight" color="#ef4444">
+            sequenced
+          </TextAnnotation>{" "}
+          <TextAnnotation type="underline" color="#34d399">
+            automatically
+          </TextAnnotation>{" "}
+          <TextAnnotation type="circle" color="#60a5fa">
+            in order
+          </TextAnnotation>
+        </TextAnnotationGroup>
+        .
+      </p>
+    </div>
+  );
+}
+
+const DOCK_DEMO_ICONS: { Icon: typeof Zap; label: string }[] = [
+  { Icon: Zap, label: "Lightning" },
+  { Icon: Heart, label: "Favourite" },
+  { Icon: Star, label: "Bookmark" },
+  { Icon: Zap, label: "Zap" },
+  { Icon: Heart, label: "Heart" },
+];
+
+export function DockPreview(props: Record<string, unknown>) {
+  const iconSize = Number(props.iconSize) || 40
+  const iconMagnification = Number(props.iconMagnification) || 60
+  const iconDistance = Number(props.iconDistance) || 140
+  const direction = (props.direction as "top" | "middle" | "bottom") || "middle"
+
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center">
+      <Dock
+        iconSize={iconSize}
+        iconMagnification={iconMagnification}
+        iconDistance={iconDistance}
+        direction={direction}
+      >
+        {DOCK_DEMO_ICONS.map(({ Icon, label }, i) => (
+          <DockIcon key={i} tooltip={label}>
+            <Icon size={24} strokeWidth={1.5} />
+          </DockIcon>
+        ))}
+      </Dock>
     </div>
   );
 }

@@ -95,6 +95,7 @@ export interface DockIconProps extends Omit<
   disableMagnification?: boolean
   distance?: number
   mouseX?: MotionValue<number>
+  tooltip?: string
   className?: string
   children?: React.ReactNode
   props?: PropsWithChildren
@@ -106,6 +107,7 @@ const DockIcon = ({
   disableMagnification,
   distance = DEFAULT_DISTANCE,
   mouseX,
+  tooltip,
   className,
   children,
   ...props
@@ -138,7 +140,7 @@ const DockIcon = ({
       ref={ref}
       style={{ width: scaleSize, height: scaleSize, padding }}
       className={cn(
-        "flex aspect-square cursor-pointer items-center justify-center rounded-full",
+        "group relative flex aspect-square cursor-pointer items-center justify-center rounded-full",
         disableMagnification && "hover:bg-muted-foreground/20 transition-colors",
         className
       )}
@@ -147,6 +149,19 @@ const DockIcon = ({
       <div className="flex items-center justify-center w-full h-full">
         {children}
       </div>
+      {tooltip && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none invisible absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-dead-800 bg-dead-900 px-2 py-1 font-mono text-[11px] text-dead-50 opacity-0 shadow-lg transition-opacity duration-200 ease-out group-hover:visible group-hover:opacity-100"
+        >
+          {tooltip}
+          <span
+            aria-hidden="true"
+            className="absolute left-1/2 top-full -translate-x-1/2 size-0"
+            style={{ borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: "4px solid #27272a" }}
+          />
+        </span>
+      )}
     </motion.div>
   )
 }

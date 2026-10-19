@@ -5,28 +5,30 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 38 (Dock)
+Phase 1: Component Implementation — Feature 39 (Text Annotation)
 
 ## Current Goal
 
-**Feature 38: Dock (Free) — macOS-style magnifying dock** — complete.
-`registry/dock/dock.tsx` implements `Dock` and `DockIcon` components using
-Framer Motion physics (`useMotionValue`, `useSpring`, `useTransform`). Icons
-scale up smoothly based on cursor proximity. The dock container publishes
-`mouseX` as a `MotionValue<number>` and injects it into each `DockIcon`
-child via `React.cloneElement`. Each icon computes a distance from the
-cursor to its own bounding-box centre, maps that distance through
-`useTransform` with a `[-distance, 0, distance]` → `[size, targetSize, size]`
-lookup, and feeds the result into `useSpring` (mass 0.1, stiffness 150,
-damping 12) for a fluid responsive feel. Props: `iconSize` (default 40),
-`iconMagnification` (default 60), `iconDistance` (default 140),
-`disableMagnification` (prevents spring effect and applies CSS hover state),
-`direction` (`top` | `middle` | `bottom`). Test page
-`app/test-dock/page.tsx` covers default, disabled magnification, extreme
-magnification, and direction variations. Docs page at
-`app/docs/components/dock/page.mdx`. CLI bumped to **`v0.1.15`** (tag
-`v0.1.14` was already burned by Feature 37, so the next valid version is
-used — see Next Up #16 precedent).
+**Feature 39: Text Annotation (Free) — rough-notation wrapper with in-view
+support** — complete. `registry/text-annotation/text-annotation.tsx` wraps the
+`rough-notation` library to provide hand-drawn, sketchy annotation effects,
+plus automatic in-view triggering via `IntersectionObserver`.
+`TextAnnotation` exposes all eight documented types (`underline`, `box`,
+`circle`, `highlight`, `strike-through`, `crossed-off`, `bracket`,
+`multi-line`) and every native option (`color`, `iterations`, `strokeWidth`,
+`padding`, `multiline`, `animationDuration`) as React props, alongside the new
+`show` (manual control), `inView` (auto-trigger) and `triggerOnce` (default
+`true`) props. The instance is created in a `useEffect` keyed on the options,
+re-created when any option changes, and `.remove()`d on unmount.
+`TextAnnotationGroup` publishes an `AnnotationContext` so nested
+`TextAnnotation`s register themselves; the group builds a `rough-notation`
+`annotationGroup` and reveals the members in sequence when the group itself is
+50% in view. Test page `app/test-text-annotation/page.tsx` covers all eight
+types, custom styling, an interactive toggle, a scroll-triggered in-view
+section, and a sequential group. Docs page at
+`app/docs/components/text-annotation/page.mdx`. CLI bumped to **`v0.1.16`**
+(tag `v0.1.15` was already consumed by Feature 38 Dock, so the next valid
+version is used — see Next Up #16 precedent).
 
 ## Completed
 
@@ -5923,3 +5925,76 @@ Current Goal for the remaining release steps.
   errors), `rm -rf .next && npm run build` passes (all routes including
   `/test-dock` and `/docs/components/dock` prerendered static), `cd packages/cli
   && npm run build` clean. Git tag `v0.1.15` created and pushed.
+
+- Feature 39 (feature spec `39-text-annotation.md`): Text Annotation — a new
+  Free component wrapping `rough-notation`. Created:
+  `registry/text-annotation/text-annotation.tsx` (component),
+  `registry/text-annotation/index.ts` (barrel),
+  `app/test-text-annotation/page.tsx` (5 sections: all 8 types / custom
+  styling / interactive toggle / in-view trigger / annotation group),
+  `app/docs/components/text-annotation/page.mdx` (preview with
+  `ComponentCustomizer`, `<InstallTabs tier="free">`, usage, all-8-types
+  snippet, in-view snippet, grouped snippet, both props tables, dependencies,
+  performance, accessibility). Modified: `registry.json` (+ `text-annotation`
+  entry, `dependencies: ["rough-notation"]`, manifest now **19 components**),
+  `components/docs/preview-wrappers.tsx` (+ `TextAnnotationPreview`),
+  `packages/cli/package.json` (`0.1.15` → `0.1.16`),
+  `context/progress-tracker.md`. `rough-notation@0.5.1` added to root
+  `package.json`.
+
+  **THE SPEC'S `v0.1.15` WAS ALREADY BURNED BY FEATURE 38 — SHIPPED AS
+  `v0.1.16`.** The spec says bump to `0.1.15` and tag `v0.1.15`, but Feature 38
+  Dock already consumed that exact version: the tag exists on `origin/main`
+  pointing at `2012781`. Re-pointing a published tag needs a force-push that
+  `AGENTS.md` forbids, so the owner chose the documented next-valid-version
+  path (Feature 25 / Next Up #13 / Feature 37 precedent): manifest `0.1.16`,
+  tag `v0.1.16`.
+
+  **THE TWO LIBRARY GAPS THE SPEC HAD TO BRIDGE.** 1. **`multi-line` does not
+  exist in rough-notation.** Its `RoughAnnotationType` union is only the seven
+  native types; wrapping is expressed with a `multiline: true` FLAG instead. If
+  `multi-line` were passed through as-is the library's render switch has no
+  `default` case and draws NO paths at all — a silently invisible annotation.
+  Dead UI maps `multi-line` → `underline` with `multiline` forced on. 2. **None
+  of rough-notation's types are exported from its entry point.** The package
+  only exports the `annotate` and `annotationGroup` functions, so `Annotation`,
+  `AnnotationGroup`, `AnnotationConfig` and `NativeAnnotationType` are all
+  DERIVED (`ReturnType<typeof annotate>`, `Parameters<typeof annotate>[1]`, …)
+  rather than imported — type-accurate and immune to the library's internal
+  naming.
+
+  **LIFECYCLE: OPTIONS ARE APPLIED BY RE-CREATION, NOT MUTATION.** The
+  component cannot reuse one `Annotation` across option changes: rough-notation's
+  setters cover `color`/`strokeWidth`/`padding`/`iterations` but not `type` or
+  `multiline`, and a freshly built annotation always starts hidden. So the
+  creation `useEffect` depends on every option and rebuilds the instance, then
+  immediately restores the desired state (shown if `show`/already-animated,
+  hidden otherwise). `show`/`inView` are read from refs that are updated in an
+  effect (NOT during render — the React Compiler lint rule rejects ref writes
+  in the render body), so changing them alone never tears the annotation down.
+  The `.remove()` call runs on every rebuild AND unmount — one instance, zero
+  leaked SVGs.
+
+  **GROUPING VIA OPTIONAL CONTEXT.** `AnnotationContext` carries
+  `register`/`unregister` and defaults to `null`. `TextAnnotation` reads it
+  directly rather than through `useAnnotationRegistration`, because a nested
+  annotation must register *optionally* — a `null` context simply means
+  "standalone, manage your own show/hide". When a context is present the child
+  hands over its instance and stops running its own manual and in-view effects.
+  The group holds the membership in state, builds a `rough-notation`
+  `annotationGroup` in an effect, and re-applies visibility after every rebuild
+  (a newly added member arrives hidden, so an already-revealed group must be
+  re-shown). `useAnnotationRegistration` is still exported for custom consumers
+  that need a hard (throwing) context. The group owns its own
+  `IntersectionObserver` at `threshold: 0.5`.
+
+  **VERIFIED.** `npx tsc --noEmit` clean, `npm run lint` clean (0 errors),
+  `rm -rf .next && npm run build` succeeds (all routes incl.
+  `/test-text-annotation` and `/docs/components/text-annotation` prerendered
+  static). Playwright/Chromium against the production server: 26 annotation
+  SVGs mount on load; all 8 types produce visible paths (path counts `2, 8, 2,
+  2, 2, 4, 3, 2, …`); custom `strokeWidth` up to 26.6 and all eight demo colours
+  present; the interactive toggle drops the section from 12 paths → 0 → 12; the
+  in-view section reveals 5/5 annotations only after scrolling to it; the group
+  reveals 4/4 after scrolling. Docs page renders (1 main + 3 grouped SVGs).
+  Zero page errors, zero console errors.
