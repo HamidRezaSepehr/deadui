@@ -5,36 +5,28 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 37 (Spinning Text SVG TextPath)
+Phase 1: Component Implementation — Feature 38 (Dock)
 
 ## Current Goal
 
-**Feature 37: Spinning Text (Free) — SVG TextPath revision** — complete.
-`registry/spinning-text/spinning-text.tsx` no longer accepts an array of
-React nodes. It now takes a single `text: string` and draws it continuously
-along a perfect circle using native SVG `<path>` + `<textPath>` (path
-`M 50,50 m -40,0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0` in a 100×100
-viewBox), eliminating the array-of-nodes / per-item `transformOrigin`
-approach from Feature 35. The SVG container rotates via Tailwind's built-in
-`@keyframes spin` (inline `animation` style) — still zero Tailwind config
-injection. Props: `text` (required), `duration` (default 10s), `direction`
-(`clockwise` | `counter-clockwise`), `centerContent` (defaults to a
-`bg-dead-950` circle; the Archive/Feature-35 note that `bg-dead-black` is not
-a theme token is confirmed by `deadui`'s own palette — see the webgl-image-
-trail precedent). Each mount gets a unique path id via `React.useId()` so
-multiple instances on one page cannot collide on `#circlePath`. Test page
-`app/test-spinning-text/` rebuilt with the spec's 4 sections (basic repeating
-string / custom center with `Command` badge / counter-clockwise + 5s / the
-same string at `w-32`, `w-44`, `w-64`). Docs page rebuilt around the `text`
-prop with a repeating-string recommendation, size-wrapping, custom center,
-and direction/duration snippets. CLI bumped to **`v0.1.14`** (tag `v0.1.12`
-was already burned by the Feature 35 release and `v0.1.13` by Feature 36, so
-the next valid version is used — see Session Notes and Next Up #16).
-
-## In Progress
-
-None. Feature 37 is committed, tagged (`v0.1.14`) and pushed — see Current
-Goal for the remaining GitHub-Release + manual npm publish steps.
+**Feature 38: Dock (Free) — macOS-style magnifying dock** — complete.
+`registry/dock/dock.tsx` implements `Dock` and `DockIcon` components using
+Framer Motion physics (`useMotionValue`, `useSpring`, `useTransform`). Icons
+scale up smoothly based on cursor proximity. The dock container publishes
+`mouseX` as a `MotionValue<number>` and injects it into each `DockIcon`
+child via `React.cloneElement`. Each icon computes a distance from the
+cursor to its own bounding-box centre, maps that distance through
+`useTransform` with a `[-distance, 0, distance]` → `[size, targetSize, size]`
+lookup, and feeds the result into `useSpring` (mass 0.1, stiffness 150,
+damping 12) for a fluid responsive feel. Props: `iconSize` (default 40),
+`iconMagnification` (default 60), `iconDistance` (default 140),
+`disableMagnification` (prevents spring effect and applies CSS hover state),
+`direction` (`top` | `middle` | `bottom`). Test page
+`app/test-dock/page.tsx` covers default, disabled magnification, extreme
+magnification, and direction variations. Docs page at
+`app/docs/components/dock/page.mdx`. CLI bumped to **`v0.1.15`** (tag
+`v0.1.14` was already burned by Feature 37, so the next valid version is
+used — see Next Up #16 precedent).
 
 ## Completed
 
@@ -1390,6 +1382,7 @@ Current Goal for the remaining release steps.
 | 15 | Scroll Progress | Free | COMPLETE (Feature 34) | ✅ (F34) | horizontal, circular (props: color, showPercentage, size, strokeWidth) |
 | 16 | Spinning Text | Free | COMPLETE (Features 35 + 37) | ✅ (F37) | — (configurable via props: text, duration, direction, centerContent; SVG textPath revision in F37) |
 | 17 | Mouse Lens Effect | Pro | COMPLETE (Feature 36) | ✅ (F36) | — (configurable via props: srcOutside, srcInside, squareSize, lensDistortion, rgbShiftIntensity, mouseEasing)
+| 18 | Dock | Free | COMPLETE (Feature 38) | ✅ (F38) | — (configurable via props: iconSize, iconMagnification, iconDistance, disableMagnification, direction)
 
 ## Open Questions
 
@@ -5885,3 +5878,48 @@ Current Goal for the remaining release steps.
   `○ (Static)`. `cd packages/cli && npm run build` clean. All created files
   read back correctly. Git operations completed: commit pushed, tag `v0.1.8`
   pushed.
+
+- Feature 38 (feature spec `38-dock.md`): Dock — a new Free macOS-style
+  magnifying dock component. Created: `registry/dock/dock.tsx` (component),
+  `registry/dock/index.ts` (barrel), `app/test-dock/page.tsx` (4 sections:
+  default / disabled magnification / extreme magnification / different
+  directions), `app/docs/components/dock/page.mdx` (preview with
+  `ComponentCustomizer`, `<InstallTabs tier="free">`, usage, props tables
+  for both `Dock` and `DockIcon`, dependencies, performance, accessibility).
+  Modified: `registry.json` (+ `dock` entry — manifest now **18 components**),
+  `packages/cli/package.json` (`0.1.14` → `0.1.15`),
+  `context/progress-tracker.md`.
+
+  **THE `v0.1.14` VERSION IN THE SPEC IS BURNED — SHIPPED AS `v0.1.15`.**
+  The spec's Release step says bump to `0.1.14` and tag `v0.1.14`, but that
+  tag already exists on `origin/main` pointing at `2381dbe` (the Feature 37
+  release). The HEAD manifest is already `0.1.14`. `git tag v0.1.14` fails
+  outright ("already exists"), and re-pointing a published tag needs a
+  force-push that `AGENTS.md` forbids. The owner chose the documented
+  next-valid-version path (the exact Feature 25 / Next Up #13 / Feature 37
+  precedent): manifest `0.1.15`, tag `v0.1.15`.
+
+  **FRAMER MOTION PHYSICS DETAIL.** The component uses `useMotionValue` for
+  the cursor's `pageX`, `useTransform` for the distance-to-size mapping
+  (with an array-based linear interpolation: `[-distance, 0, distance]` →
+  `[size, targetSize, size]`), and `useSpring` with `mass: 0.1,
+  stiffness: 150, damping: 12` for the fluid magnification animation.
+  The `disableMagnification` prop bypasses the spring entirely and sets
+  `targetSize = size`, relying on CSS `:hover` for visual feedback.
+
+  **`Dock` IS A `forwardRef` COMPONENT.** It uses `React.forwardRef` to
+  expose its `ref` for Framer Motion's `motion.div`. Its `renderChildren()`
+  iterates with `React.Children.map` and clones each `DockIcon` child with
+  the container-level config (mouseX, size, magnification, disableMagnification,
+  distance) injected into its props via `React.cloneElement`.
+
+  **`DockIcon` USES `useTransform` WITH A CALLBACK FOR DISTANCE CALC.** The
+  callback reads `ref.current.getBoundingClientRect()` to compute the icon's
+  centre-relative distance from the cursor, feeding it into the array-based
+  size transform lookup. The icon always renders at its natural size when
+  `disableMagnification` is true.
+
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` clean (0
+  errors), `rm -rf .next && npm run build` passes (all routes including
+  `/test-dock` and `/docs/components/dock` prerendered static), `cd packages/cli
+  && npm run build` clean. Git tag `v0.1.15` created and pushed.

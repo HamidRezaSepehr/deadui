@@ -1,0 +1,103 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { Dock, DockIcon } from "@/registry/dock"
+import { Zap, Heart, Star } from "lucide-react"
+
+export const metadata = {
+  title: "Dock",
+  description:
+    "A macOS-style magnifying dock component with smooth Framer Motion physics.",
+}
+
+# Dock
+
+A macOS-style magnifying dock component with smooth Framer Motion physics.
+Icons scale up smoothly based on cursor proximity using spring physics.
+
+## Preview
+
+<ComponentCustomizer
+  component={Dock}
+  defaultProps={{
+    iconSize: 40,
+    iconMagnification: 60,
+    iconDistance: 140,
+    direction: "middle",
+  }}
+  controls={{
+    iconSize: { type: "slider", min: 24, max: 80, step: 2 },
+    iconMagnification: { type: "slider", min: 24, max: 160, step: 2 },
+    iconDistance: { type: "slider", min: 40, max: 400, step: 10 },
+    direction: {
+      type: "select",
+      options: ["top", "middle", "bottom"],
+    },
+  }}
+  className="not-prose my-8"
+/>
+
+Move your cursor across the icons — they scale up with a spring effect as
+they approach the pointer. The `disableMagnification` prop (not exposed above)
+turns off the physics and applies a simple hover state instead.
+
+## Installation
+
+<InstallTabs componentName="dock" tier="free" />
+
+## Usage
+
+```tsx
+import { Dock, DockIcon } from "@/components/ui/dock"
+import { Zap, Heart, Star } from "lucide-react"
+
+export function AppDock() {
+  return (
+    <Dock>
+      <DockIcon><Zap size={24} /></DockIcon>
+      <DockIcon><Heart size={24} /></DockIcon>
+      <DockIcon><Star size={24} /></DockIcon>
+    </Dock>
+  )
+}
+```
+
+## Props
+
+| Prop                   | Type                                         | Default     | Description                                                               |
+| ---------------------- | -------------------------------------------- | ----------- | ------------------------------------------------------------------------- |
+| `children`             | `React.ReactNode`                            | —           | `DockIcon` children. Required.                                            |
+| `iconSize`             | `number`                                     | `40`        | Base size of each icon in pixels (width and height).                      |
+| `iconMagnification`    | `number`                                     | `60`        | Target size when the cursor is closest (the peak scale).                  |
+| `disableMagnification` | `boolean`                                    | `false`     | When `true`, the spring is bypassed and icons stay at `iconSize`.         |
+| `iconDistance`         | `number`                                     | `140`       | Pixel distance over which the magnification ramps from base to peak.      |
+| `direction`            | `"top" \| "middle" \| "bottom"`              | `"middle"`  | Alignment of icons within the dock container.                             |
+| `className`            | `string`                                     | —           | Merged after the dock's base classes.                                     |
+
+### DockIcon Props
+
+| Prop        | Type                 | Default     | Description                                                  |
+| ----------- | -------------------- | ----------- | ------------------------------------------------------------ |
+| `children`  | `React.ReactNode`    | —           | Icon content (typically a Lucide icon). Required.            |
+| `className` | `string`             | —           | Merged after the icon's base classes.                        |
+
+## Dependencies
+
+- `motion` — the spring physics, motion values, and transforms
+- `class-variance-authority`
+
+## Performance
+
+- Only `width` and `height` are animated via Motion's spring values, so the
+  scaling stays on the compositor and never triggers layout reflow.
+- The spring configuration (`mass: 0.1`, `stiffness: 150`, `damping: 12`)
+  gives a responsive yet stable feel without overshoot.
+
+## Accessibility
+
+- Renders as semantic `<div>` elements with `cursor-pointer` for the icons.
+- Under `prefers-reduced-motion: reduce`, the spring values resolve to their
+  target instantly, so magnification still works without animation. Pass
+  `disableMagnification` for a fully static variant.
+- The dock container uses `backdrop-blur-md` for a frosted-glass effect that
+  respects the user's `prefers-reduced-transparency` setting via the
+  `supports-backdrop-blur:` prefix.

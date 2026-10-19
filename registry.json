@@ -1,6 +1,25 @@
 {
   "components": [
     {
+      "name": "dock",
+      "title": "Dock",
+      "description": "A macOS-style magnifying dock component with smooth Framer Motion physics.",
+      "tier": "free",
+      "dependencies": [
+        "motion",
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "registry/dock/dock.tsx",
+          "target": "components/ui/dock.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "cinematic-text",
       "title": "Cinematic Text Reveal",
       "description": "GSAP SplitText + ScrollTrigger letter-by-letter reveal",
