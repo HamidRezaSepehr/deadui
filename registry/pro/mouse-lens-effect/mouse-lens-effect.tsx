@@ -127,6 +127,30 @@ function Scene({
 
   const [texture1, texture2] = useTexture([srcInside, srcOutside])
 
+  React.useEffect(() => {
+    // The Unsplash demo images are non-power-of-two (e.g. 1200x1500), and
+    // three's TextureLoader defaults leave `generateMipmaps: true` with a
+    // `LinearMipmapLinearFilter` min filter. Generating mipmaps for NPOT
+    // textures is what breaks the WebGL context on macOS's ANGLE/Metal GL
+    // backend — three logs `THREE.WebGLRenderer: Context Lost.` right when
+    // the texture reaches the GPU and the canvas goes permanently black,
+    // which is the "flash of the image, then nothing" failure. Disabling
+    // mipmaps removes the offending `generateMipmap` call; bilinear
+    // filtering and clamped wrapping stay because this shader warps UVs.
+    // `colorSpace` is deliberately left at the loader default (untouched):
+    // this component renders with a raw ShaderMaterial, which does NOT
+    // decode an SRGB-tagged texture on sample — tagging it would upload a
+    // hardware-decoding SRGB8 texture and the image would render too dark.
+    for (const texture of [texture1, texture2]) {
+      texture.wrapS = THREE.ClampToEdgeWrapping
+      texture.wrapT = THREE.ClampToEdgeWrapping
+      texture.generateMipmaps = false
+      texture.minFilter = THREE.LinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.needsUpdate = true
+    }
+  }, [texture1, texture2])
+
   // Smooth mouse following
   const targetMouse = useRef(new THREE.Vector2(0, 0))
   const currentMouse = useRef(new THREE.Vector2(0, 0))

@@ -428,7 +428,7 @@
     {
       "name": "spinning-text",
       "title": "Spinning Text",
-      "description": "CSS-driven circular text spinner that arranges text, icons, or images in a perfect, continuously rotating ring with a customizable center element",
+      "description": "Continuous text drawn along a perfect circle via native SVG textPath, rotating smoothly around a customizable center element",
       "tier": "free",
       "dependencies": [
         "clsx",

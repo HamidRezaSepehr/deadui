@@ -384,18 +384,15 @@ export function ScrollProgressPreview(props: Record<string, unknown>) {
   );
 }
 
-const SPINNING_DEMO = ['SPIN', '•', 'DEAD', '•', 'UI', '•'];
-
 export function SpinningTextPreview(props: Record<string, unknown>) {
   return (
     <div className="flex min-h-[300px] w-full items-center justify-center">
       <SpinningText
-        radius={Number(props.radius) || 120}
+        text="SPIN • DEAD • UI • "
+        className="h-64 w-64"
         duration={Number(props.duration) || 10}
         direction={(props.direction as "clockwise" | "counter-clockwise") || "clockwise"}
-      >
-        {SPINNING_DEMO}
-      </SpinningText>
+      />
     </div>
   );
 }

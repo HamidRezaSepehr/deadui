@@ -5,28 +5,35 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 36 (Mouse Lens Effect)
+Phase 1: Component Implementation — Feature 37 (Spinning Text SVG TextPath)
 
 ## Current Goal
 
-**Feature 36: Mouse Lens Effect (Pro)** — complete.
-`registry/pro/mouse-lens-effect/mouse-lens-effect.tsx` ships `MouseLensEffect`
-with a custom GLSL shader material (the spec's exact `LensMaterial`): a square
-mask follows the pointer with per-frame `lerp` easing (`mouseEasing`), the
-mask is aspect-corrected so it stays square on any viewport, `getCCLensUv`
-applies localized barrel distortion, and the RGB channels are shifted
-radially from the lens centre. Props: `srcOutside` (grayscale), `srcInside`
-(vibrant), `squareSize` (default 0.3), `lensDistortion` (0.2),
-`rgbShiftIntensity` (0.015), `mouseEasing` (0.08). Test page
-`app/test-mouse-lens-effect/` has 3 sections (Default / High Distortion /
-Fast Easing). Docs page at `app/docs/components/mouse-lens-effect/` with
-live `ComponentCustomizer` preview. `registry.json` entry lists `three`,
-`@react-three/fiber`, `@react-three/drei` and ships a single file →
-`components/ui/mouse-lens-effect.tsx`. CLI bumped to **`v0.1.13`**.
+**Feature 37: Spinning Text (Free) — SVG TextPath revision** — complete.
+`registry/spinning-text/spinning-text.tsx` no longer accepts an array of
+React nodes. It now takes a single `text: string` and draws it continuously
+along a perfect circle using native SVG `<path>` + `<textPath>` (path
+`M 50,50 m -40,0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0` in a 100×100
+viewBox), eliminating the array-of-nodes / per-item `transformOrigin`
+approach from Feature 35. The SVG container rotates via Tailwind's built-in
+`@keyframes spin` (inline `animation` style) — still zero Tailwind config
+injection. Props: `text` (required), `duration` (default 10s), `direction`
+(`clockwise` | `counter-clockwise`), `centerContent` (defaults to a
+`bg-dead-950` circle; the Archive/Feature-35 note that `bg-dead-black` is not
+a theme token is confirmed by `deadui`'s own palette — see the webgl-image-
+trail precedent). Each mount gets a unique path id via `React.useId()` so
+multiple instances on one page cannot collide on `#circlePath`. Test page
+`app/test-spinning-text/` rebuilt with the spec's 4 sections (basic repeating
+string / custom center with `Command` badge / counter-clockwise + 5s / the
+same string at `w-32`, `w-44`, `w-64`). Docs page rebuilt around the `text`
+prop with a repeating-string recommendation, size-wrapping, custom center,
+and direction/duration snippets. CLI bumped to **`v0.1.14`** (tag `v0.1.12`
+was already burned by the Feature 35 release and `v0.1.13` by Feature 36, so
+the next valid version is used — see Session Notes and Next Up #16).
 
 ## In Progress
 
-None. Feature 36 is committed, tagged (`v0.1.13`) and pushed — see Current
+None. Feature 37 is committed, tagged (`v0.1.14`) and pushed — see Current
 Goal for the remaining GitHub-Release + manual npm publish steps.
 
 ## Completed
@@ -1130,6 +1137,45 @@ both packages, 7 curl cases against the live route, and
     than a snap, and the docs page mounts its live preview canvas with zero
     errors.
 
+    **POST-RELEASE BUGFIX: black screen after a flash of the image.** The
+    owner reported the component showed the image for a moment on load,
+    then went permanently black. Root cause: **WebGL context loss.** It
+    reproduces only on the macOS ANGLE/Metal GL backend (SwiftShader, used
+    by default in headless CI, hides it), which is why the original
+    Playwright suite on `next start` saw nothing wrong. On launch, the
+    texture is present on the first painted frames — that is the "flash".
+    Then the browser fires `webglcontextlost`, three logs
+    `THREE.WebGLRenderer: Context Lost.`, and the canvas stays dead and
+    black forever. Reproduced deterministically with real Metal-ANGLE:
+    `webglcontextlost` fired at ~2–3 s, exactly when the Unsplash image
+    finished downloading and hit the GPU, 3/3 runs on the docs page and
+    test page. The unaffected `webgl-image-trail` never lost a context
+    (0/4).
+
+    **The trigger is NPOT mipmap generation.** The demo images are
+    non-power-of-two (1200×1500), and three's `TextureLoader` defaults
+    leave `generateMipmaps: true` with a `LinearMipmapLinearFilter` min
+    filter. Generating mipmaps for an NPOT texture is a known GPU-
+    destabilising call on ANGLE/Metal; the fix is the same texture
+    configuration the proven `webgl-image-trail` uses (minus the SRGB
+    tag, see note below): `generateMipmaps: false`, `minFilter`/
+    `magFilter` `LinearFilter`, `ClampToEdgeWrapping`, `needsUpdate: true`
+    — applied to both textures in a `useEffect` before they reach the
+    shader. After the fix: 0/6 context losses across both pages on the
+    same Metal-ANGLE run that failed 3/3 before, and `isContextLost`
+    reads false after interaction.
+
+    **A false-start during the fix is worth recording:** setting
+    `texture.colorSpace = SRGBColorSpace` (copied from the trail) made the
+    canvas render about 3.5× too dark (avg luminance dropped 72.5 → 20.6),
+    because a raw `ShaderMaterial` does NOT decode an SRGB-tagged texture
+    on sample — the SRGB8 internal format decodes on the GPU, and the
+    ShaderMaterial path has no conversion back, so the image renders in
+    linear darkness. The trail shader converts explicitly; `MouseLensEffect`
+    does not, so `colorSpace` stays at the loader default. Two-line
+    regression check: luminance back at 72.5 (source image is ~68.5) with
+    the lens square still clearly saturated inside a grayscale field.
+
 ## In Progress
 
 None. Feature 28 (Advanced Marquee), Feature 29 (Text Video Mask) and
@@ -1306,6 +1352,19 @@ Current Goal for the remaining release steps.
     staggered-grid` still prints "Component not found". This
     is Next Up #9 / the first Open Question and was
     deliberately left alone again.
+16. **`v0.1.12` IS BURNED — THE SPINNING TEXT REVISION SHIPS
+    AS `v0.1.14`.** The Feature 37 spec (like Feature 25's
+    before it) says bump to `0.1.12`, but that tag already
+    exists on `origin/main` pointing at `2888b11` (the
+    Feature 35 array-based spinning text) and `v0.1.13` points
+    at `4b0f378` (Feature 36). HEAD's manifest is already
+    `0.1.13`; `git tag v0.1.12` fails ("already exists") and
+    re-pointing a published tag needs a force-push that
+    `AGENTS.md` forbids. The owner chose the Feature 25 / Next
+    Up #13 precedent: manifest `0.1.14`, tag `v0.1.14`. npm
+    will only see those tags after each release is published —
+    this release publishes `0.1.14`. See Completed/Session
+    Notes Feature 37.
 
 
 ## Component Status
@@ -1329,7 +1388,7 @@ Current Goal for the remaining release steps.
 | 13 | Orbiting Circles | Free | COMPLETE (Feature 32) | ✅ (F32) | — (configurable via props: radius, duration, reverse, path, angle) |
 | 14 | Ripple | Free | COMPLETE (Feature 33) | ✅ (F33) | — (configurable via props: mainCircleSize, mainCircleOpacity, numCircles, color) |
 | 15 | Scroll Progress | Free | COMPLETE (Feature 34) | ✅ (F34) | horizontal, circular (props: color, showPercentage, size, strokeWidth) |
-| 16 | Spinning Text | Free | COMPLETE (Feature 35) | ✅ (F35) | — (configurable via props: radius, duration, direction, centerContent)
+| 16 | Spinning Text | Free | COMPLETE (Features 35 + 37) | ✅ (F37) | — (configurable via props: text, duration, direction, centerContent; SVG textPath revision in F37) |
 | 17 | Mouse Lens Effect | Pro | COMPLETE (Feature 36) | ✅ (F36) | — (configurable via props: srcOutside, srcInside, squareSize, lensDistortion, rgbShiftIntensity, mouseEasing)
 
 ## Open Questions
@@ -1559,6 +1618,68 @@ Current Goal for the remaining release steps.
   build` clean, and Playwright/Chromium against `next start` — canvases
   render with WebGL content, the lens tracks the pointer, no GL/console/
   page errors anywhere.
+
+  **POST-RELEASE BUGFIX.** The owner reported a black screen after a
+  flash of the image ([see Completed #49]). Root cause: WebGL context
+  loss on macOS ANGLE/Metal, triggered by default NPOT mipmap generation
+  when the Unsplash texture hit the GPU. Fix: the component now disables
+  mipmaps (`generateMipmaps: false`, bilinear filters, clamped wrap) in a
+  `useEffect` before the textures reach the shader. Reproduced 3/3 on the
+  Metal backend before the fix, 0/6 after. `colorSpace` is deliberately NOT
+  tagged SRGB — a raw ShaderMaterial renders an SRGB8 texture ~3.5× too
+  dark (72.5 → 20.6 luminance).
+
+- Feature 37 (feature spec `37-spinning-text.md`): Spinning Text — SVG
+  TextPath revision. The Feature 35 array-of-nodes implementation is
+  REPLACED. Modified: `registry/spinning-text/spinning-text.tsx` (now takes a
+  single `text: string`; renders an SVG `<path>` (circle centred at 50,50,
+  radius 40 in a 100×100 viewBox) + `<textPath>`; the rotating wrapper uses
+  Tailwind's built-in `@keyframes spin` via inline `animation`, so still zero
+  config injection), `app/test-spinning-text/page.tsx` (rebuilt — spec's 4
+  sections: repeating basic string / custom `Command`-badge center /
+  counter-clockwise `duration={5}` / the same text at `w-32`, `w-44`, `w-64`
+  to prove viewBox scaling), `app/docs/components/spinning-text/page.mdx`
+  (rebuilt — `text` prop with a repeating-string recommendation, sizing via
+  `className`, custom center, direction/speed, how-it-works with the path
+  `d`, props table, deps, performance, accessibility),
+  `components/docs/preview-wrappers.tsx` (+ `SpinningTextPreview` rewritten to
+  pass `text="SPIN • DEAD • UI • "` and drive `duration`/`direction` from the
+  customizer), `registry.json` (entry unchanged except the description now
+  reads "Continuous text drawn along a perfect circle via native SVG
+  textPath, rotating smoothly around a customizable center element"),
+  `packages/cli/package.json` (`0.1.13` → `0.1.14`), this file.
+
+  **THE `v0.1.12` VERSION IN THE SPEC IS BURNED — SHIPPED AS `v0.1.14`.**
+  The spec's Release step says bump to `0.1.12` and tag `v0.1.12`, but that
+  tag already exists on `origin/main` pointing at `2888b11` (the Feature 35
+  release) and `v0.1.13` points at `4b0f378` (Feature 36). The HEAD manifest
+  is already `0.1.13`. `git tag v0.1.12` fails outright ("already exists"),
+  and re-pointing a published tag needs a force-push that `AGENTS.md`
+  forbids. The owner chose the documented next-valid-version path (the exact
+  Feature 25 / Next Up #13 precedent): manifest `0.1.14`, tag `v0.1.14`.
+  npm will show `0.1.12` and `0.1.13` only if/when their releases are
+  published — this release publishes `0.1.14`.
+
+  **TWO DELIBERATE DEVIATIONS FROM THE SPEC BODY, BOTH SAFE.** (1) The spec
+  ships a static `id="circlePath"`; the component uses `React.useId()` and
+  a templated `href={`#${pathId}`}` instead, because a static id duplicates
+  on every mount and the first `#circlePath` in the document would win — the
+  test page alone renders six instances. (2) The spec's default center is
+  `bg-dead-black`, a token `app/globals.css` does not define; the component
+  defaults to `bg-dead-950` (the webgl-image-trail precedent documents this
+  exact mapping). Everything else — path geometry, `text-foreground`,
+  `tracking-[0.2em]`, `animation: spin`, the `centerContent` z-10 layer, the
+  `text` type — is spec-verbatim.
+
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` clean (0
+  errors; the 5 warnings are the pre-existing `<img>` precedent),
+  `rm -rf .next && npm run build` 44/44 routes, `cd packages/cli && npm run
+  build` clean, and Playwright/Chromium against `next start` — 6 `textPath`
+  elements each carrying the exact repeated string, 6 circular `path`s,
+  `animation: spin 10s linear infinite normal` (and `spin 5s linear infinite
+  reverse` on the counter-clockwise ring), 6 center layers, the docs page
+  renders one live preview `textPath` + 4 install tabs, zero console/page
+  errors.
 
 ## Resolved Decisions
 
