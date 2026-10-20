@@ -86,7 +86,14 @@ export function LineShadowText({
       }
       className={cn(
         'relative z-0 inline-flex',
-        'after:absolute after:top-[var(--shadow-offset)] after:left-[var(--shadow-offset)] after:content-[attr(data-text)]',
+        // The mirror must wrap EXACTLY like the real text. Positioned with
+        // top/left offsets it shrink-to-fits to `width - shadowOffset`, which
+        // drops the last word onto a phantom second line — its shadow then
+        // paints a whole line below the text. `inset-0` pins the mirror to the
+        // parent's full measure so line breaks match; the offset becomes a
+        // paint-only translate (transform does not affect layout).
+        'after:absolute after:inset-0 after:content-[attr(data-text)]',
+        'after:[translate:var(--shadow-offset)_var(--shadow-offset)]',
         'after:bg-[linear-gradient(var(--shadow-angle),transparent_45%,var(--shadow-color)_45%,var(--shadow-color)_55%,transparent_0)]',
         // Tile the gradient at the shadow's own width: the `line-shadow`
         // keyframe then advances the background by exactly one tile per cycle,

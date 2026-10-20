@@ -78,7 +78,12 @@ export function LineShadowText({
       }
       className={cn(
         "relative z-0 inline-flex",
-        `after:absolute after:top-[var(--shadow-offset)] after:left-[var(--shadow-offset)] after:content-[attr(data-text)]`,
+        // Post-release fix: top/left offsets made the absolute mirror
+        // shrink-to-fit to `width - shadowOffset`, re-wrapping the last word
+        // onto a phantom line (its shadow painted a line below the text).
+        // Fill the parent box and offset via paint-only translate instead:
+        `after:absolute after:inset-0 after:content-[attr(data-text)]`,
+        `after:[translate:var(--shadow-offset)_var(--shadow-offset)]`,
         `after:bg-[linear-gradient(var(--shadow-angle),transparent_45%,var(--shadow-color)_45%,var(--shadow-color)_55%,transparent_0)]`,
         "after:-z-10 after:bg-clip-text after:text-transparent",
         `after:animate-line-shadow`,

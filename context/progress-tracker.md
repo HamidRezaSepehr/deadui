@@ -26,14 +26,20 @@ Manifest now describes **21 components**. **The spec's `v0.1.16` is burned —
 Feature 40 ships as `v0.1.17`** (owner-confirmed; Feature 39 Text Annotation
 already consumed `v0.1.16` — see Next Up #17).
 
-**Post-release review — three owner-reported follow-ups implemented and
+**Post-release review — four owner-reported follow-ups implemented and
 verified, UNCOMMITTED pending owner direction:** (1) the crawl's visibility
 depended on `angle` (the fixed `(1,1)` keyframe travel has zero projection on
 the gradient axis at 45°/225° — the shipped DEFAULT froze); the component now
 emits `--shadow-travel-x/y` (best of the four tile-grid vectors per angle) and
 the `line-shadow` keyframe in `app/globals.css` + both `init.ts` blocks reads
 it with a `(1,1)` fallback. (2) Test-route example fonts enlarged. (3) The 90°
-example (test section 2 + docs snippet) replaced with 60°. Commit / `v0.1.18`
+example (test section 2 + docs snippet) replaced with 60°. (4) The shadow's
+LAST WORD always painted on a phantom second line: the `::after` mirror was
+positioned with `top/left: var(--shadow-offset)`, so its shrink-to-fit width
+was `W − offset` — one space-break narrower than the real text — and every
+multi-word instance re-wrapped the tail word to a mirrored line 2. Fix:
+`after:inset-0` (identical wrap width) + paint-only
+`[translate:var(--shadow-offset)_var(--shadow-offset)]`. Commit / `v0.1.18`
 release decision pending — the keyframe change ships through the CLI. Full
 numbers in the Session Notes.
 
@@ -6082,9 +6088,11 @@ Current Goal for the remaining release steps.
   with `DOMMotionComponents` from `motion/react`) carrying `relative z-0
   isolate after:z-[-10]` so the shadow layer paints behind the real text.
   The `::after` mirrors the text with `content: attr(data-text)` (from a
-  `data-text={children}` attribute), takes `after:absolute after:top
-  after:left` and its offset from `translate(var(--shadow-offset),
-  var(--shadow-offset))`, then paints
+  `data-text={children}` attribute), is pinned to the parent box with
+  `after:absolute after:inset-0` and offset purely as paint via
+  `after:[translate:var(--shadow-offset)_var(--shadow-offset)]` (originally
+  `after:top/left-[var(--shadow-offset)]` — see the follow-up note on the
+  phantom second line), then paints
   `linear-gradient(var(--shadow-angle), transparent 45%,
   var(--shadow-color) 45%, var(--shadow-color) 55%, transparent 0)` clipped
   to the mirrored glyphs (`after:bg-clip-text after:text-transparent`) with
@@ -6246,3 +6254,56 @@ Current Goal for the remaining release steps.
   wired at 0/90/135/180/270/345 (Home + ArrowRight×n, step 15) with exact
   travel matches; docs snippet swap present; reduced-motion → `animation:
   none`; zero console/page errors.
+
+- Feature 40 follow-up #2 (owner report): "the shadow of the last part of a
+  multi-word text always displays on the bottom/next line — only the tail word
+  is displaced, earlier words sit right." Component-only fix
+  (`registry/line-shadow-text/line-shadow-text.tsx`); no keyframe/`init.ts`
+  change. **UNCOMMITTED**, same pending decision as the previous follow-up.
+
+  **ROOT CAUSE: AN ABSOLUTE MIRROR WITH `left: var(--shadow-offset)`
+  SHRINK-TO-FITS TO `W − offset`, SO IT RE-WRAPS ONE BREAK NARROWER THAN THE
+  REAL TEXT.** The `::after` was `after:top-[…] after:left-[…]`, so its
+  available width for shrink-to-fit was `containingBlock − left = W − offset`.
+  Every multi-word instance therefore had a mirror ONE SPACE-BREAK narrower
+  than the real line: greedy breaking drops the tail word onto a mirrored
+  line 2 while the real word stays on line 1 — the tail word's shadow paints
+  a full line-height below its glyphs, exactly as reported. Reproduced
+  numerically on the test page (pre-fix): **6 of 7 instances had
+  `after.height = 2 × parent.height`** (Ship Fast `311.73×144` vs real
+  `314.61×72`, "this phrase" `105.84×65` vs `106.64×32.5`, Bold Hatch offset
+  0.14em → `252.77` vs `257.56`) and the strip below the "60 Degrees" box
+  held **147 red hatch pixels** (the phantom "Degrees" shadow). The paragraph
+  kept 2/2 lines but at `575.05` vs `576` — its intra-line break still
+  differed, so mid-line words were displaced too. Previous pixel checks never
+  caught it because every crawl/presence capture clipped to the parent's box,
+  where the phantom line never renders.
+
+  **FIX: WRAP WIDTH = PARENT WIDTH, OFFSET = PAINT-ONLY.**
+  `after:absolute after:inset-0` (all four insets 0 → used width is exactly
+  the containing block, no shrink-to-fit, identical greedy line breaks as the
+  real text given same font/text/width) and the offset moved from layout to
+  paint: `after:[translate:var(--shadow-offset)_var(--shadow-offset)]` — the
+  arbitrary-property portability pattern this component already uses for
+  `background-size`, and `transform`/`translate` never affect layout. Net
+  visual position of the mirror is unchanged (box at 0 shifted by offset ==
+  old box at offset), wrap behaviour is now width-independent of
+  `shadowOffset` (verified at the worst case, the docs 0.12em option). Known
+  tradeoff: the mirror can paint up to `shadowOffset` (≤0.12em) past the
+  parent's right/bottom edge — same overflow the old translate-based offsets
+  (Magic UI lineage) had, absorbed by card padding in every documented usage.
+
+  VERIFIED. `npx tsc --noEmit` clean; `npm run lint` 0 errors (5
+  pre-existing warnings); `npm run build` clean. Post-fix metrics: all 7
+  instances `after.width == parent.width` and `after.height ==
+  parent.height` (line counts 1/1, 2/2, 1/1); red pixels below the
+  "60 Degrees" box 147 → 4 (residue = the legitimate descender+0.04em escape
+  of the `g`, which overflows the line box just like the real glyph does);
+  docs preview mirror equals parent at both 0.04em and 0.12em offsets.
+  Full regression (`lst_verify2`) green with HIGHER crawl signal everywhere —
+  Ship Fast 595 → 1162, 60° 139 → 583, Bold 187 → 414, sweep all
+  `999–1696 px>100` — because the tail word's hatch is now inside the box
+  where the captures look. One apparent regression (paragraph 135° `4
+  px>100`) re-tested across deltas 250/400/500/650/850/1000 ms →
+  `145/322/328/141/0/0`: the capture landed on the documented half-cycle
+  alias (Δ = 1000 ms = one full stripe period), not a product change.
