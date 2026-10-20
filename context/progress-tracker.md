@@ -43,6 +43,12 @@ multi-word instance re-wrapped the tail word to a mirrored line 2. Fix:
 release decision pending — the keyframe change ships through the CLI. Full
 numbers in the Session Notes.
 
+Also from the same review: the docs customizer preview now defaults to a
+single word (`Shadow`) at `text-6xl md:text-7xl` — the old multi-word
+`text-4xl` default made the hatch too small to judge (in-box crawl signal at
+the default 45° went `89 → 949 px>100`; mirror still single-line and equal
+to the parent box, fits the panel, zero console errors).
+
 ## Completed
 
 1. Next.js app scaffolded at repo root (App Router,
