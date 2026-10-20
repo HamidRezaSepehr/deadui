@@ -26,6 +26,17 @@ Manifest now describes **21 components**. **The spec's `v0.1.16` is burned —
 Feature 40 ships as `v0.1.17`** (owner-confirmed; Feature 39 Text Annotation
 already consumed `v0.1.16` — see Next Up #17).
 
+**Post-release review — three owner-reported follow-ups implemented and
+verified, UNCOMMITTED pending owner direction:** (1) the crawl's visibility
+depended on `angle` (the fixed `(1,1)` keyframe travel has zero projection on
+the gradient axis at 45°/225° — the shipped DEFAULT froze); the component now
+emits `--shadow-travel-x/y` (best of the four tile-grid vectors per angle) and
+the `line-shadow` keyframe in `app/globals.css` + both `init.ts` blocks reads
+it with a `(1,1)` fallback. (2) Test-route example fonts enlarged. (3) The 90°
+example (test section 2 + docs snippet) replaced with 60°. Commit / `v0.1.18`
+release decision pending — the keyframe change ships through the CLI. Full
+numbers in the Session Notes.
+
 ## Completed
 
 1. Next.js app scaffolded at repo root (App Router,
@@ -1179,7 +1190,7 @@ both packages, 7 curl cases against the live route, and
     `.after\:animate-line-shadow::after`), `app/globals.css` (same keyframe +
     `@utility` + reduced-motion entry for the docs site), test page
     `app/test-line-shadow-text/page.tsx` (4 sections: default on a light
-    card / red 90° / `as` polymorphism / subtle-vs-bold sizing) and docs page
+    card / red 60° / `as` polymorphism / subtle-vs-bold sizing) and docs page
     `app/docs/components/line-shadow-text/page.mdx` (live `ComponentCustomizer`
     with shadowColor color input, shadowOffset/shadowWidth/duration/`as`
     selects, angle slider, InstallTabs, usage, props table, dependencies /
@@ -1197,7 +1208,9 @@ both packages, 7 curl cases against the live route, and
     spec's own `shadowWidth` prop meaningful as "tile size AND travel per
     cycle". Animation string everywhere:
     `line-shadow var(--shadow-duration, 2s) linear infinite` (spec default
-    `duration = "2s"`).
+    `duration = "2s"`). Post-release, the travel's DIRECTION became
+    angle-aware (`--shadow-travel-x/y`, see the follow-up Session Notes) —
+    "one tile per cycle" is kept, just not always the `(1,1)` tile.
 
     **TAILWIND V4 NEEDS `@utility`, NOT `theme.extend`.** Variants only
     compose onto utilities the Tailwind engine generated itself, so
@@ -6162,3 +6175,74 @@ Current Goal for the remaining release steps.
   `feat: add animated line-shadow text component for v0.1.17` carrying the
   bump, tag `v0.1.17` on it, both pushed — GitHub Release UI click and the
   manual `npm publish` commands handed to the owner (the spec's step 5/9).
+
+- Feature 40 follow-up (post-release owner review, three reports): (1) the
+  crawl was invisible at some angles, (2) test-route example fonts too small
+  to judge the effect, (3) the 90° example "doesn't look good". Implemented
+  across `registry/line-shadow-text/line-shadow-text.tsx`, `app/globals.css`,
+  `packages/cli/src/commands/init.ts`, `app/test-line-shadow-text/page.tsx`
+  and `app/docs/components/line-shadow-text/page.mdx`. **UNCOMMITTED at the
+  time of writing** — commit / `v0.1.18` release pending owner decision (the
+  keyframe change is shipped CLI surface).
+
+  **ROOT CAUSE OF (1): THE FIXED `(1,1)` TRAVEL HAS ZERO PROJECTION ON THE
+  GRADIENT AXIS AT 45° — THE SHIPPED DEFAULT.** The hatch only reads as
+  "crawling" when the background-position motion projects onto the pattern's
+  gradient axis `(sin θ, −cos θ)`; the keyframe always traveled `(w, w)`, so
+  visible amplitude was `|sin θ − cos θ|·w` — exactly 0 at 45° and 225°,
+  max at 135°. Proven with a same-element angle sweep (runtime
+  `--shadow-angle` override on the section-1 element, CDP clip captures
+  500 ms apart, noise floor first measured at `max 0` by freezing the
+  animation): pre-fix, 45°/225° collapsed to `px>100 = 47/36, max 216/195`
+  while every other angle ran `200–475 / ~650`. FIX: prop-time math in the
+  component picks, from the four tile-grid vectors `[(1,0), (0,1), (1,1),
+  (1,−1)]`, the one with the largest projection
+  `max(|sin|, |cos|, |sin−cos|, |sin+cos|) ≥ √2/2` — every candidate is a
+  whole tile on the background lattice, so every pick stays seamless by the
+  same construction as before — and writes it as
+  `--shadow-travel-x/y: calc(var(--shadow-width) * n)`. The keyframe's 100%
+  stop became `var(--shadow-travel-x, var(--shadow-width)) var(…y…)`, in
+  `app/globals.css` AND both `init.ts` injections (v3 keyframes object + v4
+  `THEME_CSS_BLOCK`); the fallback keeps old components on new CSS and new
+  components on old CSS working. Post-fix sweep: all 24 angles ≥ `502
+  px>100` (worst = 300°), 45° now `640`, noise floor still 0.
+
+  **THE FOLLOW-UP MEASUREMENT TRAP: HALF-CYCLE ALIASING.** The first
+  post-fix docs-preview check "failed" (`px>100 = 35` at 45°) even though
+  rAF sampling of `getComputedStyle(::after).backgroundPosition` proved the
+  animation crawling smoothly (`0 → 2.16px → 0` on both axes, 138 moves /
+  139 samples). The measurement itself was the bug: at 45° the stripe phase
+  period is `w/√2`, travel `(1,−1)` moves `√2·w` per cycle, so a capture
+  delta of exactly 50% of the cycle shifts the pattern by exactly ONE
+  stripe period — pixel-identical frames, `diff ≈ 0` by self-similarity.
+  Same trap explains why forced `(1,1)` read 11 there (phase shift 0).
+  Re-measured at non-aliased deltas: 350/600/750 ms → `276/195/123 px>100`.
+  Rule for future crawl checks: never sample at exactly `cycle/2` for a
+  travel whose projection is `2×` the stripe period (45°/225°), or at any
+  `delta = k·period/|projection|`.
+
+  **(2) FONTS + (3) 60°.** Test-route example sizes: sections 1–2
+  `text-5xl` → `text-6xl md:text-7xl` (height 48 → 72), section 3 h1
+  `text-4xl` → `text-5xl` (40 → 48), paragraph `text-xl` → `text-2xl`
+  (32 → 78 wrapping), inline sentence `text-lg` → `text-xl`, section 4
+  `text-3xl` → `text-5xl` (36 → 48) — all asserted via bounding boxes.
+  Section 2 and the docs usage snippet moved from `angle={90}` "Ninety
+  Degrees" to `angle={60}` "Sixty Degrees" (60° picks travel `(1,−1)`,
+  projection `1.366w` — a strong crawl off the default diagonal);
+  "Ninety Degrees" / "90 Degrees" gone from both pages (the only remaining
+  `angle={90}` in the repo belongs to orbiting-circles).
+
+  VERIFIED (this follow-up): `npx tsc --noEmit` clean; `npm run lint`
+  0 errors (same 5 pre-existing warnings); `npm run build` clean;
+  `cd packages/cli && npm run build` clean (`deadui 0.1.17`, dist grep
+  confirms 3 `shadow-travel` lines); production chunk
+  `@keyframes line-shadow{0%{…}to{background-position:var(--shadow-travel-x,
+  var(--shadow-width)) var(--shadow-travel-y,var(--shadow-width))}}` plus the
+  `::after` utility and reduced-motion `animation: none`. Playwright vs
+  `next start`: all 7 test-page instances report the expected
+  `--shadow-angle/-travel-x/-travel-y/-duration` (45 → `(1,−1)`, 60 →
+  `(1,−1)`, 135 → `(1,1)`); per-section crawls `595/139/409/187 px>100`
+  (Ship Fast/60°/paragraph/Bold); 24-angle sweep all `≥502`; docs slider
+  wired at 0/90/135/180/270/345 (Home + ArrowRight×n, step 15) with exact
+  travel matches; docs snippet swap present; reduced-motion → `animation:
+  none`; zero console/page errors.

@@ -206,7 +206,7 @@ const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
         lines: [
           "'line-shadow': {",
           "  '0%': { 'background-position': '0 0' },",
-          "  '100%': { 'background-position': 'var(--shadow-width) var(--shadow-width)' },",
+          "  '100%': { 'background-position': 'var(--shadow-travel-x, var(--shadow-width)) var(--shadow-travel-y, var(--shadow-width))' },",
           '},',
         ],
       },
@@ -353,7 +353,8 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
     background-position: 0 0;
   }
   100% {
-    background-position: var(--shadow-width) var(--shadow-width);
+    background-position: var(--shadow-travel-x, var(--shadow-width))
+      var(--shadow-travel-y, var(--shadow-width));
   }
 }
 

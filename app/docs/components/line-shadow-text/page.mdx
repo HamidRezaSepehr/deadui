@@ -84,8 +84,8 @@ export function Hero() {
 ### Custom colour and angle
 
 ```tsx
-<LineShadowText shadowColor="#a855f7" angle={90} duration="3s">
-  Ninety Degrees
+<LineShadowText shadowColor="#a855f7" angle={60} duration="3s">
+  Sixty Degrees
 </LineShadowText>
 ```
 
@@ -110,7 +110,7 @@ export function Hero() {
 | `children` | `string` | — (required) | The text to render, also mirrored into the shadow layer. |
 | `shadowColor` | `string` | `"black"` | Colour of the line shadow. |
 | `shadowOffset` | `string` | `"0.04em"` | Distance the shadow layer sits behind and to the right of the text. |
-| `shadowWidth` | `string` | `"0.06em"` | Hatch tile size — also the distance the shadow travels per animation cycle. |
+| `shadowWidth` | `string` | `"0.06em"` | Hatch tile size — also the distance the shadow travels per animation cycle, along the tile axis that keeps the crawl visible at the given `angle`. |
 | `angle` | `number` | `45` | Angle of the diagonal lines in degrees. |
 | `duration` | `string` | `"2s"` | Length of one animation cycle, e.g. `"2s"`. |
 | `as` | `"article" \| "div" \| "h1" \| "h2" \| "h3" \| "h4" \| "h5" \| "h6" \| "li" \| "p" \| "section" \| "span"` | `"span"` | Element to render; motion props stay typed against it. |

@@ -53,6 +53,24 @@ export function LineShadowText({
 }: LineShadowTextProps) {
   const MotionComponent = motionElements[Component]
 
+  // The hatch pattern is periodic with the tile lattice (w, 0) / (0, w), so a
+  // travel of one whole tile in EITHER axis returns the pattern identically —
+  // every candidate below is seamless. Which candidate is visible depends on
+  // the angle: the crawl only reads on motion projected onto the gradient axis
+  // (sin, −cos). Traveling (1, 1) everywhere collapses to zero at 45deg (the
+  // default!), so pick the candidate with the largest projection instead —
+  // max(|sin|, |cos|, |sin−cos|, |sin+cos|) is always ≥ √2/2.
+  const sin = Math.sin((angle * Math.PI) / 180)
+  const cos = Math.cos((angle * Math.PI) / 180)
+  const travel = (
+    [
+      [1, 0, Math.abs(sin)],
+      [0, 1, Math.abs(cos)],
+      [1, 1, Math.abs(sin - cos)],
+      [1, -1, Math.abs(sin + cos)],
+    ] as const
+  ).reduce((best, candidate) => (candidate[2] > best[2] ? candidate : best))
+
   return (
     <MotionComponent
       style={
@@ -62,6 +80,8 @@ export function LineShadowText({
           '--shadow-width': shadowWidth,
           '--shadow-angle': `${angle}deg`,
           '--shadow-duration': duration,
+          '--shadow-travel-x': `calc(var(--shadow-width) * ${travel[0]})`,
+          '--shadow-travel-y': `calc(var(--shadow-width) * ${travel[1]})`,
         } as CSSProperties
       }
       className={cn(

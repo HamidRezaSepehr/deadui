@@ -271,17 +271,23 @@ body {
    the background by exactly ONE tile per cycle, so at 100% the pattern is
    pixel-identical to 0% — the loop is seamless by construction, and the crawl
    speed stays tied to `--shadow-width` / `--shadow-duration` instead of the
-   element's size. Registered with `@utility` rather than written as a class in
-   `@layer utilities`: the component uses the `after:` variant, and v4 composes
-   variants only onto utilities its engine knows. The animation var sits in the
-   rule body so `--shadow-duration` resolves against the ::after itself, not
-   :root (the reason `--animate-*` tokens are avoided everywhere else here). */
+   element's size. WHICH tile-grid vector the travel uses is chosen per element
+   by the component (`--shadow-travel-x/y`): a fixed (1, 1) travel reads as no
+   motion at all at 45deg, because only motion projected onto the gradient axis
+   (sin, −cos) moves the stripes — the fallback keeps components that predate
+   the variables working on the old (1, 1) path. Registered with `@utility`
+   rather than written as a class in `@layer utilities`: the component uses the
+   `after:` variant, and v4 composes variants only onto utilities its engine
+   knows. The animation var sits in the rule body so `--shadow-duration`
+   resolves against the ::after itself, not :root (the reason `--animate-*`
+   tokens are avoided everywhere else here). */
 @keyframes line-shadow {
   0% {
     background-position: 0 0;
   }
   100% {
-    background-position: var(--shadow-width) var(--shadow-width);
+    background-position: var(--shadow-travel-x, var(--shadow-width))
+      var(--shadow-travel-y, var(--shadow-width));
   }
 }
 

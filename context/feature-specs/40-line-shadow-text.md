@@ -100,7 +100,9 @@ keyframes: {
   // ... existing keyframes
   'line-shadow': {
     '0%': { backgroundPosition: '0 0' },
-    '100%': { backgroundPosition: 'var(--shadow-width) var(--shadow-width)' }, // Or whatever the exact Magic UI keyframe is, typically it shifts the background
+    // Post-release: travel direction is chosen per element (--shadow-travel-x/y,
+    // set by the component from `angle`) — a fixed (1,1) travel freezes at 45°.
+    '100%': { backgroundPosition: 'var(--shadow-travel-x, var(--shadow-width)) var(--shadow-travel-y, var(--shadow-width))' },
   }
 },
 animation: {
@@ -113,7 +115,7 @@ animation: {
 ### 3. Test Page (`app/test-line-shadow-text/page.tsx`)
 Create a page demonstrating:
 1. **Default**: Standard black shadow on a heading.
-2. **Custom Color & Angle**: A vibrant accent color with a `90` degree angle.
+2. **Custom Color & Angle**: A vibrant accent color with a `60` degree angle (owner review: the original `90` example was replaced — 90° didn't look good).
 3. **Different Elements**: Using the `as="h1"`, `as="p"`, and `as="span"` props.
 4. **Custom Sizing**: Adjusted `shadowOffset` and `shadowWidth` for a bolder or subtler effect.
 

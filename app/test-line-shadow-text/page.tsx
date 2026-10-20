@@ -26,7 +26,7 @@ export default function TestLineShadowTextPage() {
         </p>
 
         <div className="flex items-center justify-center rounded-lg border border-dead-800 bg-white p-12">
-          <LineShadowText className="text-5xl font-bold tracking-tight text-black">
+          <LineShadowText className="text-6xl font-bold tracking-tight text-black md:text-7xl">
             Ship Fast
           </LineShadowText>
         </div>
@@ -39,19 +39,20 @@ export default function TestLineShadowTextPage() {
         <p className="mb-8 font-mono text-sm text-dead-400">
           2. CUSTOM COLOR &amp; ANGLE — A vibrant{' '}
           <code className="text-dead-50">shadowColor</code> at{' '}
-          <code className="text-dead-50">angle={'{90}'}</code> flips the hatch
-          axis to horizontal bands, crawling sideways behind the heading.
+          <code className="text-dead-50">angle={'{60}'}</code> tilts the hatch
+          off the default diagonal, and the crawl follows the new axis behind
+          the heading.
         </p>
 
         <div className="flex items-center justify-center rounded-lg border border-dead-800 bg-dead-900 p-12">
           <LineShadowText
             as="h2"
             shadowColor="#ef4444"
-            angle={90}
+            angle={60}
             duration="3s"
-            className="text-5xl font-bold tracking-tight text-dead-50"
+            className="text-6xl font-bold tracking-tight text-dead-50 md:text-7xl"
           >
-            90 Degrees
+            60 Degrees
           </LineShadowText>
         </div>
       </section>
@@ -72,7 +73,7 @@ export default function TestLineShadowTextPage() {
           <LineShadowText
             as="h1"
             shadowColor="#60a5fa"
-            className="text-4xl font-bold tracking-tight text-dead-50"
+            className="text-5xl font-bold tracking-tight text-dead-50"
           >
             Block Heading
           </LineShadowText>
@@ -81,12 +82,12 @@ export default function TestLineShadowTextPage() {
             as="p"
             shadowColor="#a855f7"
             angle={135}
-            className="max-w-xl text-xl leading-relaxed text-dead-50"
+            className="max-w-xl text-2xl leading-relaxed text-dead-50"
           >
             A whole paragraph wearing the shadow, wrapping across lines.
           </LineShadowText>
 
-          <p className="text-lg leading-relaxed text-dead-300">
+          <p className="text-xl leading-relaxed text-dead-300">
             Inline in a sentence —{' '}
             <LineShadowText shadowColor="#34d399" className="font-semibold text-dead-50">
               this phrase
@@ -114,7 +115,7 @@ export default function TestLineShadowTextPage() {
               shadowOffset="0.015em"
               shadowWidth="0.03em"
               duration="4s"
-              className="text-3xl font-bold text-dead-50"
+              className="text-5xl font-bold text-dead-50"
             >
               Subtle Hatch
             </LineShadowText>
@@ -129,7 +130,7 @@ export default function TestLineShadowTextPage() {
               shadowOffset="0.1em"
               shadowWidth="0.14em"
               duration="1.5s"
-              className="text-3xl font-bold text-dead-50"
+              className="text-5xl font-bold text-dead-50"
             >
               Bold Hatch
             </LineShadowText>
