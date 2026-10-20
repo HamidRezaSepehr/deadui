@@ -265,6 +265,33 @@ body {
   }
 }
 
+/* Line Shadow Text
+   A diagonal hatch tiled at `background-size: var(--shadow-width)` behind the
+   glyphs (clipped to them with `background-clip: text`). The keyframe advances
+   the background by exactly ONE tile per cycle, so at 100% the pattern is
+   pixel-identical to 0% — the loop is seamless by construction, and the crawl
+   speed stays tied to `--shadow-width` / `--shadow-duration` instead of the
+   element's size. Registered with `@utility` rather than written as a class in
+   `@layer utilities`: the component uses the `after:` variant, and v4 composes
+   variants only onto utilities its engine knows. The animation var sits in the
+   rule body so `--shadow-duration` resolves against the ::after itself, not
+   :root (the reason `--animate-*` tokens are avoided everywhere else here). */
+@keyframes line-shadow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: var(--shadow-width) var(--shadow-width);
+  }
+}
+
+@utility animate-line-shadow {
+  animation-name: line-shadow;
+  animation-duration: var(--shadow-duration, 2s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
 /* Reduced motion (code-standards non-negotiable). Deliberately UNLAYERED: in
    the cascade, unlayered declarations outrank declarations inside a layer, so
    this beats the `@layer utilities` rules above without needing `!important`
@@ -275,7 +302,9 @@ body {
   .animate-gradient-rotate,
   .animate-gradient-pulse,
   .animate-rainbow,
-  .animate-ripple {
+  .animate-ripple,
+  .animate-line-shadow,
+  .after\:animate-line-shadow::after {
     animation: none;
   }
 }

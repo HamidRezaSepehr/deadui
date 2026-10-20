@@ -102,6 +102,13 @@ const CN_EXPORT_PATTERNS = [
  *    gets a button whose gradient never moves. The matching `--color-1`…`-5`
  *    custom properties are a SEPARATE write into the stylesheet, because they are
  *    not theme colours; see `setupRainbowColors`.
+ * 5. `line-shadow` keyframes + animation. `registry/line-shadow-text` paints a
+ *    hatch with `after:animate-line-shadow`, and both `--shadow-duration` and
+ *    the keyframe's `--shadow-width` must resolve against that `::after` — the
+ *    v3 entries therefore read the vars inside the utility string (a per-element
+ *    resolution), and the v4 block registers a real `@utility`, because v4
+ *    composes variants only onto utilities its engine knows and a hand-written
+ *    class in `@layer utilities` is invisible to it.
  */
 const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
   {
@@ -194,6 +201,15 @@ const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
           '},',
         ],
       },
+      {
+        key: 'line-shadow',
+        lines: [
+          "'line-shadow': {",
+          "  '0%': { 'background-position': '0 0' },",
+          "  '100%': { 'background-position': 'var(--shadow-width) var(--shadow-width)' },",
+          '},',
+        ],
+      },
     ],
   },
   {
@@ -231,6 +247,10 @@ const THEME_PROPERTIES: { property: string; entries: ThemeEntry[] }[] = [
       {
         key: 'ripple',
         lines: ["ripple: 'ripple 3s ease-in-out infinite alternate',"],
+      },
+      {
+        key: 'line-shadow',
+        lines: ["'line-shadow': 'line-shadow var(--shadow-duration, 2s) linear infinite',"],
       },
     ],
   },
@@ -328,6 +348,15 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
   }
 }
 
+@keyframes line-shadow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: var(--shadow-width) var(--shadow-width);
+  }
+}
+
 @layer utilities {
   .animate-marquee {
     animation-name: marquee;
@@ -375,13 +404,27 @@ const THEME_CSS_BLOCK = `/* ${THEME_MARKER} — Dead UI theme tokens. Added by \
   }
 }
 
+/* \`after:animate-line-shadow\` needs a registered utility, not a plain class:
+   v4 only composes variants onto utilities its engine knows, so a rule inside
+   \`@layer utilities\` would never reach the component's \`after:\` variant. The
+   animation var lives in the rule body, where it resolves against the ::after
+   instead of :root. */
+@utility animate-line-shadow {
+  animation-name: line-shadow;
+  animation-duration: var(--shadow-duration, 2s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-marquee-vertical,
   .animate-gradient-rotate,
   .animate-gradient-pulse,
   .animate-rainbow,
-  .animate-ripple {
+  .animate-ripple,
+  .animate-line-shadow,
+  .after\\:animate-line-shadow::after {
     animation: none;
   }
 }

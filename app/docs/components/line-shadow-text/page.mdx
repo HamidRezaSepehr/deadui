@@ -1,0 +1,144 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { LineShadowText } from "@/registry/line-shadow-text"
+
+export const metadata = {
+  title: "Line Shadow Text",
+  description:
+    "Animated diagonal line shadow sweeping behind text, with configurable colour, angle, offset, width and speed.",
+}
+
+# Line Shadow Text
+
+An animated diagonal line shadow crawling behind your words. The shadow is a
+pseudo-element painted with a tiled gradient and clipped to the glyphs with
+`background-clip: text` — the text itself never moves, and no JavaScript runs
+while the hatch sweeps. Colour, angle, offset, width and speed are all CSS
+custom properties driven by props.
+
+## Preview
+
+<ComponentCustomizer
+  component={LineShadowText}
+  defaultProps={{
+    children: "Line Shadow Text",
+    shadowColor: "#ef4444",
+    shadowOffset: "0.04em",
+    shadowWidth: "0.06em",
+    angle: 45,
+    duration: "2s",
+    as: "span",
+    className: "text-4xl font-bold tracking-tight text-dead-50",
+  }}
+  controls={{
+    shadowColor: { type: "color" },
+    shadowOffset: { type: "select", options: ["0.02em", "0.04em", "0.08em", "0.12em"] },
+    shadowWidth: { type: "select", options: ["0.03em", "0.06em", "0.1em", "0.16em"] },
+    angle: { type: "slider", min: 0, max: 360, step: 15, unit: "°" },
+    duration: { type: "select", options: ["0.5s", "1s", "2s", "4s", "8s"] },
+    as: { type: "select", options: ["span", "h1", "h2", "h3", "p", "div", "section"] },
+  }}
+  className="not-prose my-8"
+/>
+
+Every control edits a CSS variable on the spot — widen `shadowWidth` for a
+chunkier hatch that also travels further per cycle, or slow `duration` down to
+a crawl.
+
+## Installation
+
+<InstallTabs componentName="line-shadow-text" tier="free" />
+
+### One-time setup
+
+The `line-shadow` keyframe and the `animate-line-shadow` utility are injected
+into your project by `deadui init`:
+
+```bash
+npx deadui@latest init
+```
+
+If you already ran `init` before this component existed, re-run it — it is
+idempotent and will add only what is missing.
+
+### Dependency
+
+The component renders through `motion` (`npm install motion`). `deadui add`
+installs it for you automatically; it is only needed by hand if you copied the
+file manually.
+
+## Usage
+
+```tsx
+import { LineShadowText } from "@/components/ui/line-shadow-text"
+
+export function Hero() {
+  return (
+    <h1 className="text-6xl font-bold tracking-tight">
+      Ship <LineShadowText>Fast</LineShadowText>
+    </h1>
+  )
+}
+```
+
+### Custom colour and angle
+
+```tsx
+<LineShadowText shadowColor="#a855f7" angle={90} duration="3s">
+  Ninety Degrees
+</LineShadowText>
+```
+
+### A block-level heading
+
+```tsx
+<LineShadowText
+  as="h2"
+  shadowColor="#60a5fa"
+  shadowOffset="0.08em"
+  shadowWidth="0.1em"
+  className="text-5xl font-bold"
+>
+  Block Element
+</LineShadowText>
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `children` | `string` | — (required) | The text to render, also mirrored into the shadow layer. |
+| `shadowColor` | `string` | `"black"` | Colour of the line shadow. |
+| `shadowOffset` | `string` | `"0.04em"` | Distance the shadow layer sits behind and to the right of the text. |
+| `shadowWidth` | `string` | `"0.06em"` | Hatch tile size — also the distance the shadow travels per animation cycle. |
+| `angle` | `number` | `45` | Angle of the diagonal lines in degrees. |
+| `duration` | `string` | `"2s"` | Length of one animation cycle, e.g. `"2s"`. |
+| `as` | `"article" \| "div" \| "h1" \| "h2" \| "h3" \| "h4" \| "h5" \| "h6" \| "li" \| "p" \| "section" \| "span"` | `"span"` | Element to render; motion props stay typed against it. |
+| `className` | `string` | — | Merged after the component's base classes. |
+| `...props` | `MotionProps & HTMLAttributes<HTMLElement>` | — | Spread onto the rendered element. |
+
+## Dependencies
+
+- `motion` — renders the polymorphic element. The crawl itself is pure CSS.
+
+## Performance
+
+- The animation is one CSS keyframe on the pseudo-element: no JavaScript frames,
+  no layout reads, no observers while it runs.
+- `background-position` repaints only the text's own box each frame — a small,
+  fixed paint area with no layout invalidation.
+- The shadow layer mirrors the text through `content: attr(data-text)`, so the
+  component adds no extra DOM nodes.
+
+## Accessibility
+
+- The real text stays in the DOM unchanged — selectable and copyable — and the
+  shadow paints purely decoratively behind it. Nothing is communicated by the
+  shadow alone.
+- The shadow mirrors the text through `content: attr(data-text)`, which is what
+  `background-clip: text` uses as its shape. Browsers expose that generated
+  content in the accessibility tree, so a screen reader may announce the phrase
+  a second time — worth keeping in mind if you apply it to running body copy
+  rather than short headings.
+- Under `prefers-reduced-motion` the crawl stops (the shipped CSS disables it)
+  and the hatch remains as a static shadow with fully legible text.

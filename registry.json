@@ -1,6 +1,22 @@
 {
   "components": [
     {
+      "name": "line-shadow-text",
+      "title": "Line Shadow Text",
+      "description": "Animated diagonal line shadow sweeping behind text, with configurable colour, angle, offset, width and speed.",
+      "tier": "free",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/line-shadow-text/line-shadow-text.tsx",
+          "target": "components/ui/line-shadow-text.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "text-annotation",
       "title": "Text Annotation",
       "description": "Hand-drawn, sketchy annotation effects for text using rough-notation.",

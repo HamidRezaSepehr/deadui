@@ -5,30 +5,26 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 39 (Text Annotation)
+Phase 1: Component Implementation — Feature 40 (Line Shadow Text)
 
 ## Current Goal
 
-**Feature 39: Text Annotation (Free) — rough-notation wrapper with in-view
-support** — complete. `registry/text-annotation/text-annotation.tsx` wraps the
-`rough-notation` library to provide hand-drawn, sketchy annotation effects,
-plus automatic in-view triggering via `IntersectionObserver`.
-`TextAnnotation` exposes all eight documented types (`underline`, `box`,
-`circle`, `highlight`, `strike-through`, `crossed-off`, `bracket`,
-`multi-line`) and every native option (`color`, `iterations`, `strokeWidth`,
-`padding`, `multiline`, `animationDuration`) as React props, alongside the new
-`show` (manual control), `inView` (auto-trigger) and `triggerOnce` (default
-`true`) props. The instance is created in a `useEffect` keyed on the options,
-re-created when any option changes, and `.remove()`d on unmount.
-`TextAnnotationGroup` publishes an `AnnotationContext` so nested
-`TextAnnotation`s register themselves; the group builds a `rough-notation`
-`annotationGroup` and reveals the members in sequence when the group itself is
-50% in view. Test page `app/test-text-annotation/page.tsx` covers all eight
-types, custom styling, an interactive toggle, a scroll-triggered in-view
-section, and a sequential group. Docs page at
-`app/docs/components/text-annotation/page.mdx`. CLI bumped to **`v0.1.16`**
-(tag `v0.1.15` was already consumed by Feature 38 Dock, so the next valid
-version is used — see Next Up #16 precedent).
+**Feature 40: Line Shadow Text (Free) — animated diagonal line-shadow hatch
+crawling behind the glyphs** — complete. `registry/line-shadow-text/line-shadow-text.tsx`
+renders a `motion` element whose `::after` mirrors the text through
+`content: attr(data-text)` and paints a tiled diagonal gradient clipped to those
+glyphs with `background-clip: text`, sitting `shadowOffset` behind the real
+text. Every visual knob (`shadowColor`, `shadowOffset`, `shadowWidth`,
+`angle`, `duration`, `as`) is a prop that only writes CSS custom properties —
+zero JavaScript runs while the hatch animates. The `line-shadow` keyframe and
+`animate-line-shadow` utility ship from `deadui init` (v3 `theme.extend` + v4
+`@utility`, the dual-injection pattern from Feature 25) and from
+`app/globals.css` for the docs site. Test page at
+`app/test-line-shadow-text/page.tsx` (4 sections), docs page with a live
+`ComponentCustomizer` at `app/docs/components/line-shadow-text/page.mdx`.
+Manifest now describes **21 components**. **The spec's `v0.1.16` is burned —
+Feature 40 ships as `v0.1.17`** (owner-confirmed; Feature 39 Text Annotation
+already consumed `v0.1.16` — see Next Up #17).
 
 ## Completed
 
@@ -1170,6 +1166,51 @@ both packages, 7 curl cases against the live route, and
     regression check: luminance back at 72.5 (source image is ~68.5) with
     the lens square still clearly saturated inside a grayscale field.
 
+50. **Feature 40: Line Shadow Text (Free)** —
+    `registry/line-shadow-text/line-shadow-text.tsx` (component) +
+    `registry/line-shadow-text/index.ts` (barrel), a `registry.json` entry
+    (`tier: "free"`, `dependencies: ["motion"]`, single file →
+    `components/ui/line-shadow-text.tsx`, `variants: []` — manifest now
+    **21 components**, all `files[].path` values on disk),
+    `packages/cli/src/commands/init.ts` (new `line-shadow` entries in the v3
+    `THEME_PROPERTIES` keyframes + animation arrays and in the v4
+    `THEME_CSS_BLOCK`: `@keyframes line-shadow`, `@utility animate-line-shadow`,
+    and the reduced-motion selectors including the escaped
+    `.after\:animate-line-shadow::after`), `app/globals.css` (same keyframe +
+    `@utility` + reduced-motion entry for the docs site), test page
+    `app/test-line-shadow-text/page.tsx` (4 sections: default on a light
+    card / red 90° / `as` polymorphism / subtle-vs-bold sizing) and docs page
+    `app/docs/components/line-shadow-text/page.mdx` (live `ComponentCustomizer`
+    with shadowColor color input, shadowOffset/shadowWidth/duration/`as`
+    selects, angle slider, InstallTabs, usage, props table, dependencies /
+    performance / accessibility). `packages/cli` `0.1.16` → **`0.1.17`** (the
+    spec's `v0.1.16` is burned — see Next Up #17).
+
+    **DESIGN DECISION (Option E — spec verbatim plus one portable class).**
+    The component ships the spec's structure exactly, plus
+    `after:[background-size:var(--shadow-width)_var(--shadow-width)]`:
+    the arbitrary-property syntax works on Tailwind v3.1+ while `bg-size-*`
+    is v4-only, so one class serves both consumer versions. The keyframe is
+    `0% → var(--shadow-width)` on both axes rather than Magic UI's literal
+    `100% -100%` — the hatch tile IS one gradient tile, so advancing exactly
+    one tile per cycle is the same perfectly seamless loop, and it makes the
+    spec's own `shadowWidth` prop meaningful as "tile size AND travel per
+    cycle". Animation string everywhere:
+    `line-shadow var(--shadow-duration, 2s) linear infinite` (spec default
+    `duration = "2s"`).
+
+    **TAILWIND V4 NEEDS `@utility`, NOT `theme.extend`.** Variants only
+    compose onto utilities the Tailwind engine generated itself, so
+    `after:animate-line-shadow` compiled to nothing for a v4 consumer whose
+    `animate-line-shadow` came from a plain `@layer utilities` block. The v4
+    block therefore declares `@utility animate-line-shadow { animation-name:
+    line-shadow; animation-duration: var(--shadow-duration, 2s); … }` with the
+    `var()` in the rule body, so it resolves against each `::after` at use
+    time rather than capturing a `:root` fallback. v3 consumers get
+    `theme.extend.animation` entries where variants work natively.
+
+    Full verification in the Session Notes.
+
 ## In Progress
 
 None. Feature 28 (Advanced Marquee), Feature 29 (Text Video Mask) and
@@ -1359,6 +1400,17 @@ Current Goal for the remaining release steps.
     will only see those tags after each release is published —
     this release publishes `0.1.14`. See Completed/Session
     Notes Feature 37.
+17. **`v0.1.16` IS BURNED — FEATURE 40 SHIPS AS `v0.1.17`.** The
+    Feature 40 spec says bump to `0.1.16` and tag `v0.1.16`, but
+    Feature 39 Text Annotation already consumed that exact
+    version: the tag exists on `origin/main` pointing at
+    `2924979`, and HEAD's manifest was already `0.1.16`.
+    `git tag v0.1.16` fails outright ("already exists"), and
+    re-pointing a published tag needs the force-push that
+    `AGENTS.md` forbids. The owner confirmed the documented
+    next-valid-version path (the Feature 25 / Next Up #13 /
+    Feature 37 / Feature 38 precedent): manifest `0.1.17`, tag
+    `v0.1.17`.
 
 
 ## Component Status
@@ -1385,6 +1437,7 @@ Current Goal for the remaining release steps.
 | 16 | Spinning Text | Free | COMPLETE (Features 35 + 37) | ✅ (F37) | — (configurable via props: text, duration, direction, centerContent; SVG textPath revision in F37) |
 | 17 | Mouse Lens Effect | Pro | COMPLETE (Feature 36) | ✅ (F36) | — (configurable via props: srcOutside, srcInside, squareSize, lensDistortion, rgbShiftIntensity, mouseEasing)
 | 18 | Dock | Free | COMPLETE (Feature 38) | ✅ (F38) | — (configurable via props: iconSize, iconMagnification, iconDistance, disableMagnification, direction)
+| 19 | Line Shadow Text | Free | COMPLETE (Feature 40) | ✅ (F40) | — (configurable via props: shadowColor, shadowOffset, shadowWidth, angle, duration, as) |
 
 ## Open Questions
 
@@ -5998,3 +6051,114 @@ Current Goal for the remaining release steps.
   in-view section reveals 5/5 annotations only after scrolling to it; the group
   reveals 4/4 after scrolling. Docs page renders (1 main + 3 grouped SVGs).
   Zero page errors, zero console errors.
+
+- Feature 40 (feature spec `40-line-shadow-text.md`): Line Shadow Text — a
+  new Free component. Created: `registry/line-shadow-text/line-shadow-text.tsx`
+  (component), `registry/line-shadow-text/index.ts` (barrel),
+  `app/test-line-shadow-text/page.tsx` (4 sections),
+  `app/docs/components/line-shadow-text/page.mdx`. Modified: `registry.json`
+  (+ `line-shadow-text` entry prepended — manifest now **21 components**),
+  `packages/cli/src/commands/init.ts` (v3 `THEME_PROPERTIES` + v4
+  `THEME_CSS_BLOCK` injection), `app/globals.css` (keyframe + `@utility` +
+  reduced-motion), `packages/cli/package.json` (`0.1.16` → `0.1.17`),
+  this file. No `preview-wrappers.tsx` adapter: the MDX imports the registry
+  component directly (`import { LineShadowText } from
+  "@/registry/line-shadow-text"`), the ripple pattern.
+
+  **ANATOMY.** The root is a `motion` element (polymorphic via `as`, typed
+  with `DOMMotionComponents` from `motion/react`) carrying `relative z-0
+  isolate after:z-[-10]` so the shadow layer paints behind the real text.
+  The `::after` mirrors the text with `content: attr(data-text)` (from a
+  `data-text={children}` attribute), takes `after:absolute after:top
+  after:left` and its offset from `translate(var(--shadow-offset),
+  var(--shadow-offset))`, then paints
+  `linear-gradient(var(--shadow-angle), transparent 45%,
+  var(--shadow-color) 45%, var(--shadow-color) 55%, transparent 0)` clipped
+  to the mirrored glyphs (`after:bg-clip-text after:text-transparent`) with
+  the tile set by the portable `after:[background-size:var(--shadow-width)_var(--shadow-width)]`
+  class. Inline `style` on the root sets all five `--shadow-*` variables plus
+  `--shadow-duration`; the animation class is
+  `after:animate-line-shadow`.
+
+  **THE `v0.1.16` SPEC VERSION IS BURNED — SHIPPED AS `v0.1.17`.** Feature 39
+  already took `0.1.16` (tag → `2924979`), and HEAD's manifest was already
+  `0.1.16` when this feature started. Owner chose the established
+  next-valid-version path (Next Up #13/#16 precedents): manifest `0.1.17`,
+  tag `v0.1.17`. Full detail in Next Up #17.
+
+  **THE WAR STORY: EVERY "THE CRAWL IS INVISIBLE" MEASUREMENT WAS A
+  LIGHT-THEME ARTIFACT, AND IT TOOK FOUR DIAGNOSTIC SCRIPTS TO CATCH.**
+  Frame-to-frame pixel diffs of the running animation came back `max 6`,
+  `px>12 = 0` — i.e. "nothing repaints" — while CDP showed the animation
+  genuinely `running`, `currentTime` advancing, computed `background-position`
+  crawling, and the strip-tests (removing the `after:` classes) still
+  reporting 143–312 changed pixels "proving the hatch paints". The actual
+  cause: `app/layout.tsx` uses `defaultTheme="system"`, headless Chromium
+  answered **light**, and the Dead ramp MIRRORS by role in light mode —
+  `bg-dead-50` resolves to `#09090b` (near-black), so section 1's "light
+  card" was a BLACK card, `text-dead-950` was white, and the default BLACK
+  hatch was black-on-black: `#000` vs `#09090b` is a 27/765 sum ≈ 3.5%
+  contrast, which both the "presence" checks (measuring exactly that 27) and
+  the crawl checks (sub-pixel shifts of a 3.5% pattern) could never show. The
+  forced-position diagnostic (`background-position: 2.424px !important` vs
+  `0 0`, `max 13` across the box) is the tell that was finally read
+  correctly: the position DID change pixels — just imperceptibly, because the
+  pattern itself was invisible. Fix is demo-only: section 1's card is now
+  `bg-white` + `text-black` (the exact `test-rainbow-button` precedent for a
+  theme-independent light demo surface), so the default black shadow always
+  has a light card to show against. Re-verified in BOTH colour schemes.
+
+  **THE SECOND REAL FINDING: `attr(data-text)` CONTENT IS EXPOSED TO
+  SCREEN READERS.** A CDP accessibility probe against a plain-span control
+  showed the pseudo's generated content as a second `StaticText` node in
+  Chrome's tree — the earlier docs claim ("generated content is never
+  announced") was wrong. The Accessibility section now discloses that a
+  screen reader may announce the phrase twice and recommends short headings
+  over running body copy.
+
+  **THE TAILWIND V4 VARIANT RULE, RESTATED.** `after:animate-line-shadow`
+  only emits for utilities the engine itself generated; a v4 project whose
+  animation came from a pasted `@layer utilities` block would silently ship
+  an un-animated shadow. Hence `@utility animate-line-shadow` in both
+  `init.ts`'s `THEME_CSS_BLOCK` and `app/globals.css`, with
+  `animation-duration: var(--shadow-duration, 2s)` written in the RULE BODY
+  so the fallback resolves on each `::after` — proven live: four instances on
+  one page reported distinct computed durations of 2s/3s/4s/1.5s from their
+  own inline styles.
+
+  VERIFIED. `npx tsc --noEmit` clean; `npm run lint` 0 errors (5
+  pre-existing warnings: 4 `<img>` in test-orbiting-circles + 1 in
+  registry/avatar-circles); `npm run build` succeeds with both new routes
+  `○ (Static)`; `cd packages/cli && npm run build` clean. The built CSS was
+  read directly: `@keyframes line-shadow` with `0 0` → `var(--shadow-width)`
+  stops, `.after\:animate-line-shadow:after` carrying
+  `animation-duration: var(--shadow-duration,2s)`, the escaped
+  `.after\:\[background-size\:var\(--shadow-width\)_…\]:after` utility, and
+  the unlayered `prefers-reduced-motion` block killing both
+  `.animate-line-shadow` AND `.after\:animate-line-shadow:after` with
+  `animation: none`. Playwright/Chromium against `next start`, dark scheme:
+  section-1 card `rgb(250,250,250)`, hatch presence on-vs-stripped
+  `max 702, 377 px>100`, crawl over 700ms `max 138` (default) and `max 133`
+  (bold, 1.5s cycle); light scheme: presence `max 693, 385 px>100`, crawl
+  `max 339`, docs preview red pixels `106` on panel `rgb(244,244,245)`;
+  angle 90° + `rgb(239,68,68)` in the computed gradient; `background-size`
+  scaling 0.9/2.88/4.2px for widths 0.03/0.06/0.14em; reduced-motion context
+  → `animation: none`; docs customizer switches duration → 8s and `as` → h1
+  live; zero console/page errors everywhere. Registry invariant: 21
+  components, **0** missing file paths.
+
+  HARNESS NOTES. (1) In this Next 16 repo, `next start` compiles
+  on demand into `.next/dev` — a page edit can be served while
+  `.next/BUILD_ID` still predates it, so "did my edit ship?" must be
+  answered from the served chunk content, not build timestamps.
+  (2) Playwright's `locator.screenshot()` defaults `animations:
+  "disabled"` (cancels infinite animations) — crawl checks must use
+  `animations="allow"` or a CDP `Page.captureScreenshot` clip. (3) The site
+  runs `defaultTheme="system"`: any visual fixture that assumes a
+  background must pin `color_scheme="dark"|"light"` explicitly, because
+  `bg-dead-50` and `bg-dead-950` INVERT between schemes.
+
+  RELEASE. Single feature commit
+  `feat: add animated line-shadow text component for v0.1.17` carrying the
+  bump, tag `v0.1.17` on it, both pushed — GitHub Release UI click and the
+  manual `npm publish` commands handed to the owner (the spec's step 5/9).
