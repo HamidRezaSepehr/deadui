@@ -22,10 +22,21 @@ symmetric 0.23 → 30 → 0.23 profile. `height` is an inline style (any CSS len
 works) and `zIndex` is a Tailwind class. Zero dependencies, zero runtime JS.
 Manifest now describes **22 components**. Test page at
 `app/test-gradient-blur/page.tsx` (page-level fixed top+bottom strips over a
-long scroll, a container-level `absolute` fade inside a `relative overflow-y-auto`
-box, a `sticky` fade that stays pinned to the visible edge at every scroll
-position, and a `center-peak` lens card), docs page with a live
+long scroll, a container-level `sticky`/`side="top"` fade pinned to the top
+edge of a `relative overflow-y-auto` box, a container-level `sticky`/
+`side="bottom"` fade with ~1194px of scrollable copy, and a `center-peak`
+lens card — all content horizontally centered), docs page with a live
 `ComponentCustomizer` at `app/docs/components/gradient-blur/page.mdx`.
+
+**TEST-PAGE REVISION (owner request, post-release).** Sections 2/3 are
+now both container-level sticky demos — `side="top"` (FIRST child, pinned
+to the container's top edge while text scrolls under it) and
+`side="bottom"` (LAST child, 15 paragraphs / ~1194px of scroll) —
+replacing the old `absolute` demo whose blur travels with the scrolled
+content, and the page's content is horizontally centered
+(`flex flex-col items-center` on the root). Registry component, docs and
+CLI untouched; the `v0.1.18` npm payload is unchanged. 17/17 browser
+assertions on the revision (see Completed #51).
 
 **THE SPEC'S `v0.1.17` IS BURNED — Feature 41 SHIPS AS `v0.1.18`**
 (owner-confirmed; Feature 40 Line Shadow Text already consumed `v0.1.17` — tag
@@ -1287,6 +1298,26 @@ both packages, 7 curl cases against the live route, and
     build / CLI build clean, 27/27 browser assertions (mask reversal,
     webkit mirrors, container pinning, customizer controls), zero
     console/page errors.
+
+    **POST-RELEASE DEMO REVISION (owner request).** The old section 2
+    showed the `absolute` container demo, whose blur travels with the
+    scrolled content (the empirical fact above) — the owner asked for a
+    container fade that STAYS put instead. Section 2 is now "STICKY TOP
+    (CONTAINER LEVEL)": a `position="sticky" side="top"` blur as the
+    FIRST child of a `relative overflow-y-auto` box, pinned to the
+    container's top edge at every scroll position with the text sliding
+    underneath it. Section 3 (sticky bottom) gained 10 more paragraphs
+    (scroll range 414px → 1194px) so the pinning is visible across a
+    long scroll, and the whole page's content is now horizontally
+    centered (`flex flex-col items-center` on the root). Verified with a
+    fresh 17/17 Playwright suite: all sections centered at x=316/w=768
+    in a 1400px viewport; sticky-top bounding box pixel-identical at
+    rest and after a 300px container scroll; content confirmed scrolled
+    under the pinned band; sticky-bottom still pinned at full scroll;
+    both page-level fixed strips unaffected; zero console/page errors.
+    Docs page, registry component, registry.json and the CLI are
+    untouched, so the `v0.1.18` npm payload is unchanged — the tag stays
+    where it is.
 
 ## In Progress
 
