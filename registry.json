@@ -1,6 +1,20 @@
 {
   "components": [
     {
+      "name": "gradient-blur",
+      "title": "Gradient Blur",
+      "description": "A smooth, multi-layered backdrop blur effect with gradient masking for elegant content fade-outs.",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/gradient-blur/gradient-blur.tsx",
+          "target": "components/ui/gradient-blur.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "line-shadow-text",
       "title": "Line Shadow Text",
       "description": "Animated diagonal line shadow sweeping behind text, with configurable colour, angle, offset, width and speed.",

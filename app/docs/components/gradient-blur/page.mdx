@@ -1,0 +1,155 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GradientBlur } from "@/registry/gradient-blur"
+
+export const metadata = {
+  title: "Gradient Blur",
+  description:
+    "A smooth, multi-layered backdrop blur effect with gradient masking for elegant content fade-outs.",
+}
+
+# Gradient Blur
+
+Eight stacked backdrop-blur layers, each masked to its own gradient band, dissolve
+content into glass instead of a hard cutoff. Fade the edges of a page, the bottom of
+a scrollable card, or the middle of a panel — the ramp is pure CSS, and no
+JavaScript runs while it paints.
+
+## Preview
+
+<ComponentCustomizer
+  component={GradientBlur}
+  defaultProps={{
+    variant: "bottom-to-top",
+    position: "absolute",
+    side: "bottom",
+    height: "100px",
+  }}
+  controls={{
+    variant: { type: "select", options: ["bottom-to-top", "center-peak"] },
+    position: { type: "select", options: ["absolute", "fixed", "sticky"] },
+    side: { type: "select", options: ["bottom", "top"] },
+    height: { type: "select", options: ["48px", "80px", "100px", "160px", "240px"] },
+  }}
+  className="not-prose my-8"
+/>
+
+The preview defaults to `position="absolute"` so the blur anchors to the preview
+box itself. Switch it to `fixed` to see the page-level behaviour — the strip will
+pin to your viewport until you switch it back.
+
+## Use cases
+
+**Page-level fade.** `position="fixed"` pins the strip to a viewport edge
+regardless of where it sits in the tree — the classic fold fade for heroes and
+long articles. `side="bottom"` (default) dissolves content into the bottom edge;
+`side="top"` reverses the blur ramp and the mask stops so the strongest blur
+sits against the top edge and decays downward.
+
+**Container-level fade.** `position="absolute"` anchors to the nearest positioned
+ancestor. Put it inside a `relative` scroll container and only *that* box fades —
+the page around it is untouched. An absolute overlay lives in the scrolled
+content, so it travels with the content once the box scrolls; if you need the
+fade glued to the visible edge at every scroll position, use `position="sticky"`
+as the **last** child (for `side="bottom"`) or the **first** child (for
+`side="top"`).
+
+## Installation
+
+<InstallTabs componentName="gradient-blur" tier="free" />
+
+No dependencies to install and no setup to run — the component ships as plain
+divs with inline `backdrop-filter` / `mask-image` styles.
+
+## Usage
+
+### Fixed page-level fade
+
+```tsx
+import { GradientBlur } from "@/components/ui/gradient-blur"
+
+export function Page() {
+  return (
+    <>
+      <main>{/* your content */}</main>
+
+      {/* Fades content into the bottom of the viewport */}
+      <GradientBlur />
+
+      {/* Fades content out of the top of the viewport */}
+      <GradientBlur side="top" />
+    </>
+  )
+}
+```
+
+### Absolute container-level fade
+
+`position="absolute"` requires a positioned parent — wrap the scrollable area in
+`relative` (or any `position` other than `static`) so the blur has a containing
+block to anchor to.
+
+```tsx
+<div className="relative h-[420px] overflow-y-auto">
+  <Feed />
+  <GradientBlur position="absolute" side="bottom" height="80px" />
+</div>
+```
+
+### Sticky fade that tracks the visible edge
+
+```tsx
+<div className="relative h-[420px] overflow-y-auto">
+  <Feed />
+  {/* Last child for side="bottom"; first child for side="top" */}
+  <GradientBlur position="sticky" side="bottom" height="80px" />
+</div>
+```
+
+### Center-peak band
+
+```tsx
+<div className="relative h-[280px] overflow-hidden">
+  <Card />
+  <GradientBlur
+    position="absolute"
+    side="bottom"
+    variant="center-peak"
+    height="100%"
+  />
+</div>
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `variant` | `"bottom-to-top" \| "center-peak"` | `"bottom-to-top"` | Blur profile — a monotonic ramp towards the edge, or a symmetric profile that peaks in the middle of the band. |
+| `position` | `"fixed" \| "absolute" \| "sticky"` | `"fixed"` | Positioning strategy applied to the root. `fixed` pins to the viewport, `absolute` anchors to the nearest positioned ancestor, `sticky` tracks the visible edge of the nearest scroll container. |
+| `side` | `"top" \| "bottom"` | `"bottom"` | Which edge the blur fades from. `top` reverses both the blur values and the mask stops. |
+| `height` | `string` | `"100px"` | Height of the blur band, e.g. `"100px"`, `"8rem"`, `"100%"`. Applied as an inline style so any CSS length works. |
+| `zIndex` | `string` | `"z-50"` | Tailwind z-index class for the overlay, e.g. `"z-40"`, `"z-[100]"`. Pass a literal class string so Tailwind can see it. |
+| `className` | `string` | — | Merged after the component's base and position classes. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the rendered element. |
+
+## Dependencies
+
+- None.
+
+## Performance
+
+- Ten DOM nodes total (root + layers wrapper + eight bands) and no JavaScript at
+  runtime — the ramp is entirely CSS custom properties on `backdrop-filter`.
+- `backdrop-filter` is composited on the GPU; the eight layers are masked bands of
+  one composited surface group, so there is no layout work per frame.
+- Masks deliberately overshoot the band (stops run 0% → 125%) so no layer paints a
+  hard line inside the visible strip.
+
+## Accessibility
+
+- The overlay is `pointer-events-none`, so content underneath stays clickable,
+  selectable and scrollable at every blur strength.
+- The blur is purely decorative: nothing is communicated by it alone, and the
+  faded content remains in the DOM and in the accessibility tree.
+- There is no motion to reduce — the effect is a static composite, so
+  `prefers-reduced-motion` needs no special handling.

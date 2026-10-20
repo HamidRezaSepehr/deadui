@@ -5,49 +5,55 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 40 (Line Shadow Text)
+Phase 1: Component Implementation — Feature 41 (Gradient Blur)
 
 ## Current Goal
 
-**Feature 40: Line Shadow Text (Free) — animated diagonal line-shadow hatch
-crawling behind the glyphs** — complete. `registry/line-shadow-text/line-shadow-text.tsx`
-renders a `motion` element whose `::after` mirrors the text through
-`content: attr(data-text)` and paints a tiled diagonal gradient clipped to those
-glyphs with `background-clip: text`, sitting `shadowOffset` behind the real
-text. Every visual knob (`shadowColor`, `shadowOffset`, `shadowWidth`,
-`angle`, `duration`, `as`) is a prop that only writes CSS custom properties —
-zero JavaScript runs while the hatch animates. The `line-shadow` keyframe and
-`animate-line-shadow` utility ship from `deadui init` (v3 `theme.extend` + v4
-`@utility`, the dual-injection pattern from Feature 25) and from
-`app/globals.css` for the docs site. Test page at
-`app/test-line-shadow-text/page.tsx` (4 sections), docs page with a live
-`ComponentCustomizer` at `app/docs/components/line-shadow-text/page.mdx`.
-Manifest now describes **21 components**. **The spec's `v0.1.16` is burned —
-Feature 40 ships as `v0.1.17`** (owner-confirmed; Feature 39 Text Annotation
-already consumed `v0.1.16` — see Next Up #17).
+**Feature 41: Gradient Blur (Free) — eight-layer backdrop-blur fade with
+gradient masking** — complete. `registry/gradient-blur/gradient-blur.tsx`
+stacks eight absolutely positioned `backdrop-filter` layers inside the overlay,
+each masked to its own `linear-gradient` band whose stops advance by 12.5% per
+layer, so the compounded falloff reads as continuous glass. Every positioning
+need is a prop: `position="fixed" | "absolute" | "sticky"` maps onto the matching
+root classes (`fixed bottom-0 left-0`, `sticky top-0 left-0`, …), `side="top"`
+reverses BOTH the blur array (30px first) and the mask stops (`STOPS_REVERSE`,
+starting at −12.5%), and `variant="center-peak"` swaps the monotonic ramp for a
+symmetric 0.23 → 30 → 0.23 profile. `height` is an inline style (any CSS length
+works) and `zIndex` is a Tailwind class. Zero dependencies, zero runtime JS.
+Manifest now describes **22 components**. Test page at
+`app/test-gradient-blur/page.tsx` (page-level fixed top+bottom strips over a
+long scroll, a container-level `absolute` fade inside a `relative overflow-y-auto`
+box, a `sticky` fade that stays pinned to the visible edge at every scroll
+position, and a `center-peak` lens card), docs page with a live
+`ComponentCustomizer` at `app/docs/components/gradient-blur/page.mdx`.
 
-**Post-release review — four owner-reported follow-ups implemented and
-verified, UNCOMMITTED pending owner direction:** (1) the crawl's visibility
-depended on `angle` (the fixed `(1,1)` keyframe travel has zero projection on
-the gradient axis at 45°/225° — the shipped DEFAULT froze); the component now
-emits `--shadow-travel-x/y` (best of the four tile-grid vectors per angle) and
-the `line-shadow` keyframe in `app/globals.css` + both `init.ts` blocks reads
-it with a `(1,1)` fallback. (2) Test-route example fonts enlarged. (3) The 90°
-example (test section 2 + docs snippet) replaced with 60°. (4) The shadow's
-LAST WORD always painted on a phantom second line: the `::after` mirror was
-positioned with `top/left: var(--shadow-offset)`, so its shrink-to-fit width
-was `W − offset` — one space-break narrower than the real text — and every
-multi-word instance re-wrapped the tail word to a mirrored line 2. Fix:
-`after:inset-0` (identical wrap width) + paint-only
-`[translate:var(--shadow-offset)_var(--shadow-offset)]`. Commit / `v0.1.18`
-release decision pending — the keyframe change ships through the CLI. Full
-numbers in the Session Notes.
+**THE SPEC'S `v0.1.17` IS BURNED — Feature 41 SHIPS AS `v0.1.18`**
+(owner-confirmed; Feature 40 Line Shadow Text already consumed `v0.1.17` — tag
+exists on `origin` pointing at `9045567`; see Next Up #18). `packages/cli`
+bumped to `0.1.18`, tag `v0.1.18` created. GitHub Actions is not currently
+publishing, so the release is a MANUAL npm publish from the owner's machine —
+exact commands handed over in the session report.
 
-Also from the same review: the docs customizer preview now defaults to a
-single word (`Shadow`) at `text-6xl md:text-7xl` — the old multi-word
-`text-4xl` default made the hatch too small to judge (in-box crawl signal at
-the default 45° went `89 → 949 px>100`; mirror still single-line and equal
-to the parent box, fits the panel, zero console errors).
+Full verification: `npx tsc --noEmit` clean, `npm run lint` clean (0 errors;
+only the 5 pre-existing `<img>` warnings), `npm run build` 52/52 routes (both
+new routes `○ (Static)`), `cd packages/cli && npm run build` clean
+(`deadui@0.1.18`), and 27/27 Playwright/Chromium assertions against
+`next start` (port 3001; an 11-hour stale `next-server` on 3000 was killed
+first — the Feature 30 trap): both fixed strips pinned to the exact viewport
+edges; bottom strip blur values ascending `0.234375 → 30px` and top strip
+exactly reversed with layer-0 mask starting at `−12.5%` while bottom layer-0
+starts at `0%` and layer-7 runs `87.5 → 125%`; `-webkit-` mirrors present in
+the DOM style attribute alongside the standard properties; the container-level
+absolute blur sits on the container's bottom edge at rest inside its
+`relative overflow-y-auto` parent; the sticky blur's bounding box is pixel-
+identical before and after a 260px container scroll (tracks the visible edge);
+`center-peak` reports the symmetric profile with `height: 100%` covering the
+whole card; all overlays `pointer-events-none` with a computed
+`backdrop-filter: blur(30px)`; the docs customizer mounts, anchors its default
+`absolute bottom` preview to the preview box bottom, and its four controls
+(side → top applies the reversal, variant → center-peak, position → fixed →
+sticky) all re-render correctly; docs sidebar lists the component; zero
+console/page errors everywhere.
 
 ## Completed
 
@@ -1234,14 +1240,60 @@ both packages, 7 curl cases against the live route, and
     time rather than capturing a `:root` fallback. v3 consumers get
     `theme.extend.animation` entries where variants work natively.
 
-    Full verification in the Session Notes.
+    Full verification in the Session Notes. The four post-release owner
+    follow-ups (angle-aware crawl travel, enlarged test fonts, 90° → 60°
+    example, and the phantom-second-line mirror fix) were committed in
+    `d9dca91`, `bf6d672` and `9ec775a` and ship with this push.
+
+51. **Feature 41: Gradient Blur (Free)** —
+    `registry/gradient-blur/gradient-blur.tsx` (component) +
+    `registry/gradient-blur/index.ts` (barrel), a `registry.json` entry
+    (`tier: "free"`, `dependencies: []`, single file →
+    `components/ui/gradient-blur.tsx`, `variants: []` — manifest now
+    **22 components**, all `files[].path` values on disk), test page
+    `app/test-gradient-blur/page.tsx` and docs page
+    `app/docs/components/gradient-blur/page.mdx` (live
+    `ComponentCustomizer` with variant/position/side/height controls,
+    InstallTabs, use-cases, four usage snippets, positioning guidance,
+    props table, dependencies/performance/accessibility).
+    `packages/cli` `0.1.17` → **`0.1.18`** (the spec's `v0.1.17` is burned
+    by Feature 40 — see Next Up #18).
+
+    **THE SPEC'S COMPONENT SHIPS AS WRITTEN** (spec verbatim + a `'use
+    client'` directive every registry component carries, which is also
+    what lets the docs MDX pass it to `ComponentCustomizer`): eight
+    masked `backdrop-filter` layers (0.234375 → 30px geometric ramp), the
+    `getMask(i, reverse)` stop walker over 11-stop `STOPS` /
+    `STOPS_REVERSE` arrays, `getBlurValues` reversing for `side="top"`,
+    and the `positionClasses` map producing `fixed|absolute|sticky` ×
+    `top|bottom` root classes. `height` is an inline style (any CSS
+    length, incl. `"100%"`), `zIndex` is a Tailwind class literal.
+
+    **TWO EMPIRICAL FACTS THAT SHAPE THE DEMOS** (measured in Chromium
+    before writing the test page): (1) an `absolute` child of a
+    `relative overflow-y-auto` container is anchored to the container's
+    UNSCROLLED padding box — it sits on the visible bottom at rest and
+    then TRAVELS WITH THE SCROLLED CONTENT, which is why section 2
+    documents the behaviour and section 3 offers the alternative: a
+    `sticky bottom-0` blur placed as the LAST child stays pixel-pinned
+    to the visible edge at every scroll position (proof: identical
+    bounding box before/after a 260px container scroll). (2) The docs
+    preview box is itself `relative overflow-hidden`, so the customizer
+    defaults to `position="absolute"` (anchors inside the preview);
+    choosing `fixed` deliberately pins the strip to the real viewport
+    and choosing `sticky` parks it as a centred band.
+
+    Full verification recorded in the Current Goal section: tsc / lint /
+    build / CLI build clean, 27/27 browser assertions (mask reversal,
+    webkit mirrors, container pinning, customizer controls), zero
+    console/page errors.
 
 ## In Progress
 
-None. Feature 28 (Advanced Marquee), Feature 29 (Text Video Mask) and
-Feature 30 (Click Effect) are complete. v0.1.7 (which carries Text
-Video Mask + Click Effect) is committed and tagged locally — see
-Current Goal for the remaining release steps.
+None. Feature 41 (Gradient Blur) is complete; `v0.1.18` is committed and
+tagged locally. GitHub Actions is not currently publishing, so the owner
+runs the manual npm publish from `packages/cli` — exact commands handed
+over in the session report.
 
 ## Next Up
 
@@ -1436,6 +1488,17 @@ Current Goal for the remaining release steps.
     next-valid-version path (the Feature 25 / Next Up #13 /
     Feature 37 / Feature 38 precedent): manifest `0.1.17`, tag
     `v0.1.17`.
+18. **`v0.1.17` IS BURNED — FEATURE 41 SHIPS AS `v0.1.18`.** The
+    Feature 41 spec says bump to `0.1.17` and tag `v0.1.17`, but Feature
+    40 Line Shadow Text already consumed that exact version: the tag
+    exists on `origin` pointing at `9045567`, and HEAD's manifest was
+    already `0.1.17`. `git tag v0.1.17` fails outright ("already
+    exists"), and re-pointing a published tag needs the force-push that
+    `AGENTS.md` forbids. The owner confirmed the documented
+    next-valid-version path (the #13 / #16 / #17 precedent): manifest
+    `0.1.18`, tag `v0.1.18`. npm has only ever seen `0.1.0`, `0.1.2`
+    and `0.1.5`, so the manual publish will land `0.1.18` directly —
+    `0.1.6`–`0.1.17` exist only as git tags.
 
 
 ## Component Status
@@ -1463,6 +1526,7 @@ Current Goal for the remaining release steps.
 | 17 | Mouse Lens Effect | Pro | COMPLETE (Feature 36) | ✅ (F36) | — (configurable via props: srcOutside, srcInside, squareSize, lensDistortion, rgbShiftIntensity, mouseEasing)
 | 18 | Dock | Free | COMPLETE (Feature 38) | ✅ (F38) | — (configurable via props: iconSize, iconMagnification, iconDistance, disableMagnification, direction)
 | 19 | Line Shadow Text | Free | COMPLETE (Feature 40) | ✅ (F40) | — (configurable via props: shadowColor, shadowOffset, shadowWidth, angle, duration, as) |
+| 20 | Gradient Blur | Free | COMPLETE (Feature 41) | ✅ (F41) | — (configurable via props: variant bottom-to-top/center-peak, position fixed/absolute/sticky, side top/bottom, height, zIndex) |
 
 ## Open Questions
 
