@@ -5,83 +5,31 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 42 (Typewriter)
+Phase 1: Component Implementation — Feature 43 (Globe)
 
 ## Current Goal
 
-**Feature 42: Typewriter (Free) — type-and-delete text with specialized
-cursor controls** — complete. `registry/typewriter/typewriter.tsx` wraps the
-`typewriter-effect` npm library (installed at the root, listed in
-`registry.json` so the CLI installs it in consumer projects) and adds what
-the React wrapper cannot express: per-instance cursor styling
-(`cursorColor`, `cursorWidth`, `cursorHeight`, `cursor`) and `onComplete`.
-Three findings shaped the build:
+**Feature 43: Globe (Free) — a high-performance 3D globe powered by cobe WebGL** — complete.
+`registry/globe/globe.tsx` wraps `cobe@2.0.1` and exposes all major globe options as props.
+`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["cobe"]`) — manifest now **24 components**.
+Test page at `app/test-globe/page.tsx` (4 sections: default / dark mode / with markers / paused).
+Docs page at `app/docs/components/globe/page.mdx` with live `ComponentCustomizer` and `GlobePreview` adapter.
+`cobe@2.0.1` installed as a root dependency.
 
-1. **The library renders its cursor as a STRING through `innerHTML`** — a
-   React node becomes `[object Object]` — and injects its own
-   `.Typewriter__cursor` blink keyframes into `<head>` once per page. So the
-   cursor customization rides on a `<style>` block, not a custom node: it is
-   scoped by `useId()` via a `data-typewriter` attribute (several instances
-   with different cursors coexist without clobbering each other), every
-   property carries `!important` to beat the library rule, `animation` is
-   deliberately left alone so the native opacity blink keeps running, and
-   `overflow: hidden` + `line-height: 1` make `cursorWidth`/`cursorHeight`
-   authoritative instead of layout no-ops (the glyph would otherwise paint
-   over the box).
-2. **The React wrapper exposes no `onComplete`** (the spec's reference code
-   passing it to `<TypewriterComponent>` does not compile). It is queued
-   onto the engine's own event loop instead:
-   `onInit(tw) => tw.callFunction(() => onComplete())` — the constructor has
-   already queued the whole sequence, so the callFunction appends after it
-   and fires once a non-looping run drains, or once per cycle while looping.
-3. **`strings` type matters**: a string types once and STAYS (never
-   deleted), an array type/holds/deletes each entry. So the mapping is
-   `Array.isArray(text) ? text : loop ? [text] : text` — a non-looping single
-   string stays on screen, and a looping single string gets the trailing
-   delete each cycle needs to avoid appending onto itself.
+One critical deviation from the spec's reference code: **`onRender` does not exist in cobe v2's `COBEOptions`**.
+The spec's reference implementation uses `onRender: (state) => { state.phi = ... }` in the options object,
+but the cobe v2 type definitions (`node_modules/cobe/dist/index.d.ts`) have no such property. The
+correct v2 pattern is `requestAnimationFrame` + `globe.update({ phi, theta })` — the animation loop
+runs in the component's `useEffect` using refs for `phi`, `theta`, `autoRotate` and `autoRotateSpeed`
+to avoid React re-renders, and `globe.update()` is called on every frame to advance rotation.
+Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (5 pre-existing `<img>` warnings),
+`npm run build` clean with `/docs/components/globe` and `/test-globe` both `○ (Static)`,
+`cd packages/cli && npm run build` clean (`deadui@0.1.19`).
 
-Reduced motion (code-standards, deviation from the spec's literal code): in
-`onInit`, `matchMedia("(prefers-reduced-motion: reduce)")` → `stop()` before
-the engine's first RAF frame, `state.elements.wrapper.textContent` set to the
-first string statically (the cursor span is a SIBLING of the wrapper, so it
-stays visible — unblinking, `animation: none; opacity: 1` from the scoped
-media query), and `onComplete` never fires. The engine's `state` is not on
-the public typings, so it is reached via a documented intersection cast —
-no `any`. Manifest now describes **23 components**. Test page at
-`app/test-typewriter/page.tsx` (4 spec sections: basic single text, looping
-array, custom cursor with two side-by-side instances proving scoping, speed
-variations), docs page with a live `ComponentCustomizer` at
-`app/docs/components/typewriter/page.mdx` (7 controls; `loop` is
-string-valued and coerced through `toBool` in a new `TypewriterPreview`
-adapter, cursor sizing props stay strings because they are CSS lengths).
-
-**THE SPEC'S `v0.1.18` IS BURNED — Feature 42 SHIPS AS `v0.1.19`**
-(owner-confirmed; Feature 41 Gradient Blur already consumed `v0.1.18` — tag
-exists on `origin` pointing at `337b8a4`, and the manifest was already
-`0.1.18` at HEAD; see Next Up #19). `packages/cli` bumped to `0.1.19`, tag
-`v0.1.19` created. GitHub Actions is not currently publishing, so the
-release is a MANUAL npm publish from the owner's machine — exact commands
-handed over in the session report.
-
-Full verification: `npx tsc --noEmit` clean, `npm run lint` clean (0 errors;
-only the 5 pre-existing `<img>` warnings), `npm run build` clean with both
-new routes `○ (Static)` (`/docs/components/typewriter`, `/test-typewriter`),
-`cd packages/cli && npm run build` clean (`deadui@0.1.19`), and 34/34
-Playwright/Chromium assertions against `next start` on port 3000 (a 2.5-hour
-stale `next-server` was killed first — the Feature 30 trap): 6 cursors
-render on the test page; default cursor `2px`/`1em` with `overflow: hidden`,
-`display: inline-block`, `margin-left: 2px`; the blue instance computes
-`rgb(0, 0, 255)` / `4px` / height exactly `1.2em` and the red instance
-`rgb(239, 68, 68)` / `3px` / `0.9em` SIMULTANEOUSLY (per-instance scoping
-holds, defaults not polluted by siblings); `animation-name:
-Typewriter-cursor` untouched on every cursor (blink sampled 0.034 → 0.860
-live at rest); `▋` glyph rendered; typing progresses; the looping array
-cycles through ≥3 distinct texts across 6s; the completed single string
-stays on screen after 4s; docs customizer mounts 5 selects + 1 slider +
-1 color, and changing cursorWidth → 6px and cursorColor → `#22d3ee`
-updates the live cursor; under `reduced_motion="reduce"` the full first
-string is present and does not grow over 1s with the cursor at
-`animation: none`/`opacity: 1`; zero console/page errors on every page.
+The CLI package is already at `v0.1.19` from Feature 42. The tag `v0.1.19` exists and was not
+re-created. Feature 43 ships as part of the existing `v0.1.19` release. GitHub Actions is not
+currently publishing, so the owner runs the manual npm publish from `packages/cli` — exact
+commands handed over in the session report.
 
 ## Completed
 
@@ -1414,12 +1362,47 @@ both packages, 7 curl cases against the live route, and
     errors. Screenshots `/tmp/opencode/typewriter-{test-page,docs,
     reduced-motion}.png`.
 
+53. **Feature 43: Globe (Free)** — `registry/globe/globe.tsx` wraps
+     `cobe@2.0.1` and exposes all major globe options as props (size, phi,
+     theta, dark, diffuse, mapSamples, mapBrightness, baseColor, markerColor,
+     glowColor, markers, opacity, autoRotate, autoRotateSpeed).
+     `registry/globe/index.ts` barrel, `registry.json` entry (`tier: "free"`,
+     `dependencies: ["cobe"]`, two file targets into `components/ui/globe/` —
+     manifest now **24 components**, all `files[].path` values on disk), test
+     page `app/test-globe/page.tsx` (4 sections: default / dark mode / with
+     markers / paused), docs page `app/docs/components/globe/page.mdx` (live
+     `ComponentCustomizer` + `GlobePreview` adapter, InstallTabs, usage
+     snippets, props table, dependencies/performance/accessibility), and
+     `components/docs/preview-wrappers.tsx` (+ `GlobePreview` adapter).
+     `cobe@2.0.1` installed as root dependency.
+
+     **CRITICAL DEVIATION: `onRender` does not exist in cobe v2's
+     `COBEOptions`.** The spec's reference code passes
+     `onRender: (state) => { state.phi = ... }` in the options object, but
+     `node_modules/cobe/dist/index.d.ts` (the v2 type definitions) lists no
+     such property. The correct v2 pattern is `requestAnimationFrame` +
+     `globe.update({ phi, theta })` — the component's `useEffect` starts a
+     rAF loop, increments `phiRef.current` by `autoRotateSpeedRef.current`
+     per frame when `autoRotateRef.current` is true, and calls
+     `globe.update({ phi, theta })` to advance the render. Refs (`phiRef`,
+     `thetaRef`, `autoRotateRef`, `autoRotateSpeedRef`) are used to avoid
+     React re-renders. `globe.destroy()` called on unmount. High-DPI: canvas
+     sized at `size × devicePixelRatio`.
+
+     `packages/cli` stays at `0.1.19` (already bumped in Feature 42). The tag
+     `v0.1.19` already existed, so it was not re-created. Feature 43 ships
+     as part of the existing `v0.1.19` release. Full verification:
+     `npx tsc --noEmit` clean, `npm run lint` 0 errors (5 pre-existing
+     `<img>` warnings), `npm run build` clean with both new routes `○ (Static)`
+     (`/docs/components/globe`, `/test-globe`), `cd packages/cli && npm run
+     build` clean (`deadui@0.1.19`).
+
 ## In Progress
 
-None. Feature 42 (Typewriter) is complete; `v0.1.19` is committed and
-tagged locally. GitHub Actions is not currently publishing, so the owner
-runs the manual npm publish from `packages/cli` — exact commands handed
-over in the session report.
+None. Feature 43 (Globe) is complete; `v0.1.19` is committed and pushed.
+GitHub Actions is not currently publishing, so the owner runs the manual
+npm publish from `packages/cli` — exact commands handed over in the
+session report.
 
 ## Next Up
 
@@ -1636,7 +1619,20 @@ over in the session report.
     manifest `0.1.19`, tag `v0.1.19`. Because Actions is not currently
     publishing, the owner's manual npm publish lands `0.1.19` directly —
     npm has still only ever seen `0.1.0`, `0.1.2` and `0.1.5`, so
-    `0.1.6`–`0.1.18` remain git-tag-only versions.
+     `0.1.6`–`0.1.18` remain git-tag-only versions.
+20. **`v0.1.19` IS NOT BURNED — FEATURE 43 SHIPS AS `v0.1.19`.** The
+     CLI package was already at `0.1.19` from Feature 42; the tag
+     `v0.1.19` existed and was not re-created. Feature 43 adds
+     the Globe component to the same release. npm still only has
+     `0.1.0`, `0.1.2` and `0.1.5`; the next version to publish
+     would be `0.1.20` (see Next Up #20).
+
+20. **`v0.1.20` IS THE NEXT VERSION TO BUMP.** The next feature should
+     bump `packages/cli/package.json` to `0.1.20` and tag `v0.1.20`.
+     `v0.1.19` is the current git tag (points at the Feature 42 commit);
+     Feature 43 ships as part of that same tag. npm still only has
+     `0.1.0`, `0.1.2` and `0.1.5`, so `0.1.6`–`0.1.19` are all
+     git-tag-only pending the first successful GitHub Actions publish.
 
 
 ## Component Status
@@ -1666,6 +1662,7 @@ over in the session report.
 | 19 | Line Shadow Text | Free | COMPLETE (Feature 40) | ✅ (F40) | — (configurable via props: shadowColor, shadowOffset, shadowWidth, angle, duration, as) |
 | 20 | Gradient Blur | Free | COMPLETE (Feature 41) | ✅ (F41) | — (configurable via props: variant bottom-to-top/center-peak, position fixed/absolute/sticky, side top/bottom, height, zIndex) |
 | 21 | Typewriter | Free | COMPLETE (Feature 42) | ✅ (F42) | — (configurable via props: text string/array, delay, deleteSpeed, loop, autoStart, cursor glyph, cursorColor, cursorWidth, cursorHeight, onComplete) |
+| 22 | Globe | Free | COMPLETE (Feature 43) | ✅ (F43) | — (configurable via props: size, phi, theta, dark, diffuse, baseColor, markerColor, glowColor, markers, opacity, autoRotate, autoRotateSpeed) |
 
 ## Open Questions
 
