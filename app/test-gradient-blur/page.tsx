@@ -1,5 +1,24 @@
 import { GradientBlur } from '@/registry/gradient-blur'
 
+const frameSrc = (frame: number) =>
+  `/image-sequence/ezgif-frame-${String(frame).padStart(3, '0')}.jpg`
+
+function FrameImg({
+  frame,
+  alt,
+  className,
+}: {
+  frame: number
+  alt: string
+  className?: string
+}) {
+  return (
+    // Static local frame: next/image would only add runtime negotiation here.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={frameSrc(frame)} alt={alt} className={className} />
+  )
+}
+
 export default function TestGradientBlurPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center bg-dead-950 text-dead-50">
@@ -43,6 +62,19 @@ export default function TestGradientBlurPage() {
             dissolve into the fold, or a long article whose first and last lines
             never butt against the browser chrome with a razor-sharp edge.
           </p>
+
+          <FrameImg
+            frame={12}
+            alt="Photograph scrolling past the viewport-fixed fades"
+            className="h-64 w-full rounded-md object-cover"
+          />
+
+          <p>
+            Images melt the same way text does — this one crosses the bottom
+            strip as you scroll, its lower edge thickening into 30px of glass
+            before the frame ever moves.
+          </p>
+
           <p>
             Both strips are <code className="text-dead-50">pointer-events-none</code> —
             they blur what is behind them and never intercept a single click,
@@ -77,6 +109,13 @@ export default function TestGradientBlurPage() {
               underneath it. The fade belongs to the container, not the page: only
               the content of <em>this</em> box dissolves.
             </p>
+
+            <FrameImg
+              frame={25}
+              alt="Photograph sliding under the sticky top fade"
+              className="h-56 w-full rounded-md object-cover"
+            />
+
             <p>
               Scroll down: the band never moves. A sticky element is offset from
               its flow position to keep its inset edge inside the scrollport —
@@ -119,6 +158,13 @@ export default function TestGradientBlurPage() {
               deliberately overshooting the band so the outermost layer never
               paints a hard line inside the visible strip.
             </p>
+
+            <FrameImg
+              frame={70}
+              alt="Second photograph passing through the pinned top fade"
+              className="h-56 w-full rounded-md object-cover"
+            />
+
             <p>
               Keep scrolling — the fade stays pinned to the top no matter how far
               you go.
@@ -167,6 +213,13 @@ export default function TestGradientBlurPage() {
               never drifts, never jumps, and releases only when you reach the end
               of the content.
             </p>
+
+            <FrameImg
+              frame={40}
+              alt="Photograph fading into the sticky bottom band"
+              className="h-56 w-full rounded-md object-cover"
+            />
+
             <p>
               The blur values double every layer — 0.23, 0.47, 0.94, 1.875, 3.75,
               7.5, 15, 30 — a geometric ramp that matches how real glass
@@ -205,6 +258,13 @@ export default function TestGradientBlurPage() {
               box the last paragraphs sit comfortably above the parked band
               instead of underneath it.
             </p>
+
+            <FrameImg
+              frame={85}
+              alt="Second photograph crossing the tracked bottom edge"
+              className="h-56 w-full rounded-md object-cover"
+            />
+
             <p>
               More filler, more scroll: the mask for layer i runs transparent at
               stops[i]%, opaque from stops[i+1]% to stops[i+2]%, and transparent
@@ -216,6 +276,13 @@ export default function TestGradientBlurPage() {
               bottom edge; the lightest (0.23px) is the first, almost invisible.
               Your eye reads the stack as a single sheet of thickening glass.
             </p>
+
+            <FrameImg
+              frame={110}
+              alt="Third photograph melting into the parked bottom fade"
+              className="h-56 w-full rounded-md object-cover"
+            />
+
             <p>
               Still scrolling — good. The fade has not moved a pixel. That is
               sticky layout doing its job, not JavaScript.
@@ -259,14 +326,21 @@ export default function TestGradientBlurPage() {
         </p>
 
         <div className="relative h-[280px] overflow-hidden rounded-lg border border-dead-800 bg-gradient-to-br from-dead-900 via-dead-800 to-dead-900">
-          <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
+          <FrameImg
+            frame={95}
+            alt="Photograph behind the frosted lens card"
+            className="absolute inset-0 z-0 h-full w-full object-cover brightness-[0.65]"
+          />
+
+          <div className="relative flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
             <p className="text-4xl font-bold tracking-tight md:text-5xl">
               Frosted Lens
             </p>
-            <p className="max-w-sm font-mono text-sm leading-relaxed text-dead-300">
-              The text in the middle of the card is smeared by the two 30px
-              center layers; the title above and the caption below stay sharp
-              because the outer layers of the peak profile are nearly clear.
+            <p className="max-w-sm font-mono text-sm leading-relaxed text-dead-50">
+              The photograph behind this card is smeared through the two 30px
+              center layers while its top and bottom edges stay razor-sharp;
+              the title is milky and the caption under it nearly crisp, because
+              the outer layers of the peak profile are almost clear.
             </p>
           </div>
 

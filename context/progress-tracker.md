@@ -5,66 +5,83 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 41 (Gradient Blur)
+Phase 1: Component Implementation — Feature 42 (Typewriter)
 
 ## Current Goal
 
-**Feature 41: Gradient Blur (Free) — eight-layer backdrop-blur fade with
-gradient masking** — complete. `registry/gradient-blur/gradient-blur.tsx`
-stacks eight absolutely positioned `backdrop-filter` layers inside the overlay,
-each masked to its own `linear-gradient` band whose stops advance by 12.5% per
-layer, so the compounded falloff reads as continuous glass. Every positioning
-need is a prop: `position="fixed" | "absolute" | "sticky"` maps onto the matching
-root classes (`fixed bottom-0 left-0`, `sticky top-0 left-0`, …), `side="top"`
-reverses BOTH the blur array (30px first) and the mask stops (`STOPS_REVERSE`,
-starting at −12.5%), and `variant="center-peak"` swaps the monotonic ramp for a
-symmetric 0.23 → 30 → 0.23 profile. `height` is an inline style (any CSS length
-works) and `zIndex` is a Tailwind class. Zero dependencies, zero runtime JS.
-Manifest now describes **22 components**. Test page at
-`app/test-gradient-blur/page.tsx` (page-level fixed top+bottom strips over a
-long scroll, a container-level `sticky`/`side="top"` fade pinned to the top
-edge of a `relative overflow-y-auto` box, a container-level `sticky`/
-`side="bottom"` fade with ~1194px of scrollable copy, and a `center-peak`
-lens card — all content horizontally centered), docs page with a live
-`ComponentCustomizer` at `app/docs/components/gradient-blur/page.mdx`.
+**Feature 42: Typewriter (Free) — type-and-delete text with specialized
+cursor controls** — complete. `registry/typewriter/typewriter.tsx` wraps the
+`typewriter-effect` npm library (installed at the root, listed in
+`registry.json` so the CLI installs it in consumer projects) and adds what
+the React wrapper cannot express: per-instance cursor styling
+(`cursorColor`, `cursorWidth`, `cursorHeight`, `cursor`) and `onComplete`.
+Three findings shaped the build:
 
-**TEST-PAGE REVISION (owner request, post-release).** Sections 2/3 are
-now both container-level sticky demos — `side="top"` (FIRST child, pinned
-to the container's top edge while text scrolls under it) and
-`side="bottom"` (LAST child, 15 paragraphs / ~1194px of scroll) —
-replacing the old `absolute` demo whose blur travels with the scrolled
-content, and the page's content is horizontally centered
-(`flex flex-col items-center` on the root). Registry component, docs and
-CLI untouched; the `v0.1.18` npm payload is unchanged. 17/17 browser
-assertions on the revision (see Completed #51).
+1. **The library renders its cursor as a STRING through `innerHTML`** — a
+   React node becomes `[object Object]` — and injects its own
+   `.Typewriter__cursor` blink keyframes into `<head>` once per page. So the
+   cursor customization rides on a `<style>` block, not a custom node: it is
+   scoped by `useId()` via a `data-typewriter` attribute (several instances
+   with different cursors coexist without clobbering each other), every
+   property carries `!important` to beat the library rule, `animation` is
+   deliberately left alone so the native opacity blink keeps running, and
+   `overflow: hidden` + `line-height: 1` make `cursorWidth`/`cursorHeight`
+   authoritative instead of layout no-ops (the glyph would otherwise paint
+   over the box).
+2. **The React wrapper exposes no `onComplete`** (the spec's reference code
+   passing it to `<TypewriterComponent>` does not compile). It is queued
+   onto the engine's own event loop instead:
+   `onInit(tw) => tw.callFunction(() => onComplete())` — the constructor has
+   already queued the whole sequence, so the callFunction appends after it
+   and fires once a non-looping run drains, or once per cycle while looping.
+3. **`strings` type matters**: a string types once and STAYS (never
+   deleted), an array type/holds/deletes each entry. So the mapping is
+   `Array.isArray(text) ? text : loop ? [text] : text` — a non-looping single
+   string stays on screen, and a looping single string gets the trailing
+   delete each cycle needs to avoid appending onto itself.
 
-**THE SPEC'S `v0.1.17` IS BURNED — Feature 41 SHIPS AS `v0.1.18`**
-(owner-confirmed; Feature 40 Line Shadow Text already consumed `v0.1.17` — tag
-exists on `origin` pointing at `9045567`; see Next Up #18). `packages/cli`
-bumped to `0.1.18`, tag `v0.1.18` created. GitHub Actions is not currently
-publishing, so the release is a MANUAL npm publish from the owner's machine —
-exact commands handed over in the session report.
+Reduced motion (code-standards, deviation from the spec's literal code): in
+`onInit`, `matchMedia("(prefers-reduced-motion: reduce)")` → `stop()` before
+the engine's first RAF frame, `state.elements.wrapper.textContent` set to the
+first string statically (the cursor span is a SIBLING of the wrapper, so it
+stays visible — unblinking, `animation: none; opacity: 1` from the scoped
+media query), and `onComplete` never fires. The engine's `state` is not on
+the public typings, so it is reached via a documented intersection cast —
+no `any`. Manifest now describes **23 components**. Test page at
+`app/test-typewriter/page.tsx` (4 spec sections: basic single text, looping
+array, custom cursor with two side-by-side instances proving scoping, speed
+variations), docs page with a live `ComponentCustomizer` at
+`app/docs/components/typewriter/page.mdx` (7 controls; `loop` is
+string-valued and coerced through `toBool` in a new `TypewriterPreview`
+adapter, cursor sizing props stay strings because they are CSS lengths).
+
+**THE SPEC'S `v0.1.18` IS BURNED — Feature 42 SHIPS AS `v0.1.19`**
+(owner-confirmed; Feature 41 Gradient Blur already consumed `v0.1.18` — tag
+exists on `origin` pointing at `337b8a4`, and the manifest was already
+`0.1.18` at HEAD; see Next Up #19). `packages/cli` bumped to `0.1.19`, tag
+`v0.1.19` created. GitHub Actions is not currently publishing, so the
+release is a MANUAL npm publish from the owner's machine — exact commands
+handed over in the session report.
 
 Full verification: `npx tsc --noEmit` clean, `npm run lint` clean (0 errors;
-only the 5 pre-existing `<img>` warnings), `npm run build` 52/52 routes (both
-new routes `○ (Static)`), `cd packages/cli && npm run build` clean
-(`deadui@0.1.18`), and 27/27 Playwright/Chromium assertions against
-`next start` (port 3001; an 11-hour stale `next-server` on 3000 was killed
-first — the Feature 30 trap): both fixed strips pinned to the exact viewport
-edges; bottom strip blur values ascending `0.234375 → 30px` and top strip
-exactly reversed with layer-0 mask starting at `−12.5%` while bottom layer-0
-starts at `0%` and layer-7 runs `87.5 → 125%`; `-webkit-` mirrors present in
-the DOM style attribute alongside the standard properties; the container-level
-absolute blur sits on the container's bottom edge at rest inside its
-`relative overflow-y-auto` parent; the sticky blur's bounding box is pixel-
-identical before and after a 260px container scroll (tracks the visible edge);
-`center-peak` reports the symmetric profile with `height: 100%` covering the
-whole card; all overlays `pointer-events-none` with a computed
-`backdrop-filter: blur(30px)`; the docs customizer mounts, anchors its default
-`absolute bottom` preview to the preview box bottom, and its four controls
-(side → top applies the reversal, variant → center-peak, position → fixed →
-sticky) all re-render correctly; docs sidebar lists the component; zero
-console/page errors everywhere.
+only the 5 pre-existing `<img>` warnings), `npm run build` clean with both
+new routes `○ (Static)` (`/docs/components/typewriter`, `/test-typewriter`),
+`cd packages/cli && npm run build` clean (`deadui@0.1.19`), and 34/34
+Playwright/Chromium assertions against `next start` on port 3000 (a 2.5-hour
+stale `next-server` was killed first — the Feature 30 trap): 6 cursors
+render on the test page; default cursor `2px`/`1em` with `overflow: hidden`,
+`display: inline-block`, `margin-left: 2px`; the blue instance computes
+`rgb(0, 0, 255)` / `4px` / height exactly `1.2em` and the red instance
+`rgb(239, 68, 68)` / `3px` / `0.9em` SIMULTANEOUSLY (per-instance scoping
+holds, defaults not polluted by siblings); `animation-name:
+Typewriter-cursor` untouched on every cursor (blink sampled 0.034 → 0.860
+live at rest); `▋` glyph rendered; typing progresses; the looping array
+cycles through ≥3 distinct texts across 6s; the completed single string
+stays on screen after 4s; docs customizer mounts 5 selects + 1 slider +
+1 color, and changing cursorWidth → 6px and cursorColor → `#22d3ee`
+updates the live cursor; under `reduced_motion="reduce"` the full first
+string is present and does not grow over 1s with the cursor at
+`animation: none`/`opacity: 1`; zero console/page errors on every page.
 
 ## Completed
 
@@ -1319,9 +1336,87 @@ both packages, 7 curl cases against the live route, and
     untouched, so the `v0.1.18` npm payload is unchanged — the tag stays
     where it is.
 
+    **IMAGE PASS (owner request).** The same page now shows the blur
+    over photographs instead of only type: a `frameSrc`/`FrameImg`
+    helper serves 7 local `public/image-sequence/` frames (1920×1080)
+    with one `@next/next/no-img-element` disable — lint stays at exactly
+    the 5 pre-existing warnings, 0 errors. Placement: section 1 prose box
+    (1, scrolls through the viewport-fixed bottom band), sticky-top
+    container (2, slide under the pinned top band at z-10 vs image
+    `auto`), sticky-bottom container (3, cross the tracked bottom band),
+    section-4 card (1 as full-bleed `absolute inset-0 z-0`
+    `brightness-[0.65]` background under the center-peak lens; caption
+    rewritten to point at the photo, measured background median
+    luminance ~105 for contrast). Re-verified on a fresh production
+    build: **31/31 Playwright assertions** — all 17 prior checks plus
+    image coverage (7 present, all decoded, all local, no overflow),
+    band/image overlap in every demo, stacking order, card photo covers
+    the card (±2px for its 1px border) and `elementFromPoint` at the
+    card center still hits the caption — zero console/page errors.
+    Screenshots: `/tmp/opencode/gb/test-page-v3.png`,
+    `test-page-v3-scrolled.png`, `card-lens-v3.png`. Registry, docs,
+    registry.json and CLI untouched; the committed `v0.1.18` npm payload
+    is unchanged.
+
+52. **Feature 42: Typewriter (Free)** — `registry/typewriter/typewriter.tsx`
+    wraps `typewriter-effect` (`2.22.x`, root dependency at the spec's `^`
+    range; `registry.json` entry carries `dependencies: ["typewriter-effect"]`
+    + `variants: []` so the CLI installs the engine in consumer projects).
+    Props per spec: `text: string | string[]`, `delay` (50),
+    `deleteSpeed` (defaults to `delay`), `loop`, `autoStart`, `cursor`,
+    `cursorColor` (`currentColor`), `cursorWidth` (`2px`), `cursorHeight`
+    (`1em`), `onComplete`, and the usual div attributes spread onto the
+    root (`inline-flex items-center`). Three deliberate deviations from the
+    spec's literal code, each forced by the library, not preference:
+    (a) **cursor styling is a scoped `<style>` block, not a custom cursor
+    node** — the engine writes `options.cursor` into
+    `.Typewriter__cursor` via `innerHTML` (strings only) and injects its own
+    blink keyframes once per page, so the component emits
+    `[data-typewriter="<useId>"] .Typewriter__cursor { color/width/height/
+    display/vertical-align/margin-left/overflow/line-height !important }`
+    plus a reduced-motion query, leaving `animation` alone so the native
+    blink survives; `useId()` scoping is what lets 6 cursors with different
+    colours/sizes coexist on the test page (blue `4px`/`1.2em` and red
+    `3px`/`0.9em` verified simultaneously); `overflow: hidden` +
+    `line-height: 1` make the width/height props actually clip the glyph
+    instead of painting over the box; (b) **`onComplete` is queued via
+    `onInit(tw) => tw.callFunction(...)`** because the React wrapper does
+    not pass it through (the spec snippet does not compile); (c) **reduced
+    motion stops the engine in `onInit`** before the first RAF frame and
+    writes the first string into `state.elements.wrapper.textContent`
+    (reached through a documented intersection cast — `state` is runtime-
+    only in the typings — no `any`), `onComplete` skipped. String mapping:
+    `Array.isArray(text) ? text : loop ? [text] : text` (non-loop single
+    string stays on screen; looping single string gets the trailing delete
+    so cycles do not append). Created `registry/typewriter/index.ts`
+    (docs barrel, not a registry file), `app/test-typewriter/page.tsx`
+    (4 sections; section 3 runs TWO instances side by side to prove the
+    per-instance scoping), `app/docs/components/typewriter/page.mdx`
+    (customizer with 7 controls, props table, usage/dependency/perf/
+    a11y sections) and the `TypewriterPreview` adapter in
+    `components/docs/preview-wrappers.tsx` (`toBool` for the `loop`
+    select). Registry placement: prepended (newest-first, like Gradient
+    Blur) — 23 components. `packages/cli` bumped `0.1.18 → 0.1.19` (the
+    spec's `0.1.18` was already burned by Feature 41, owner-confirmed;
+    Next Up #19). Full verification: `npx tsc --noEmit` clean;
+    `npm run lint` 0 errors (same 5 pre-existing `<img>` warnings);
+    `npm run build` clean with `/docs/components/typewriter` and
+    `/test-typewriter` both `○ (Static)`; `cd packages/cli && npm run
+    build` clean (`deadui@0.1.19`, verified AFTER the bump); **34/34**
+    Playwright/Chromium assertions against `next start` on port 3000 (first
+    killing a 2h33m stale `next-server` — the Feature 30 trap): cursor
+    computed geometry/colour/blink, glyph render, per-instance scoping,
+    typing progression, array looping (≥3 distinct texts), completed
+    single string persisting, docs controls (5 Radix selects + 1 Radix
+    slider + 1 native colour input; cursorWidth → `6px`, cursorColor →
+    `rgb(34, 211, 238)` both reflected live), reduced-motion statics
+    (`animation: none`, `opacity: 1`, text frozen), zero console/page
+    errors. Screenshots `/tmp/opencode/typewriter-{test-page,docs,
+    reduced-motion}.png`.
+
 ## In Progress
 
-None. Feature 41 (Gradient Blur) is complete; `v0.1.18` is committed and
+None. Feature 42 (Typewriter) is complete; `v0.1.19` is committed and
 tagged locally. GitHub Actions is not currently publishing, so the owner
 runs the manual npm publish from `packages/cli` — exact commands handed
 over in the session report.
@@ -1530,6 +1625,18 @@ over in the session report.
     `0.1.18`, tag `v0.1.18`. npm has only ever seen `0.1.0`, `0.1.2`
     and `0.1.5`, so the manual publish will land `0.1.18` directly —
     `0.1.6`–`0.1.17` exist only as git tags.
+19. **`v0.1.18` IS BURNED — FEATURE 42 SHIPS AS `v0.1.19`.** The
+    Feature 42 spec says bump to `0.1.18` and tag `v0.1.18`, but Feature
+    41 Gradient Blur already consumed that exact version: the tag exists
+    on `origin` pointing at `337b8a4`, and the manifest was already
+    `0.1.18` at HEAD. `git tag v0.1.18` fails outright ("already
+    exists"), and re-pointing a published tag needs the force-push that
+    `AGENTS.md` forbids. The owner confirmed the documented
+    next-valid-version path (the #13 / #16 / #17 / #18 precedent):
+    manifest `0.1.19`, tag `v0.1.19`. Because Actions is not currently
+    publishing, the owner's manual npm publish lands `0.1.19` directly —
+    npm has still only ever seen `0.1.0`, `0.1.2` and `0.1.5`, so
+    `0.1.6`–`0.1.18` remain git-tag-only versions.
 
 
 ## Component Status
@@ -1558,6 +1665,7 @@ over in the session report.
 | 18 | Dock | Free | COMPLETE (Feature 38) | ✅ (F38) | — (configurable via props: iconSize, iconMagnification, iconDistance, disableMagnification, direction)
 | 19 | Line Shadow Text | Free | COMPLETE (Feature 40) | ✅ (F40) | — (configurable via props: shadowColor, shadowOffset, shadowWidth, angle, duration, as) |
 | 20 | Gradient Blur | Free | COMPLETE (Feature 41) | ✅ (F41) | — (configurable via props: variant bottom-to-top/center-peak, position fixed/absolute/sticky, side top/bottom, height, zIndex) |
+| 21 | Typewriter | Free | COMPLETE (Feature 42) | ✅ (F42) | — (configurable via props: text string/array, delay, deleteSpeed, loop, autoStart, cursor glyph, cursorColor, cursorWidth, cursorHeight, onComplete) |
 
 ## Open Questions
 
@@ -6408,3 +6516,51 @@ over in the session report.
   px>100`) re-tested across deltas 250/400/500/650/850/1000 ms →
   `145/322/328/141/0/0`: the capture landed on the documented half-cycle
   alias (Δ = 1000 ms = one full stripe period), not a product change.
+
+- Feature 42 (feature spec `42-typewriter.md`): `Typewriter` (Free). Created
+  `registry/typewriter/typewriter.tsx` + `index.ts`, `app/test-typewriter/
+  page.tsx`, `app/docs/components/typewriter/page.mdx`; modified
+  `registry.json` (entry prepended, 23 components), `components/docs/
+  preview-wrappers.tsx` (`TypewriterPreview`, `toBool` for `loop`),
+  `package.json`/`package-lock.json` (`typewriter-effect`), `packages/cli/
+  package.json` (`0.1.18` → `0.1.19`), `context/progress-tracker.md`.
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors
+  (5 pre-existing `<img>` warnings), `npm run build` clean (both new
+  routes `○ Static`), CLI build clean at `0.1.19`, 34/34 Playwright
+  assertions vs `next start` (port 3000; a 2h33m stale `next-server` was
+  killed first). Branch, commit and tag `v0.1.19` pushed; manual npm
+  publish steps handed to the owner.
+
+  **THE CURSOR IS A STRING API BEHIND INJECTED CSS.** `typewriter-effect`
+  builds its cursor as `cursor.innerHTML = options.cursor` and appends it
+  as a SIBLING of the typed wrapper (`container > span.Typewriter__wrapper
+  + span.Typewriter__cursor`), then injects
+  `.Typewriter__cursor{animation:Typewriter-cursor 1s infinite}` +
+  `@keyframes{0%{opacity:0}50%{opacity:1}100%{opacity:0}}` into `<head>`
+  once per page (guarded by `window.___TYPEWRITER_JS_STYLES_ADDED___`).
+  Consequence for the reduced-motion implementation: setting
+  `state.elements.wrapper.textContent` does NOT remove the cursor — it is
+  not a child — which is why the static first string renders with the
+  cursor still visible (desired; the media query freezes it at opacity 1).
+  The blink is opacity-based, so overriding `animation` would kill it —
+  the component styles `color/width/height/display/vertical-align/
+  margin-left/overflow/line-height` only, all `!important`, scoped by a
+  `useId()` data attribute so simultaneous instances cannot clobber each
+  other. `overflow: hidden` is load-bearing: without it the `|` glyph
+  paints outside a 2px box and the sizing props become layout-only no-ops.
+
+  **NO `onComplete` IN THE REACT WRAPPER.** `typewriter-effect`'s React
+  component accepts only `component/options/onInit`; the spec's
+  `onComplete` prop on `<TypewriterComponent>` fails TS. Implemented via
+  `onInit(tw) => tw.callFunction(() => onComplete())` — the constructor
+  has already queued the full type/pause/delete sequence, and
+  `callFunction` appends after it, so it fires once when a non-looping
+  run drains and once per cycle under `loop`. `strings` semantics forced
+  the mapping `Array.isArray(text) ? text : loop ? [text] : text`: a
+  bare string types and stays, an array deletes between entries, so a
+  non-looping single string must stay a string (it would vanish) and a
+  looping single string must be wrapped (its trailing delete prevents
+  appending onto itself). Reduced motion calls `stop()` inside `onInit`
+  BEFORE the first RAF executes (the callback runs synchronously from
+  componentDidMount, constructor included) — verified: zero character
+  growth over a 1s window at `delay=50`.

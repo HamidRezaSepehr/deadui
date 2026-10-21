@@ -1,6 +1,22 @@
 {
   "components": [
     {
+      "name": "typewriter",
+      "title": "Typewriter",
+      "description": "A highly customizable text typing animation effect with specialized cursor controls.",
+      "tier": "free",
+      "dependencies": [
+        "typewriter-effect"
+      ],
+      "files": [
+        {
+          "path": "registry/typewriter/typewriter.tsx",
+          "target": "components/ui/typewriter.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "gradient-blur",
       "title": "Gradient Blur",
       "description": "A smooth, multi-layered backdrop blur effect with gradient masking for elegant content fade-outs.",

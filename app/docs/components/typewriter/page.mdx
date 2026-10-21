@@ -1,0 +1,162 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { TypewriterPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Typewriter",
+  description:
+    "A highly customizable text typing animation effect with specialized cursor controls.",
+}
+
+# Typewriter
+
+A classic type-and-delete text animation wrapped around
+[`typewriter-effect`](https://github.com/tameemsafi/typewriterjs), with
+specialized control over the blinking cursor — its colour, width, height and
+glyph are all props, forced onto the library's own cursor element without
+touching its native blink animation.
+
+## Preview
+
+<ComponentCustomizer
+  component={TypewriterPreview}
+  defaultProps={{
+    text: "Make it move.",
+    delay: 50,
+    loop: true,
+    cursor: "|",
+    cursorColor: "#ef4444",
+    cursorWidth: "2px",
+    cursorHeight: "1em",
+  }}
+  controls={{
+    text: {
+      type: "select",
+      options: [
+        "Make it move.",
+        "Type. Delete. Repeat.",
+        "Cursor controls, built in.",
+      ],
+    },
+    delay: { type: "slider", min: 10, max: 200, step: 5, unit: "ms" },
+    loop: { type: "select", options: ["true", "false"] },
+    cursor: { type: "select", options: ["|", "▋", "█", "▌", "_"] },
+    cursorColor: { type: "color" },
+    cursorWidth: { type: "select", options: ["1px", "2px", "4px", "6px"] },
+    cursorHeight: { type: "select", options: ["0.9em", "1em", "1.2em", "1.5em"] },
+  }}
+  className="not-prose my-8"
+/>
+
+Move any control and the sequence restarts with the new configuration. Set
+**Loop** to `false` to watch a run finish with the text left on screen.
+
+## Installation
+
+<InstallTabs componentName="typewriter" tier="free" />
+
+The component also needs its engine:
+
+```bash
+npm install typewriter-effect
+```
+
+## Usage
+
+### Single text
+
+```tsx
+import { Typewriter } from "@/components/ui/typewriter"
+
+export function Example() {
+  return <Typewriter text="Building interfaces that feel alive." />
+}
+```
+
+A non-looping single string stays on screen once typed — it is passed to the
+engine as a string, which the library never deletes.
+
+### Looping array of strings
+
+```tsx
+<Typewriter
+  loop
+  delay={65}
+  text={[
+    "Design. Prototype. Ship.",
+    "Type, delete, repeat.",
+    "One component, endless text.",
+  ]}
+/>
+```
+
+Arrays type each entry in order, hold it, delete it and move to the next —
+and with `loop` they cycle forever. Every cycle ends with a delete, which is
+what keeps a looping single string from appending onto itself.
+
+### Custom cursor
+
+```tsx
+<Typewriter
+  text="Thick blue block"
+  cursor="▋"
+  cursorColor="blue"
+  cursorWidth="4px"
+  cursorHeight="1.2em"
+/>
+```
+
+### Speed and completion
+
+```tsx
+<Typewriter
+  text={["First", "Second"]}
+  delay={120}
+  deleteSpeed={40}
+  onComplete={() => console.log("sequence finished")}
+/>
+```
+
+`delay` is the millisecond gap between typed characters (`deleteSpeed`
+defaults to it, so deletion keeps pace). `onComplete` fires once a
+non-looping run drains its queue, or once per cycle while looping.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `text` | `string \| string[]` | — | **Required.** The text to type. A single string types once and stays; an array types each entry in sequence, deleting between them. |
+| `delay` | `number` | `50` | Milliseconds between typed characters. Also the default delete speed. |
+| `deleteSpeed` | `number` | `delay` | Milliseconds between deleted characters. |
+| `loop` | `boolean` | `false` | Restart the sequence forever instead of finishing after the last string. |
+| `autoStart` | `boolean` | `true` | Begin typing on mount. |
+| `cursor` | `string` | `"\|"` | The glyph rendered inside the cursor element. Any string — a pipe, a block character, an emoji. |
+| `cursorColor` | `string` | `"currentColor"` | CSS colour applied to the cursor, e.g. `"blue"`, `"#ef4444"`. |
+| `cursorWidth` | `string` | `"2px"` | CSS width of the cursor box. The glyph is clipped to it, so the value is authoritative. |
+| `cursorHeight` | `string` | `"1em"` | CSS height of the cursor box, e.g. `"1.2em"`. |
+| `onComplete` | `() => void` | — | Called when the sequence completes — once without `loop`, every cycle with it. |
+| `className` | `string` | — | Merged onto the component's base `inline-flex items-center` root. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the rendered element. |
+
+## Dependencies
+
+- [`typewriter-effect`](https://github.com/tameemsafi/typewriterjs) — the
+  typing engine (listed in `registry.json`, so the CLI installs it for you).
+
+## Performance
+
+- All typing runs on the engine's animation-frame loop in the browser; the
+  React tree renders once and never re-renders while the sequence plays.
+- Cursor styling is one static `<style>` block per instance, scoped by
+  `useId()` — several typewriters with different cursors coexist on one page
+  without their rules colliding, and the block never touches the library's
+  injected `Typewriter-cursor` keyframes.
+- The engine injects its blink keyframes into `<head>` exactly once per page.
+
+## Accessibility
+
+- Under `prefers-reduced-motion: reduce` the sequence does not run: the first
+  string is rendered statically, the engine is stopped before its first frame,
+  and the cursor's blink animation is disabled while the cursor stays visible.
+- The animation is decorative — the text lives in the DOM the whole time and
+  nothing is communicated by the motion alone.

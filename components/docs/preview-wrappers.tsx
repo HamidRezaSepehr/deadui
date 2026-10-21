@@ -16,6 +16,7 @@ import { AvatarCircles } from "@/registry/avatar-circles";
 import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles";
 import { ScrollProgress } from "@/registry/scroll-progress";
 import { SpinningText } from "@/registry/spinning-text";
+import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
   TextAnnotationGroup,
@@ -480,6 +481,30 @@ export function DockPreview(props: Record<string, unknown>) {
           </DockIcon>
         ))}
       </Dock>
+    </div>
+  );
+}
+
+/**
+ * `Typewriter`'s `loop` is a string-valued boolean control (the customizer's
+ * select can only emit strings), so `toBool` coerces it — the same reason the
+ * marquee adapter needs it. The cursor sizing props arrive as strings by
+ * design: they are CSS lengths (`"4px"`, `"1.2em"`), and a slider would hand
+ * over a bare number the component must not receive.
+ */
+export function TypewriterPreview(props: Record<string, unknown>) {
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center px-4">
+      <Typewriter
+        text={(props.text as string) || "Make it move."}
+        delay={Number(props.delay) || 50}
+        loop={toBool(props.loop ?? true)}
+        cursor={(props.cursor as string) || "|"}
+        cursorColor={(props.cursorColor as string) || "currentColor"}
+        cursorWidth={(props.cursorWidth as string) || "2px"}
+        cursorHeight={(props.cursorHeight as string) || "1em"}
+        className="text-center text-2xl font-semibold md:text-3xl"
+      />
     </div>
   );
 }
