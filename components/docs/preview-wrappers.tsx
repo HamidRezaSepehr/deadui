@@ -514,7 +514,9 @@ export function TypewriterPreview(props: Record<string, unknown>) {
 export function GlobeDocsPreview() {
   return (
     <div className="relative overflow-hidden rounded-xl border border-dead-800 bg-dead-50 p-6">
-      <DocsGlobe />
+      <div className="mx-auto max-w-sm">
+        <DocsGlobe />
+      </div>
     </div>
   );
 }
@@ -639,7 +641,7 @@ function DocsGlobe() {
     <canvas
       ref={canvasRef}
       onPointerDown={handlePointerDown}
-      className="h-64 w-full cursor-grab rounded-full"
+      className="aspect-square w-full cursor-grab rounded-full"
       style={{ touchAction: "none" }}
     />
   )
