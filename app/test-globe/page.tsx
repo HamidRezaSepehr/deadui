@@ -33,7 +33,7 @@ function GlobeDemo() {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-dead-800 bg-dead-50 p-4">
+      <div className="relative aspect-square w-full max-w-md mx-auto overflow-hidden rounded-2xl border border-dead-800 bg-dead-50 p-4">
         <GlobeDemoCanvas markers={markers} arcs={arcs} />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <span className="font-mono text-3xl font-black tracking-tighter text-dead-900/5">COBE</span>
@@ -330,17 +330,18 @@ function GlobePolaroids() {
   }, [markers, speed])
 
   return (
-    <div className="relative aspect-square select-none">
-      <canvas
-        ref={canvasRef}
-        onPointerDown={handlePointerDown}
-        className="h-full w-full cursor-grab rounded-full"
-        style={{
-          opacity: 0,
-          transition: "opacity 1.2s ease",
-          touchAction: "none",
-        }}
-      />
+    <div className="max-w-md mx-auto">
+      <div className="relative aspect-square select-none">
+        <canvas
+          ref={canvasRef}
+          onPointerDown={handlePointerDown}
+          className="h-full w-full cursor-grab rounded-full"
+          style={{
+            opacity: 0,
+            transition: "opacity 1.2s ease",
+            touchAction: "none",
+          }}
+        />
       {markers.map((m) => (
         <div
           key={m.id}
@@ -384,6 +385,7 @@ function GlobePolaroids() {
           </span>
         </div>
       ))}
+      </div>
     </div>
   )
 }
@@ -513,21 +515,22 @@ function GlobeFlights() {
   }, [markers, arcs, speed])
 
   return (
-    <div className="relative aspect-square select-none">
-      <canvas
-        ref={canvasRef}
-        onPointerDown={handlePointerDown}
-        className="h-full w-full cursor-grab rounded-full"
-        style={{
-          opacity: 0,
-          transition: "opacity 1.2s ease",
-          touchAction: "none",
-        }}
-      />
-      {markers.map((m) => (
-        <div
-          key={m.id}
+    <div className="max-w-md mx-auto">
+      <div className="relative aspect-square select-none">
+        <canvas
+          ref={canvasRef}
+          onPointerDown={handlePointerDown}
+          className="h-full w-full cursor-grab rounded-full"
           style={{
+            opacity: 0,
+            transition: "opacity 1.2s ease",
+            touchAction: "none",
+          }}
+        />
+        {markers.map((m) => (
+          <div
+            key={m.id}
+            style={{
             position: "absolute",
             positionAnchor: `--cobe-${m.id}`,
             bottom: "anchor(top)",
@@ -559,6 +562,7 @@ function GlobeFlights() {
           </span>
         </div>
       ))}
+      </div>
     </div>
   )
 }

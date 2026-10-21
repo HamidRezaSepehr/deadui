@@ -1,6 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useRef, useCallback } from "react";
+import createGlobe from "cobe";
 import { Heart, Star, Zap } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -17,7 +19,6 @@ import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles";
 import { ScrollProgress } from "@/registry/scroll-progress";
 import { SpinningText } from "@/registry/spinning-text";
 import { Typewriter } from "@/registry/typewriter";
-import { Globe } from "@/registry/globe";
 import {
   TextAnnotation,
   TextAnnotationGroup,
@@ -510,15 +511,136 @@ export function TypewriterPreview(props: Record<string, unknown>) {
   );
 }
 
-export function GlobePreview(props: Record<string, unknown>) {
+export function GlobeDocsPreview() {
   return (
-    <div className="flex min-h-[300px] w-full items-center justify-center">
-      <Globe
-        size={Number(props.size) || 280}
-        dark={Number(props.dark) || 0}
-        autoRotate={toBool(props.autoRotate ?? true)}
-        autoRotateSpeed={(Number(props.autoRotateSpeed) || 1) / 100}
-      />
+    <div className="relative overflow-hidden rounded-xl border border-dead-800 bg-dead-50 p-6">
+      <DocsGlobe />
     </div>
   );
+}
+
+function DocsGlobe() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const pointerInteracting = useRef<{ x: number; y: number } | null>(null)
+  const dragOffset = useRef({ phi: 0, theta: 0 })
+  const phiOffsetRef = useRef(0)
+  const thetaOffsetRef = useRef(0)
+  const isPausedRef = useRef(false)
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    pointerInteracting.current = { x: e.clientX, y: e.clientY }
+    isPausedRef.current = true
+  }, [])
+
+  const handlePointerUp = useCallback(() => {
+    if (pointerInteracting.current !== null) {
+      phiOffsetRef.current += dragOffset.current.phi
+      thetaOffsetRef.current += dragOffset.current.theta
+      dragOffset.current = { phi: 0, theta: 0 }
+    }
+    pointerInteracting.current = null
+    isPausedRef.current = false
+  }, [])
+
+  const markers = [
+    { id: "sf", location: [37.7595, -122.4367] as [number, number], label: "San Francisco" },
+    { id: "nyc", location: [40.7128, -74.006] as [number, number], label: "New York" },
+    { id: "tokyo", location: [35.6762, 139.6503] as [number, number], label: "Tokyo" },
+    { id: "london", location: [51.5074, -0.1278] as [number, number], label: "London" },
+    { id: "sydney", location: [-33.8688, 151.2093] as [number, number], label: "Sydney" },
+    { id: "dubai", location: [25.2048, 55.2708] as [number, number], label: "Dubai" },
+    { id: "paris", location: [48.8566, 2.3522] as [number, number], label: "Paris" },
+  ]
+
+  const arcs = [
+    { id: "sf-tokyo", from: [37.7595, -122.4367] as [number, number], to: [35.6762, 139.6503] as [number, number] },
+    { id: "nyc-london", from: [40.7128, -74.006] as [number, number], to: [51.5074, -0.1278] as [number, number] },
+  ]
+
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (pointerInteracting.current !== null) {
+        dragOffset.current = {
+          phi: (e.clientX - pointerInteracting.current.x) / 300,
+          theta: (e.clientY - pointerInteracting.current.y) / 1000,
+        }
+      }
+    }
+    window.addEventListener("pointermove", handlePointerMove, { passive: true })
+    window.addEventListener("pointerup", handlePointerUp, { passive: true })
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove)
+      window.removeEventListener("pointerup", handlePointerUp)
+    }
+  }, [handlePointerUp])
+
+  useEffect(() => {
+    if (!canvasRef.current) return
+    const canvas = canvasRef.current
+    let globe: ReturnType<typeof createGlobe> | null = null
+    let animationId: number
+    let phi = 0
+
+    function init() {
+      const width = canvas.offsetWidth
+      if (width === 0 || globe) return
+
+      globe = createGlobe(canvas, {
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        width,
+        height: width,
+        phi: 0,
+        theta: 0.2,
+        dark: 0,
+        diffuse: 1.5,
+        mapSamples: 16000,
+        mapBrightness: 10,
+        baseColor: [1, 1, 1],
+        markerColor: [0.3, 0.45, 0.85],
+        glowColor: [0.94, 0.93, 0.91],
+        markerElevation: 0.01,
+        markers: markers.map((m) => ({ location: m.location, size: 0.025, id: m.id })),
+        arcs: arcs.map((a) => ({ from: a.from, to: a.to, id: a.id })),
+        arcColor: [0.3, 0.45, 0.85],
+        arcWidth: 0.5,
+        arcHeight: 0.25,
+      })
+
+      function animate() {
+        if (!isPausedRef.current) phi += 0.005
+        globe!.update({
+          phi: phi + phiOffsetRef.current + dragOffset.current.phi,
+          theta: 0.2 + thetaOffsetRef.current + dragOffset.current.theta,
+        })
+        animationId = requestAnimationFrame(animate)
+      }
+      animate()
+    }
+
+    if (canvas.offsetWidth > 0) {
+      init()
+    } else {
+      const ro = new ResizeObserver((entries) => {
+        if (entries[0]?.contentRect.width > 0) {
+          ro.disconnect()
+          init()
+        }
+      })
+      ro.observe(canvas)
+    }
+
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId)
+      if (globe) globe.destroy()
+    }
+  }, [markers, arcs])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      onPointerDown={handlePointerDown}
+      className="h-64 w-full cursor-grab rounded-full"
+      style={{ touchAction: "none" }}
+    />
+  )
 }

@@ -5,7 +5,7 @@ description: A highly customizable, high-performance 3D globe powered by cobe We
 
 import { ComponentCustomizer } from "@/components/docs/component-customizer"
 import { InstallTabs } from "@/components/docs/install-tabs"
-import { GlobePreview } from "@/components/docs/preview-wrappers"
+import { GlobeDocsPreview } from "@/components/docs/preview-wrappers"
 
 export const metadata = {
   title: "Globe",
@@ -21,21 +21,11 @@ customise colours, markers, rotation speed, and lighting to match any brand.
 
 ## Preview
 
-<ComponentCustomizer
-  component={GlobePreview}
-  defaultProps={{
-    size: 280,
-    dark: "0",
-    autoRotate: "true",
-    autoRotateSpeed: "1",
-  }}
-  controls={{
-    dark: { type: "slider", min: 0, max: 1, step: 0.05 },
-    autoRotateSpeed: { type: "slider", min: 0.5, max: 3, step: 0.1 },
-    autoRotate: { type: "select", options: ["true", "false"] },
-  }}
-  className="not-prose my-8"
-/>
+<div className="not-prose my-8">
+  <GlobeDocsPreview />
+</div>
+
+Drag the globe to rotate it. Markers are pinned to real-world locations.
 
 ## Installation
 
@@ -91,15 +81,6 @@ const MY_LOCATIONS = [
 
 `phi` and `theta` set the globe's initial orientation in radians.
 
-## How it works
-
-The component wraps the `cobe` WebGL library. It initialises a single WebGL
-context on a `<canvas>` element, renders a procedural Earth texture in a
-fragment shader, and updates the globe's rotation on every animation frame
-using refs (`phiRef`, `thetaRef`) to avoid triggering React re-renders. The
-canvas is sized at `size × devicePixelRatio` for crisp rendering on Retina
-displays, and `globe.destroy()` is called on unmount to prevent memory leaks.
-
 ## Props
 
 | Prop              | Type                                  | Default             | Description                                                         |
@@ -112,12 +93,13 @@ displays, and `globe.destroy()` is called on unmount to prevent memory leaks.
 | `mapSamples`      | `number`                              | `16000`             | Number of samples for the procedural texture. Higher = smoother.    |
 | `mapBrightness`   | `number`                              | `6`                 | Map brightness multiplier.                                           |
 | `baseColor`       | `[number, number, number]`             | `[0.3, 0.3, 0.3]`  | Globe base colour as RGB `[0–1]` tuple.                            |
-| `markerColor`      | `[number, number, number]`            | `[0.1, 0.8, 1]`    | Location marker colour as RGB `[0–1]` tuple.                        |
-| `glowColor`        | `[number, number, number]`             | `[1, 1, 1]`        | Glow colour as RGB `[0–1]` tuple.                                   |
+| `markerColor`     | `[number, number, number]`            | `[0.1, 0.8, 1]`    | Location marker colour as RGB `[0–1]` tuple.                        |
+| `glowColor`       | `[number, number, number]`            | `[1, 1, 1]`        | Glow colour as RGB `[0–1]` tuple.                                   |
 | `markers`         | `Marker[]`                            | `[]`                | Array of location markers.                                           |
 | `opacity`         | `number`                              | `1`                 | Globe opacity `0`–`1`.                                              |
 | `autoRotate`      | `boolean`                             | `true`              | Enable continuous auto-rotation.                                     |
 | `autoRotateSpeed` | `number`                              | `0.01`              | Radians added to `phi` per render frame — higher = faster.          |
+| `draggable`       | `boolean`                             | `false`             | Enable pointer drag to rotate the globe.                             |
 | `className`       | `string`                              | —                   | Additional classes for the canvas element.                           |
 | `...props`        | `HTMLAttributes<HTMLCanvasElement>`    | —                   | Spread onto the underlying `<canvas>`.                               |
 
@@ -127,6 +109,8 @@ displays, and `globe.destroy()` is called on unmount to prevent memory leaks.
 | ---------- | --------------------- | ---------------------------------------- |
 | `location` | `[number, number]`    | `[latitude, longitude]` in degrees.      |
 | `size`     | `number`              | Brightness multiplier for this marker.  |
+| `color`    | `[number, number, number]` | Custom RGB colour for this marker. |
+| `id`       | `string`              | ID for CSS anchor positioning.          |
 
 ## Dependencies
 
