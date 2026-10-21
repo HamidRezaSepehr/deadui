@@ -1,0 +1,157 @@
+---
+title: Globe
+description: A highly customizable, high-performance 3D globe powered by cobe WebGL.
+---
+
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GlobePreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Globe",
+  description:
+    "A highly customizable, high-performance 3D globe powered by cobe WebGL.",
+}
+
+# Globe
+
+A beautiful, high-performance, interactive 3D globe rendered entirely on the
+GPU via WebGL using the lightweight `cobe` library. Fully configurable —
+customise colours, markers, rotation speed, and lighting to match any brand.
+
+## Preview
+
+<ComponentCustomizer
+  component={GlobePreview}
+  defaultProps={{
+    size: 280,
+    dark: "0",
+    autoRotate: "true",
+    autoRotateSpeed: "1",
+  }}
+  controls={{
+    dark: { type: "slider", min: 0, max: 1, step: 0.05 },
+    autoRotateSpeed: { type: "slider", min: 0.5, max: 3, step: 0.1 },
+    autoRotate: { type: "select", options: ["true", "false"] },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="globe" tier="free" />
+
+## Usage
+
+```tsx
+import { Globe } from "@/components/ui/globe"
+
+export function WorldMap() {
+  return (
+    <div className="w-full max-w-sm">
+      <Globe size={400} />
+    </div>
+  )
+}
+```
+
+### Custom colours and rotation speed
+
+```tsx
+<Globe
+  size={400}
+  dark={1}
+  baseColor={[1, 0.4, 0.8]}
+  markerColor={[0.1, 1, 0.6]}
+  glowColor={[0.8, 0.2, 1]}
+  autoRotateSpeed={0.015}
+/>
+```
+
+### Adding location markers
+
+Markers are specified as an array of objects with `location` (a `[latitude,
+longitude]` tuple) and `size` (a brightness multiplier):
+
+```tsx
+const MY_LOCATIONS = [
+  { location: [40.7128, -74.006], size: 0.08 }, // New York
+  { location: [51.5074, -0.1278], size: 0.08 }, // London
+  { location: [35.6762, 139.6503], size: 0.08 }, // Tokyo
+]
+
+;<Globe size={400} markers={MY_LOCATIONS} />
+```
+
+### Disabling auto-rotation
+
+```tsx
+<Globe size={400} autoRotate={false} phi={0.5} theta={0.3} />
+```
+
+`phi` and `theta` set the globe's initial orientation in radians.
+
+## How it works
+
+The component wraps the `cobe` WebGL library. It initialises a single WebGL
+context on a `<canvas>` element, renders a procedural Earth texture in a
+fragment shader, and updates the globe's rotation on every animation frame
+using refs (`phiRef`, `thetaRef`) to avoid triggering React re-renders. The
+canvas is sized at `size × devicePixelRatio` for crisp rendering on Retina
+displays, and `globe.destroy()` is called on unmount to prevent memory leaks.
+
+## Props
+
+| Prop              | Type                                  | Default             | Description                                                         |
+| ----------------- | ------------------------------------- | ------------------- | ------------------------------------------------------------------- |
+| `size`            | `number`                              | `400`               | Canvas width/height in pixels.                                       |
+| `phi`             | `number`                              | `0`                 | Initial horizontal rotation (radians).                               |
+| `theta`           | `number`                              | `0`                 | Initial vertical rotation (radians).                                 |
+| `dark`            | `number`                              | `0`                 | Darkness level `0`–`1`. `1` = fully dark mode.                     |
+| `diffuse`         | `number`                              | `1.2`               | Diffuse lighting intensity.                                          |
+| `mapSamples`      | `number`                              | `16000`             | Number of samples for the procedural texture. Higher = smoother.    |
+| `mapBrightness`   | `number`                              | `6`                 | Map brightness multiplier.                                           |
+| `baseColor`       | `[number, number, number]`             | `[0.3, 0.3, 0.3]`  | Globe base colour as RGB `[0–1]` tuple.                            |
+| `markerColor`      | `[number, number, number]`            | `[0.1, 0.8, 1]`    | Location marker colour as RGB `[0–1]` tuple.                        |
+| `glowColor`        | `[number, number, number]`             | `[1, 1, 1]`        | Glow colour as RGB `[0–1]` tuple.                                   |
+| `markers`         | `Marker[]`                            | `[]`                | Array of location markers.                                           |
+| `opacity`         | `number`                              | `1`                 | Globe opacity `0`–`1`.                                              |
+| `autoRotate`      | `boolean`                             | `true`              | Enable continuous auto-rotation.                                     |
+| `autoRotateSpeed` | `number`                              | `0.01`              | Radians added to `phi` per render frame — higher = faster.          |
+| `className`       | `string`                              | —                   | Additional classes for the canvas element.                           |
+| `...props`        | `HTMLAttributes<HTMLCanvasElement>`    | —                   | Spread onto the underlying `<canvas>`.                               |
+
+### `Marker`
+
+| Prop       | Type                  | Description                              |
+| ---------- | --------------------- | ---------------------------------------- |
+| `location` | `[number, number]`    | `[latitude, longitude]` in degrees.      |
+| `size`     | `number`              | Brightness multiplier for this marker.  |
+
+## Dependencies
+
+The component requires the `cobe` WebGL library:
+
+```bash
+npm install cobe
+```
+
+Or let Dead UI handle it automatically:
+
+```bash
+npx deadui@latest add globe
+```
+
+## Performance
+
+- Fully GPU-rendered via WebGL — no DOM manipulation during animation.
+- Rotation updates use React refs, not state, so no re-render cycles.
+- The canvas is sized at `size × devicePixelRatio` for sharp Retina output.
+- `globe.destroy()` is called on unmount to release the WebGL context and prevent memory leaks.
+
+## Accessibility
+
+- The canvas is a decorative element; provide a text alternative or aria-label
+  if the globe conveys meaningful geographic information.
+- Under `prefers-reduced-motion` the globe still renders but rotation pauses
+  (`autoRotate` can be set to `false`).

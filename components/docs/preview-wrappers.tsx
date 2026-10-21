@@ -17,6 +17,7 @@ import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles";
 import { ScrollProgress } from "@/registry/scroll-progress";
 import { SpinningText } from "@/registry/spinning-text";
 import { Typewriter } from "@/registry/typewriter";
+import { Globe } from "@/registry/globe";
 import {
   TextAnnotation,
   TextAnnotationGroup,
@@ -504,6 +505,19 @@ export function TypewriterPreview(props: Record<string, unknown>) {
         cursorWidth={(props.cursorWidth as string) || "2px"}
         cursorHeight={(props.cursorHeight as string) || "1em"}
         className="text-center text-2xl font-semibold md:text-3xl"
+      />
+    </div>
+  );
+}
+
+export function GlobePreview(props: Record<string, unknown>) {
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center">
+      <Globe
+        size={Number(props.size) || 280}
+        dark={Number(props.dark) || 0}
+        autoRotate={toBool(props.autoRotate ?? true)}
+        autoRotateSpeed={(Number(props.autoRotateSpeed) || 1) / 100}
       />
     </div>
   );

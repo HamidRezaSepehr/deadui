@@ -1,6 +1,26 @@
 {
   "components": [
     {
+      "name": "globe",
+      "title": "Globe",
+      "description": "A highly customizable, high-performance 3D globe powered by cobe WebGL.",
+      "tier": "free",
+      "dependencies": [
+        "cobe"
+      ],
+      "files": [
+        {
+          "path": "registry/globe/globe.tsx",
+          "target": "components/ui/globe.tsx"
+        },
+        {
+          "path": "registry/globe/index.ts",
+          "target": "components/ui/globe/index.ts"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "typewriter",
       "title": "Typewriter",
       "description": "A highly customizable text typing animation effect with specialized cursor controls.",
