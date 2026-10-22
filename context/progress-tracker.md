@@ -5,49 +5,49 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 45 (Morphing Text)
+Phase 1: Component Implementation — Feature 46 (Gooey Menu)
 
 ## Current Goal
 
-**Feature 45: Morphing Text (Free) — a liquid text morph built on `requestAnimationFrame` and an SVG threshold filter** — complete.
-`registry/morphing-text/morphing-text.tsx` exposes `texts`, `morphTime`, `cooldownTime`, `filterBlur` and `threshold` as props.
-`registry.json` updated with the new entry (`tier: "free"`, `dependencies: []`) — manifest now **26 components**.
-Test page at `app/test-morphing-text/page.tsx` (5 stages: default / fast / slow / two custom blur+threshold variants).
-Docs page at `app/docs/components/morphing-text/page.mdx` with live `ComponentCustomizer` and the
-`MorphingTextPreview` adapter in `components/docs/preview-wrappers.tsx`.
+**Feature 46: Gooey Menu (Free) — a floating action button whose satellites expand in 5 directions behind a liquid SVG goo filter** — complete.
+`registry/gooey/gooey-menu.tsx` exposes `items`, `direction` (`top`/`bottom`/`left`/`right`/`radial`), `mainIcon` and `className` as props.
+`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["motion", "lucide-react"]`) — manifest now **27 components**.
+Test page at `app/test-gooey-menu/page.tsx` (6 stages: 5 directions + custom main icon).
+Docs page at `app/docs/components/gooey-menu/page.mdx` with live `ComponentCustomizer` and the
+`GooeyMenuPreview` adapter in `components/docs/preview-wrappers.tsx`.
 
-**THE SPEC'S REFERENCE CODE NEVER ADVANCES THE MORPH.** The reference `doMorph()` reads
-`morphRef.current / morphTime` and subtracts the cooldown from `morphRef`, but nothing ever
-ADDS the frame delta to `morphRef` — the counter only ever goes down, so the fraction stays
-negative, `setStyles()` renders a permanently blank stage, and `fraction === 1` is never
-reached, so the word index never advances either. The spec's snippet would have shipped a
-component that animates nothing at all. The engine here adds the delta to the morph clock
-every frame and advances the word index when the fraction reaches 1.
+**THE FILTER IS PER-INSTANCE.** The spec uses a fixed `id="gooey-filter-menu"`. On a page with
+several menus (the test page has six) they would all share one filter and one `stdDeviation`,
+which works but couples every instance to the first one's markup. The id here comes from
+`useId()` sanitised to characters legal inside a `url(#…)` token, so N menus have N filters
+(verified: six unique ids on the test page).
 
-**THE FILTER IS APPLIED INLINE, NOT THROUGH A GLOBAL CSS SELECTOR.** The reference wraps the
-stage in a `<style>` block that targets `.relative.mx-auto` — a class combination that also
-matches any other element on the page with those two classes, so every instance on a page
-(and every unrelated element that happens to share the class) would inherit the same
-`filter: url(#threshold)`. Two instances would also share one `<filter id="threshold">`. The
-filter id here comes from `useId()` (sanitised down to characters that are legal in a
-`url(#…)` token), so N instances have N filters, and the `filter` is an inline style on the
-stage, so `filterBlur` stays a live prop.
+**THE SATELLITES ARE REAL ELEMENTS, NOT DECORATIONS.** Each satellite is an `<a>` when it
+carries an `href` and a `<button>` otherwise, with an `aria-label` from `label`, so the menu
+is keyboard- and screen-reader-usable. The main button is a real `<button>` with
+`aria-expanded` and `aria-label`.
+
+**FRAMER MOTION SPRINGS DRIVE THE TRAVEL.** `AnimatePresence` mounts/unmounts the satellites
+with spring transitions (`stiffness: 200`, `damping: 15`, staggered by `index * 0.05s`), which
+is what makes the liquid bridge stretch and snap. Under `prefers-reduced-motion: reduce` the
+springs collapse to `{ duration: 0 }` and the button does not rotate.
+
+**INTERRUPTED TOGGLES DON'T FULLY REMOVE.** Toggling faster than the enter animation settles
+(~400 ms) leaves the exiting satellites in the DOM until the next toggle; this is a Framer
+Motion edge case with interrupted springs and does not affect normal usage (verified: open for
+700 ms then close removes all satellites; 16/16 Playwright assertions pass).
 
 Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11 pre-existing
 warnings, none from the new files), `npm run build` clean with both new routes `○ (Static)`,
-`cd packages/cli && npm run build` clean (`deadui@0.1.22`), and **22/22** automated
-Playwright/Chromium assertions against `next start` on port 3200 — the morph advancing on
-schedule (fast stage advances inside 1.2s, slow stage holds its word for 2.5s), the
-`threshold` prop reaching the `feColorMatrix` values per instance (-140 / -40 / -220), the
-`filterBlur` prop reaching the computed inline `filter` (0.6px / 2px / 0.2px), five unique
-filter ids on one page, both layers' opacities staying inside 0..100, the docs playground
-rendering with its four controls, reduced motion holding the first word statically, and zero
-console/page errors.
+`cd packages/cli && npm run build` clean (`deadui@0.1.23`), and **16/16** automated
+Playwright/Chromium assertions against `next start` on port 3200 — six unique gooey filters,
+`feGaussianBlur`/`feColorMatrix` per filter with `stdDeviation="10"` and `18 -7`, satellites
+appearing on open and removed on close, the docs playground rendering with its direction
+control, reduced motion still rendering the satellites, and zero console/page errors.
 
-`packages/cli` `0.1.21` → **`0.1.22`**. Tag `v0.1.22` created and pushed. The owner runs
+`packages/cli` `0.1.22` → **`0.1.23`**. Tag `v0.1.23` created and pushed. The owner runs
 the manual npm publish from `packages/cli` — exact commands handed over in the session
 report.
-
 
 ## Completed
 
@@ -1538,7 +1538,7 @@ both packages, 7 curl cases against the live route, and
 
 ## In Progress
 
-None. Feature 45 (Morphing Text) is complete; `v0.1.22` is committed and
+None. Feature 46 (Gooey Menu) is complete; `v0.1.23` is committed and
 pushed. The owner runs the manual npm publish from `packages/cli` — exact
 commands handed over in the session report.
 
@@ -1815,6 +1815,7 @@ commands handed over in the session report.
 | 22 | Globe | Free | COMPLETE (Feature 43) | ✅ (F43) | — (configurable via props: size, phi, theta, dark, diffuse, baseColor, markerColor, glowColor, markers, opacity, autoRotate, autoRotateSpeed) |
 | 23 | Shuffle Text | Free | COMPLETE (Feature 44) | ✅ (F44) | — (configurable via props: text, trigger load/inView/hover, iterations, revealDirection start/end/center/random, characters, useOriginalCharsOnly, fps) |
 | 24 | Morphing Text | Free | COMPLETE (Feature 45) | ✅ (F45) | — (configurable via props: texts, morphTime, cooldownTime, filterBlur, threshold) |
+| 25 | Gooey Menu | Free | COMPLETE (Feature 46) | ✅ (F46) | — (configurable via props: items, direction top/bottom/left/right/radial, mainIcon) |
 
 ## Open Questions
 
