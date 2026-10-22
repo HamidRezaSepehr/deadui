@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import shuffleLetters from "shuffle-letters"
 import { cn } from "@/lib/utils"
 
@@ -181,7 +181,57 @@ interface ShuffleEngineOptions {
   revealDirection: ShuffleRevealDirection
   characters?: string
   useOriginalCharsOnly: boolean
+  /** The offsets where the final text breaks onto a new line. */
+  lineBreaks: number[]
   onComplete?: () => void
+}
+
+/**
+ * Re-inserts the line breaks of the final text into a frame.
+ *
+ * The frames are written with `white-space: pre` — no soft wrapping — so the
+ * only way a frame can break onto a second line is an explicit newline. The
+ * offsets come from the final text's own layout, so a text that wraps keeps
+ * exactly the same line structure while it scrambles.
+ */
+function insertLineBreaks(text: string, breaks: number[]): string {
+  if (breaks.length === 0) return text
+
+  let result = ""
+  let cursor = 0
+
+  for (const offset of breaks) {
+    if (offset <= cursor || offset > text.length) continue
+    result += text.slice(cursor, offset) + "\n"
+    cursor = offset
+  }
+
+  return result + text.slice(cursor)
+}
+
+/**
+ * The character offsets where a text breaks onto a new line.
+ *
+ * Measured from the invisible copy of the final text, which is laid out
+ * exactly like the text the reader sees.
+ */
+function measureLineBreaks(node: Text): number[] {
+  const range = document.createRange()
+  const breaks: number[] = []
+  let previousTop: number | null = null
+
+  for (let index = 0; index < node.length; index++) {
+    range.setStart(node, index)
+    range.setEnd(node, index + 1)
+    const rect = range.getClientRects()[0]
+    if (!rect) continue
+    if (previousTop !== null && Math.abs(rect.top - previousTop) > 1) {
+      breaks.push(index)
+    }
+    previousTop = rect.top
+  }
+
+  return breaks
 }
 
 /**
@@ -192,16 +242,44 @@ interface ShuffleEngineOptions {
  * hidden — so the text resolves into place one character at a time.
  */
 function runShuffle(element: HTMLElement, options: ShuffleEngineOptions): () => void {
-  const { text, iterations, fps, revealDirection, characters, useOriginalCharsOnly } =
-    options
+  const {
+    text,
+    iterations,
+    fps,
+    revealDirection,
+    characters,
+    useOriginalCharsOnly,
+    lineBreaks,
+  } = options
 
-  // The library handles the standard configuration.
-  if (revealDirection === "start" && !characters && !useOriginalCharsOnly) {
+  // A scramble is WIDER than the text it replaces — "M" is wider than "i" —
+  // so a soft wrap would change the number of lines while the animation
+  // plays, and the second line would spill out of the box the component
+  // reserved. The text is therefore held on one line for the duration of the
+  // run, and the line breaks of the final text are re-inserted as explicit
+  // newlines, so a text that wraps keeps its exact line structure.
+  element.style.whiteSpace = "pre"
+
+  const finish = () => {
+    // Hand the text back to the browser: the final state wraps naturally.
+    element.style.whiteSpace = ""
+    element.textContent = text
+    options.onComplete?.()
+  }
+
+  // The library handles the standard configuration — a single-line text, so
+  // there are no line breaks for it to carry.
+  if (
+    revealDirection === "start" &&
+    !characters &&
+    !useOriginalCharsOnly &&
+    lineBreaks.length === 0
+  ) {
     return shuffleLetters(element, {
       text,
       iterations,
       fps,
-      onComplete: () => options.onComplete?.(),
+      onComplete: () => finish(),
     })
   }
 
@@ -254,14 +332,13 @@ function runShuffle(element: HTMLElement, options: ShuffleEngineOptions): () => 
       }
     }
 
-    element.textContent = frameText
+    element.textContent = insertLineBreaks(frameText, lineBreaks)
     frame += 1
 
     if (frame <= positions.length) {
       timer = setTimeout(tick, 1000 / fps)
     } else {
-      element.textContent = text
-      options.onComplete?.()
+      finish()
     }
   }
 
@@ -306,8 +383,16 @@ export function ShuffleText({
   ...props
 }: ShuffleTextProps) {
   const targetRef = useRef<HTMLSpanElement>(null)
+  const reservationRef = useRef<HTMLSpanElement>(null)
   const controllerRef = useRef<ShuffleController | null>(null)
   const hasAnimatedRef = useRef(false)
+
+  // The offsets where the final text breaks onto a new line, measured from
+  // the invisible copy of that text.
+  const lineBreaksRef = useRef<number[]>([])
+  // The measurement is asynchronous, so the load trigger waits for it: the
+  // engine needs to know whether the text is a single line before it starts.
+  const [isMeasured, setIsMeasured] = useState(false)
 
   // The completion callback is read through a ref so an inline arrow function
   // (a new identity on every parent render) can never restart the animation.
@@ -330,6 +415,7 @@ export function ShuffleText({
 
     // The engine owns the element's text from here on, so the DOM is reset to
     // the final text before every run.
+    element.style.whiteSpace = ""
     element.textContent = text
 
     // `prefers-reduced-motion` — the animation is skipped entirely and the
@@ -347,6 +433,7 @@ export function ShuffleText({
           revealDirection,
           characters,
           useOriginalCharsOnly,
+          lineBreaks: lineBreaksRef.current,
           onComplete: () => onCompleteRef.current?.(),
         })
       },
@@ -368,6 +455,37 @@ export function ShuffleText({
     destroy,
   ])
 
+  /**
+   * The line breaks of the final text.
+   *
+   * The invisible copy holds the final text and is laid out exactly like the
+   * text the reader sees, so it is where the breaks are measured. They are
+   * re-measured whenever the copy is resized, because a narrower container
+   * wraps the text at different offsets.
+   */
+  useEffect(() => {
+    const reservation = reservationRef.current
+    if (!reservation) return
+
+    const measure = () => {
+      const node = reservation.firstChild
+      lineBreaksRef.current =
+        node && node.nodeType === Node.TEXT_NODE
+          ? measureLineBreaks(node as Text)
+          : []
+    }
+
+    measure()
+    setIsMeasured(true)
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(reservation)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [text])
+
   // The engine replaces the element's text node, so React's own text update
   // can land on a detached node. The DOM is therefore re-synced from the prop,
   // and any run in flight is stopped so it cannot overwrite it.
@@ -375,14 +493,17 @@ export function ShuffleText({
     destroy()
     const element = targetRef.current
     if (!element) return
+    element.style.whiteSpace = ""
     if (element.textContent !== text) element.textContent = text
   }, [text, destroy])
 
-  // `load` — plays once, as soon as the component mounts.
+  // `load` — plays once, as soon as the component mounts. It waits for the
+  // line breaks to be measured, because they decide which engine runs.
   useEffect(() => {
     if (trigger !== "load") return
+    if (!isMeasured) return
     start()
-  }, [trigger, start])
+  }, [trigger, start, isMeasured])
 
   // `inView` — plays once, when 50% of the element is on screen.
   useEffect(() => {
@@ -433,14 +554,19 @@ export function ShuffleText({
       {...props}
     >
       {/* Reserves the final text's width, so the shuffle can never shift the
-          layout around it — zero CLS. */}
-      <span aria-hidden="true" className="invisible select-none whitespace-pre-wrap">
+          layout around it — zero CLS. It is also where the line breaks of the
+          final text are measured. */}
+      <span
+        ref={reservationRef}
+        aria-hidden="true"
+        className="invisible select-none whitespace-pre-wrap"
+      >
         {text}
       </span>
 
-      {/* The animated copy. The engine rewrites its text on every frame.
-          `whitespace-pre-wrap` keeps the blanks of the not-yet-revealed
-          characters, so the text resolves in place. */}
+      {/* The animated copy. The engine rewrites its text on every frame and
+          holds it on one line while it runs, so the number of lines can never
+          change mid-animation. */}
       <span
         ref={targetRef}
         aria-hidden="true"

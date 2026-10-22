@@ -139,6 +139,19 @@ precedence over `characters`.
 `iterations` is how many frames each character spends scrambling before it
 locks in; `fps` is how fast those frames run.
 
+### Multi-line text
+
+```tsx
+<ShuffleText
+  text="A paragraph long enough to wrap onto a second line in a narrow column."
+  trigger="hover"
+/>
+```
+
+A text that wraps keeps its exact line structure while it scrambles — the
+animation can never add or remove a line, because the component measures where
+the final text breaks and holds the scramble on those exact lines.
+
 ## Props
 
 | Prop | Type | Default | Description |
@@ -168,6 +181,11 @@ locks in; `fps` is how fast those frames run.
 - The component reserves the final text's width with an invisible copy and
   paints the animated copy on top of it, so the shuffle can never shift the
   layout around it — zero CLS.
+- A scramble is wider than the text it replaces (`M` is wider than `i`), so
+  the animation is held on one line — the line breaks of the final text are
+  measured up front and re-inserted into every frame, which means a text that
+  wraps keeps its exact line structure and the number of lines can never
+  change mid-animation.
 - Every run is stopped when the component unmounts, so its timer can never
   outlive the element it writes to.
 - `shuffle-letters` is a small, dependency-free package (well under 2KB

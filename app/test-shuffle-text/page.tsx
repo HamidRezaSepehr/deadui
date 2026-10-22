@@ -269,6 +269,38 @@ export default function TestShuffleTextPage() {
           </div>
         </section>
 
+        {/* 08 — Multi-line */}
+        <section>
+          <SectionLabel index="08" title="Multi-Line" />
+          <p className="mb-8 max-w-2xl text-sm text-dead-400">
+            A text that wraps must keep its exact line structure while it
+            scrambles — the animation can never add or remove a line. These
+            sit in a narrow column on purpose.
+          </p>
+          <div className="max-w-sm space-y-8">
+            <p className="text-lg leading-relaxed text-dead-200">
+              <ShuffleText
+                text="Animation that respects the line it is written on, whatever the width of its container."
+                trigger="hover"
+              />
+            </p>
+            <p className="text-lg leading-relaxed text-dead-200">
+              <ShuffleText
+                text="A second paragraph, in the same narrow column, with a reveal that runs from the centre outwards."
+                trigger="hover"
+                revealDirection="center"
+              />
+            </p>
+            <p className="text-lg leading-relaxed text-dead-200">
+              <ShuffleText
+                text="And a third one, scrambling with digits instead of letters."
+                trigger="hover"
+                characters="01"
+              />
+            </p>
+          </div>
+        </section>
+
         <div className="h-[20vh]" />
 
         <footer className="border-t border-dead-800 pt-8 text-xs text-dead-500">

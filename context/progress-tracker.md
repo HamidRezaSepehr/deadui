@@ -1528,6 +1528,35 @@ both packages, 7 curl cases against the live route, and
      playground controls reaching the component, and zero console/page
      errors.
 
+     **POST-RELEASE FIX (owner-reported): THE ANIMATION RAN ON TWO
+     LINES WHILE THE TEXT SAT ON ONE.** The owner saw the shuffle spill
+     onto a second line on the docs page and on the test route. Cause:
+     **a scramble is WIDER than the text it replaces** — `M` is wider than
+     `i` — and the animated copy is `absolute inset-0`, i.e. it is exactly
+     as tall as the reserved box. A soft wrap therefore did not make the
+     box grow, it made the second line SPILL OUT of it, which is exactly
+     what was on screen. The fix has two halves:
+     **(1) the text is held on one line for the duration of a run.** The
+     engine writes `white-space: pre` onto the animated copy before the
+     first frame and hands it back (`""` → the class's `pre-wrap`) when
+     the run ends, so the final state still wraps naturally and a resize
+     still re-wraps it. **(2) a text that wraps keeps its EXACT line
+     structure.** The line breaks of the final text are measured from the
+     invisible copy (a `Range` over its text node, one rect per
+     character) and re-inserted into every frame as explicit newlines —
+     which is why a multi-line text now runs on the local engine: the
+     library writes its own frames and cannot carry the breaks.
+     Measured after the fix: the animated copy's content height is
+     constant for the whole run (37px on the docs preview, 59px on the
+     two-line demo), the white-space is `pre` for every run frame and
+     `pre-wrap` at rest, and the final state is the exact text.
+     The load trigger now waits for the measurement, because the
+     measurement decides which engine runs. **14/14** new assertions
+     cover it, and the original **29/29** still pass — no regressions.
+     The tag `v0.1.21` was NOT moved: the published payload is the CLI
+     (`files: ["dist/"]`), which this fix does not touch, and the
+     component sources are served from `main` at install time.
+
 ## In Progress
 
 None. Feature 44 (Shuffle Text) is complete; `v0.1.21` is committed and
