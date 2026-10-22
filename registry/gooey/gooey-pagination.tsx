@@ -111,6 +111,7 @@ export function GooeyPagination({
                 animate={{
                   width: size,
                   height: size,
+                  opacity: isActive ? 1 : 0.45,
                 }}
                 transition={transition}
               >

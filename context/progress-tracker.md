@@ -6900,3 +6900,9 @@ commands handed over in the session report.
   **NOTE ON VERSION.** The spec asked for `0.1.25` / `v0.1.25`, but that version and
   tag were already released for Gooey Input. `0.1.26` / `v0.1.26` was used instead
   to avoid clobbering the prior release.
+
+  **POST-RELEASE FOLLOW-UP: INACTIVE DOTS VISIBLE WITH LOWER OPACITY.** The inner
+  circle now animates `opacity` to `1` when active and `0.45` when inactive, so
+  every dot stays visible by default (smaller + dimmer) and only the active dot
+  shows its number. The dots themselves are the click targets, so no separate
+  control buttons are needed. No version bump — ships on `main`.
