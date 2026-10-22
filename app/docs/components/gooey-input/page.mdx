@@ -1,0 +1,152 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GooeyInputPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Gooey Input",
+  description:
+    "An expandable search input whose icon morphs between the trigger and a bubble via layoutId, connected by a liquid SVG goo filter.",
+}
+
+# Gooey Input
+
+A circular search button that, when clicked, expands into a search input. The icon
+morphs between the trigger and a floating bubble through a shared `layoutId`, and
+the two stay connected by a liquid SVG goo filter while they travel. Framer Motion
+springs drive the morph.
+
+## Preview
+
+<ComponentCustomizer
+  component={GooeyInputPreview}
+  defaultProps={{
+    direction: "left",
+    speed: 1,
+    collapsedWidth: 115,
+    expandedWidth: 200,
+    expandedOffset: 50,
+    gooeyBlur: 5,
+  }}
+  controls={{
+    direction: { type: "select", options: ["left", "right"] },
+    speed: { type: "slider", min: 0.2, max: 4, step: 0.1, unit: "×" },
+    collapsedWidth: { type: "slider", min: 60, max: 160, step: 5, unit: "px" },
+    expandedWidth: { type: "slider", min: 140, max: 320, step: 5, unit: "px" },
+    expandedOffset: { type: "slider", min: 0, max: 120, step: 5, unit: "px" },
+    gooeyBlur: { type: "slider", min: 1, max: 15, step: 1, unit: "px" },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="gooey-input" tier="free" />
+
+## Usage
+
+```tsx
+import { GooeyInput } from "@/components/ui/gooey-input"
+
+export function Header() {
+  return <GooeyInput placeholder="Search…" />
+}
+```
+
+### Direction
+
+`direction` controls where the icon morphs to; the input expands the opposite way:
+
+```tsx
+<GooeyInput direction="left" />   // icon morphs left,  input expands right
+<GooeyInput direction="right" />  // icon morphs right, input expands left
+```
+
+### Speed
+
+`speed` is a multiplier on the animation duration (and the spring). `1` is the default:
+
+```tsx
+<GooeyInput speed={0.5} />  // slow
+<GooeyInput speed={1} />    // default
+<GooeyInput speed={2.5} />  // fast
+```
+
+### Controlled usage
+
+```tsx
+<GooeyInput
+  value={query}
+  onValueChange={setQuery}
+  onOpenChange={(open) => console.log(open)}
+  placeholder="Search users…"
+/>
+```
+
+### Custom widths and blur
+
+```tsx
+<GooeyInput
+  collapsedWidth={80}
+  expandedWidth={260}
+  expandedOffset={40}
+  gooeyBlur={8}
+/>
+```
+
+## How it works
+
+The trigger and the bubble both render a `SearchIcon` sharing the same `layoutId`
+(`gooey-input-icon-…`). When the input expands, Framer Motion morphs the icon
+from the trigger into the bubble, so it appears to detach and travel. The input
+itself is a `motion.input` with its own `layoutId` (`gooey-input-field-…`), so it
+animates its width in place.
+
+The whole stage is filtered with a gooey SVG filter:
+
+```svg
+<filter id="gooey-filter-…">
+  <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+  <feColorMatrix in="blur" type="matrix"
+    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="goo" />
+  <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+</filter>
+```
+
+The blur smears the alpha of the trigger and the bubble together; the matrix
+re-thresholds it, so the icon stays connected to the input by a liquid bridge
+while it morphs. The filter id is generated with `useId()`, so several inputs on
+one page never share a filter.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `direction` | `"left" \| "right"` | `"left"` | Where the icon morphs to; the input expands the opposite way. |
+| `placeholder` | `string` | `"Type to search..."` | Placeholder text for the input. |
+| `speed` | `number` | `1` | Animation speed multiplier. Higher snaps in faster. |
+| `collapsedWidth` | `number` | `115` | Width of the trigger in its collapsed state. |
+| `expandedWidth` | `number` | `200` | Width of the trigger in its expanded state. |
+| `expandedOffset` | `number` | `50` | Horizontal shift of the trigger when expanded. |
+| `gooeyBlur` | `number` | `5` | `stdDeviation` of the gooey blur. |
+| `value` | `string` | — | Controlled value. |
+| `defaultValue` | `string` | `""` | Initial value (uncontrolled). |
+| `onValueChange` | `(value: string) => void` | — | Fired when the input value changes. |
+| `onOpenChange` | `(open: boolean) => void` | — | Fired when the open state changes. |
+| `disabled` | `boolean` | `false` | Disables the input. |
+| `className` | `string` | — | Merged onto the wrapper. |
+| `classNames` | `GooeyInputClassNames` | — | Per-slot class overrides. |
+
+## Dependencies
+
+- `motion` (Framer Motion)
+
+## Performance
+
+- Only `transform`, `opacity`, `width` and `scale` are animated by the springs;
+  the SVG filter is applied once to the stage.
+- Under `prefers-reduced-motion: reduce` the springs collapse to `{ duration: 0 }`.
+
+## Accessibility
+
+- The trigger is a real `<button>` with `aria-expanded`? Actually `aria-expanded` is not set on the trigger in this implementation; the input is a real `<input>` with `autoFocus` on open, and Escape closes the field.
+- Reduced motion disables the springs.

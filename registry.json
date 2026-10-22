@@ -599,18 +599,17 @@
       "variants": []
     },
     {
-      "name": "gooey-search",
-      "title": "Gooey Search",
-      "description": "An expandable search input whose icon detaches in a configurable direction while the input expands the opposite way, connected by a liquid SVG goo filter.",
+      "name": "gooey-input",
+      "title": "Gooey Input",
+      "description": "An expandable search input whose icon morphs between the trigger and a bubble via layoutId, connected by a liquid SVG goo filter.",
       "tier": "free",
       "dependencies": [
-        "motion",
-        "lucide-react"
+        "motion"
       ],
       "files": [
         {
-          "path": "registry/gooey/gooey-search.tsx",
-          "target": "components/ui/gooey-search.tsx"
+          "path": "registry/gooey/gooey-input.tsx",
+          "target": "components/ui/gooey-input.tsx"
         }
       ],
       "variants": []

@@ -25,7 +25,7 @@ import {
 import { SpinningText } from "@/registry/spinning-text";
 import { MorphingText } from "@/registry/morphing-text";
 import { GooeyMenu } from "@/registry/gooey";
-import { GooeySearch } from "@/registry/gooey";
+import { GooeyInput } from "@/registry/gooey";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -470,17 +470,23 @@ export function GooeyMenuPreview(props: Record<string, unknown>) {
 }
 
 /**
- * `GooeySearch`'s `direction` control maps straight through.
+ * `GooeyInput`'s controls map straight through.
  */
-export function GooeySearchPreview(props: Record<string, unknown>) {
-  const direction = (props.direction as
-    | "left"
-    | "right"
-    | "top"
-    | "bottom") || "right";
+export function GooeyInputPreview(props: Record<string, unknown>) {
+  const direction = props.direction === "right" ? "right" : "left";
+  const speed = Number(props.speed);
+  const resolvedSpeed = Number.isFinite(speed) && speed > 0 ? speed : 1;
   return (
     <div className="flex min-h-[300px] w-full items-center justify-center">
-      <GooeySearch direction={direction} />
+      <GooeyInput
+        direction={direction}
+        speed={resolvedSpeed}
+        collapsedWidth={Number(props.collapsedWidth) || 115}
+        expandedWidth={Number(props.expandedWidth) || 200}
+        expandedOffset={Number(props.expandedOffset) || 50}
+        gooeyBlur={Number(props.gooeyBlur) || 5}
+        placeholder={(props.placeholder as string) || "Type to search..."}
+      />
     </div>
   );
 }
