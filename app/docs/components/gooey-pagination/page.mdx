@@ -25,6 +25,7 @@ and morphs through every intermediate circle, connected by a liquid SVG goo filt
     inactiveSize: 40,
     gap: 16,
     gooeyBlur: 8,
+    speed: 1,
   }}
   controls={{
     totalPages: { type: "slider", min: 3, max: 10, step: 1 },
@@ -32,6 +33,7 @@ and morphs through every intermediate circle, connected by a liquid SVG goo filt
     inactiveSize: { type: "slider", min: 8, max: 48, step: 2, unit: "px" },
     gap: { type: "slider", min: 8, max: 32, step: 2, unit: "px" },
     gooeyBlur: { type: "slider", min: 2, max: 16, step: 1, unit: "px" },
+    speed: { type: "slider", min: 0.2, max: 4, step: 0.1, unit: "×" },
   }}
   className="not-prose my-8"
 />
@@ -107,6 +109,7 @@ with `useId()`, so several paginations on one page never share a filter.
 | `inactiveSize` | `number` | `40` | Diameter of inactive dots in pixels. |
 | `gap` | `number` | `16` | Gap between items in pixels. |
 | `gooeyBlur` | `number` | `8` | `stdDeviation` of the gooey blur. |
+| `speed` | `number` | `1` | Animation speed multiplier. Higher snaps in faster. |
 | `className` | `string` | — | Merged onto the wrapper. |
 
 ## Dependencies

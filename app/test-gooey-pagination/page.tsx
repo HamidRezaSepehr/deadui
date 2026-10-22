@@ -68,6 +68,40 @@ export default function GooeyPaginationTestPage() {
             />
           </div>
         </section>
+
+        {/* 04 — Speed */}
+        <section>
+          <SectionLabel index="04" title="Speed" />
+          <div className="grid gap-10 lg:grid-cols-3">
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                speed 0.5 — slow
+              </div>
+              <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={0.5} />
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                speed 1 — default
+              </div>
+              <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={1} />
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                speed 2.5 — fast
+              </div>
+              <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={2.5} />
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-dead-400">
+            <code className="text-dead-200">speed</code> scales the spring duration (0.5s / speed).
+          </p>
+        </section>
       </div>
     </main>
   );
