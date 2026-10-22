@@ -613,6 +613,22 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "gooey-pagination",
+      "title": "Gooey Pagination",
+      "description": "A liquid, morphing pagination where the active state travels across pages using SVG filters and Framer Motion layoutId.",
+      "tier": "free",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/gooey/gooey-pagination.tsx",
+          "target": "components/ui/gooey-pagination.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }

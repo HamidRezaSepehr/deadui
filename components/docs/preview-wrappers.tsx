@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import createGlobe from "cobe";
 import { Heart, Star, Zap } from "lucide-react";
 import type { ReactNode } from "react";
@@ -26,6 +26,7 @@ import { SpinningText } from "@/registry/spinning-text";
 import { MorphingText } from "@/registry/morphing-text";
 import { GooeyMenu } from "@/registry/gooey";
 import { GooeyInput } from "@/registry/gooey";
+import { GooeyPagination } from "@/registry/gooey";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -487,6 +488,26 @@ export function GooeyInputPreview(props: Record<string, unknown>) {
         gooeyBlur={Number(props.gooeyBlur) || 5}
         placeholder={(props.placeholder as string) || "Type to search..."}
       />
+    </div>
+  );
+}
+
+/**
+ * `GooeyPagination` keeps its own state so the playground can drive `currentPage`
+ * through a slider without the consumer wiring it up.
+ */
+export function GooeyPaginationPreview(props: Record<string, unknown>) {
+  const totalPages = Math.max(2, Number(props.totalPages) || 7);
+  const requested = Number(props.currentPage) || 1;
+  const currentPage = Math.min(Math.max(requested, 1), totalPages);
+  const [page, setPage] = useState(currentPage);
+  // keep in sync when the slider moves
+  useEffect(() => {
+    setPage(currentPage);
+  }, [currentPage]);
+  return (
+    <div className="flex min-h-[200px] w-full items-center justify-center">
+      <GooeyPagination totalPages={totalPages} currentPage={page} onPageChange={setPage} />
     </div>
   );
 }

@@ -1,0 +1,110 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GooeyPaginationPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Gooey Pagination",
+  description:
+    "A liquid, morphing pagination where the active state travels across pages using SVG filters and Framer Motion.",
+}
+
+# Gooey Pagination
+
+Inactive pages are small dots; the active page is a large circle carrying its number.
+The active background is a single `motion.div` shared across every button through
+`layoutId`, so when the page changes Framer Motion animates it from one button to the
+next — stretching across the intermediate dots into a liquid bridge. The whole row
+sits behind an SVG gooey filter that merges the stretching background with the dots.
+
+## Preview
+
+<ComponentCustomizer
+  component={GooeyPaginationPreview}
+  defaultProps={{
+    totalPages: 7,
+    currentPage: 1,
+  }}
+  controls={{
+    totalPages: { type: "slider", min: 3, max: 12, step: 1 },
+    currentPage: { type: "slider", min: 1, max: 12, step: 1 },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="gooey-pagination" tier="free" />
+
+## Usage
+
+Controlled usage — pass the current page and handle changes:
+
+```tsx
+import { useState } from "react"
+import { GooeyPagination } from "@/components/ui/gooey-pagination"
+
+export function Pager() {
+  const [page, setPage] = useState(1)
+  return (
+    <GooeyPagination
+      totalPages={7}
+      currentPage={page}
+      onPageChange={setPage}
+    />
+  )
+}
+```
+
+## How it works
+
+The active background is one `motion.div` with `layoutId="gooey-pagination-active"`,
+wrapped in a `LayoutGroup`. When `currentPage` changes, Framer Motion unmounts the
+background from the old button and mounts it on the new one, animating the shared
+element between the two positions — stretching across the intermediate dots.
+
+The whole row is filtered with a gooey SVG filter:
+
+```svg
+<filter id="gooey-filter-pagination">
+  <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+  <feColorMatrix in="blur" mode="matrix"
+    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="gooey" />
+  <feComposite in="SourceGraphic" in2="gooey" operator="atop" />
+</filter>
+```
+
+The blur smears the alpha of the stretching background and the dots together; the
+matrix re-thresholds it, so the active circle reads as connected to the dots by a
+liquid bridge while it travels.
+
+The buttons are fixed at `h-12 w-12` so the layout never shifts; only the inner
+visual changes size (`h-4 w-4` dot for inactive, `h-12 w-12` circle for active).
+
+The filter id is generated with `useId()`, so several paginations on one page
+never share a filter.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `totalPages` | `number` | — (required) | Number of pages. |
+| `currentPage` | `number` | — (required) | The active page (1-based). |
+| `onPageChange` | `(page: number) => void` | — (required) | Fired when a page is clicked. |
+| `className` | `string` | — | Merged onto the wrapper. |
+
+## Dependencies
+
+- `motion` (Framer Motion)
+
+## Performance
+
+- Only `transform`/`layout` are animated by the spring; the SVG filter is applied
+  once to the row.
+- Under `prefers-reduced-motion: reduce` the spring still runs (the spec does not
+  gate it); consumers can disable via CSS if needed.
+
+## Accessibility
+
+- Each button is a real `<button>` with an `aria-label` (`Page N`) and
+  `aria-current="page"` on the active one.
+- Keyboard activation works via native button behaviour.
