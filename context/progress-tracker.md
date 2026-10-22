@@ -5,70 +5,49 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 44 (Shuffle Text)
+Phase 1: Component Implementation — Feature 45 (Morphing Text)
 
 ## Current Goal
 
-**Feature 44: Shuffle Text (Free) — a character-shuffle text reveal powered by shuffle-letters** — complete.
-`registry/shuffle-text/shuffle-text.tsx` wraps `shuffle-letters@1.1.0` and exposes three triggers
-(`load`, `inView`, `hover`) plus `iterations`, `revealDirection`, `characters`,
-`useOriginalCharsOnly` and `fps` as props.
-`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["shuffle-letters"]`) —
-manifest now **25 components**.
-Test page at `app/test-shuffle-text/page.tsx` (7 sections: load / live text / in-view / hover /
-reveal directions / character pools / speed).
-Docs page at `app/docs/components/shuffle-text/page.mdx` with live `ComponentCustomizer` and the
-`ShuffleTextPreview` adapter in `components/docs/preview-wrappers.tsx`.
-`shuffle-letters@1.1.0` installed as a root dependency.
+**Feature 45: Morphing Text (Free) — a liquid text morph built on `requestAnimationFrame` and an SVG threshold filter** — complete.
+`registry/morphing-text/morphing-text.tsx` exposes `texts`, `morphTime`, `cooldownTime`, `filterBlur` and `threshold` as props.
+`registry.json` updated with the new entry (`tier: "free"`, `dependencies: []`) — manifest now **26 components**.
+Test page at `app/test-morphing-text/page.tsx` (5 stages: default / fast / slow / two custom blur+threshold variants).
+Docs page at `app/docs/components/morphing-text/page.mdx` with live `ComponentCustomizer` and the
+`MorphingTextPreview` adapter in `components/docs/preview-wrappers.tsx`.
 
-**THE SPEC'S REFERENCE CODE CALLS AN API THE PACKAGE DOES NOT HAVE.** The spec writes
-`new ShuffleLetters(el, {...})` with `.start()` / `.destroy()` and the options `revealDirection`,
-`characters` and `useOriginalCharsOnly`. The published `shuffle-letters` package exposes exactly
-one function — `shuffleLetters(element, config)` — which returns the function that STOPS the
-animation; there is no constructor, no `start()`, no `destroy()`, no `revealDirection`, no custom
-character pool and no `useOriginalCharsOnly` (those three are options of the ORIGINAL jQuery
-plugin the package was ported from). Shipping the spec's snippet verbatim would have crashed on
-mount with `ShuffleLetters is not a constructor`.
+**THE SPEC'S REFERENCE CODE NEVER ADVANCES THE MORPH.** The reference `doMorph()` reads
+`morphRef.current / morphTime` and subtracts the cooldown from `morphRef`, but nothing ever
+ADDS the frame delta to `morphRef` — the counter only ever goes down, so the fraction stays
+negative, `setStyles()` renders a permanently blank stage, and `fraction === 1` is never
+reached, so the word index never advances either. The spec's snippet would have shipped a
+component that animates nothing at all. The engine here adds the delta to the morph clock
+every frame and advances the word index when the fraction reaches 1.
 
-**THE COMPONENT THEREFORE SHIPS A SMALL ENGINE OF ITS OWN, AND THE PACKAGE IS STILL THE ENGINE
-FOR THE DEFAULT CONFIGURATION.** The standard configuration — a left-to-right reveal with the
-library's own type-matched character pools — runs on `shuffle-letters` itself, so
-`shuffle-letters` stays a real runtime dependency of the installed component and the default look
-is the library's own. Every configuration the library cannot express (any reveal order other than
-`start`, a custom `characters` pool, `useOriginalCharsOnly`) runs on a local engine that mirrors
-the library's algorithm frame for frame and adds those three options. The two paths write the same
-frames and both end on the exact text.
+**THE FILTER IS APPLIED INLINE, NOT THROUGH A GLOBAL CSS SELECTOR.** The reference wraps the
+stage in a `<style>` block that targets `.relative.mx-auto` — a class combination that also
+matches any other element on the page with those two classes, so every instance on a page
+(and every unrelated element that happens to share the class) would inherit the same
+`filter: url(#threshold)`. Two instances would also share one `<filter id="threshold">`. The
+filter id here comes from `useId()` (sanitised down to characters that are legal in a
+`url(#…)` token), so N instances have N filters, and the `filter` is an inline style on the
+stage, so `filterBlur` stays a live prop.
 
-**A REVEAL ORDER IS ONLY MEANINGFUL IF THE CHARACTERS STAY WHERE THEY ARE.** The library's frame
-model drops the not-yet-revealed characters out of the string (they become `''`), which is fine for
-a left-to-right reveal — the text simply grows from the left — but it makes "the tail reveals
-first" read as *reversed text* rather than as a reveal. The local engine therefore keeps the
-unrevealed slots as blanks, and the animated copy is rendered with `whitespace-pre-wrap` so those
-blanks survive. The browser proved it: the first scrambled frame of `revealDirection="end"` on
-"Reveal order" is `'           b'` (eleven blanks, then the scrambling tail), against `'G '` for
-`"start"`.
-
-Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11 pre-existing warnings,
-none from the new files), `npm run build` clean with `/docs/components/shuffle-text` and
-`/test-shuffle-text` both `○ (Static)`, `cd packages/cli && npm run build` clean
-(`deadui@0.1.21`), a live CLI install of the component from the local checkout
-(`components/ui/shuffle-text.tsx` + `components/ui/shuffle-letters.d.ts`, dependency
-`shuffle-letters` detected and offered), and **29/29** automated Playwright/Chromium assertions
-against `next start` on port 3100 — load/in-view/hover triggers, in-view playing exactly once,
-hover replaying, the three reveal orders resolving in place, the custom pool and the
-original-characters pool, a stable root width (zero CLS), reduced motion skipping the animation
-and rendering the text statically, the docs playground controls reaching the component, and zero
+Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11 pre-existing
+warnings, none from the new files), `npm run build` clean with both new routes `○ (Static)`,
+`cd packages/cli && npm run build` clean (`deadui@0.1.22`), and **22/22** automated
+Playwright/Chromium assertions against `next start` on port 3200 — the morph advancing on
+schedule (fast stage advances inside 1.2s, slow stage holds its word for 2.5s), the
+`threshold` prop reaching the `feColorMatrix` values per instance (-140 / -40 / -220), the
+`filterBlur` prop reaching the computed inline `filter` (0.6px / 2px / 0.2px), five unique
+filter ids on one page, both layers' opacities staying inside 0..100, the docs playground
+rendering with its four controls, reduced motion holding the first word statically, and zero
 console/page errors.
 
-**THE COMPONENT RENDERS THE TEXT THREE TIMES.** An invisible copy reserves the final width (so the
-shuffle can never shift the layout — zero CLS), the animated copy is painted on top of it, and an
-`sr-only` copy carries the text for assistive technology, because the animated copy is scrambled
-while it runs and must not be announced.
+`packages/cli` `0.1.21` → **`0.1.22`**. Tag `v0.1.22` created and pushed. The owner runs
+the manual npm publish from `packages/cli` — exact commands handed over in the session
+report.
 
-`packages/cli` `0.1.19` → **`0.1.21`** (the spec's `0.1.21`; note that `0.1.20` is skipped —
-see Next Up #21). Tag `v0.1.21` created and pushed. GitHub Actions is not currently publishing,
-so the owner runs the manual npm publish from `packages/cli` — exact commands handed over in the
-session report.
 
 ## Completed
 
@@ -1559,10 +1538,9 @@ both packages, 7 curl cases against the live route, and
 
 ## In Progress
 
-None. Feature 44 (Shuffle Text) is complete; `v0.1.21` is committed and
-pushed. GitHub Actions is not currently publishing, so the owner runs the
-manual npm publish from `packages/cli` — exact commands handed over in the
-session report.
+None. Feature 45 (Morphing Text) is complete; `v0.1.22` is committed and
+pushed. The owner runs the manual npm publish from `packages/cli` — exact
+commands handed over in the session report.
 
 ## Next Up
 
@@ -1836,6 +1814,7 @@ session report.
 | 21 | Typewriter | Free | COMPLETE (Feature 42) | ✅ (F42) | — (configurable via props: text string/array, delay, deleteSpeed, loop, autoStart, cursor glyph, cursorColor, cursorWidth, cursorHeight, onComplete) |
 | 22 | Globe | Free | COMPLETE (Feature 43) | ✅ (F43) | — (configurable via props: size, phi, theta, dark, diffuse, baseColor, markerColor, glowColor, markers, opacity, autoRotate, autoRotateSpeed) |
 | 23 | Shuffle Text | Free | COMPLETE (Feature 44) | ✅ (F44) | — (configurable via props: text, trigger load/inView/hover, iterations, revealDirection start/end/center/random, characters, useOriginalCharsOnly, fps) |
+| 24 | Morphing Text | Free | COMPLETE (Feature 45) | ✅ (F45) | — (configurable via props: texts, morphTime, cooldownTime, filterBlur, threshold) |
 
 ## Open Questions
 
@@ -6734,3 +6713,62 @@ session report.
   BEFORE the first RAF executes (the callback runs synchronously from
   componentDidMount, constructor included) — verified: zero character
   growth over a 1s window at `delay=50`.
+
+- Feature 45 (feature spec `45-morphing-text.md`): `MorphingText` (Free).
+  Created `registry/morphing-text/morphing-text.tsx` + `index.ts`,
+  `app/test-morphing-text/page.tsx`,
+  `app/docs/components/morphing-text/page.mdx`; modified `registry.json`
+  (entry appended, 26 components), `components/docs/preview-wrappers.tsx`
+  (`MorphingTextPreview`), `packages/cli/package.json` (`0.1.21` → `0.1.22`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors
+  (11 pre-existing warnings, none from the new files), `npm run build` clean
+  with both new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.22`), and **22/22** automated Playwright/Chromium assertions
+  against `next start` on port 3200. Branch, commit and tag `v0.1.22` pushed;
+  manual npm publish steps handed to the owner.
+
+  **THE SPEC'S REFERENCE ENGINE NEVER ADVANCES THE MORPH.** The reference
+  `doMorph()` computes `fraction = morphRef.current / morphTime` and
+  subtracts the cooldown from `morphRef`, but NOTHING ADDS THE FRAME DELTA TO
+  `morphRef` — the counter is only ever decremented, so the fraction stays
+  negative, `setStyles()` renders a permanently blank stage, and
+  `fraction === 1` is never reached, so `textIndex` never advances either.
+  Verbatim, the component would have animated nothing at all. The engine here
+  accumulates the clamped delta into a morph clock and advances the word index
+  when the fraction reaches 1, at which point the finished word is promoted
+  from the back layer to the front layer and the next morph is armed.
+
+  **THE TIMING PROPS ARE READ THROUGH REFS, NOT THROUGH THE EFFECT DEPS.**
+  `morphTime`, `cooldownTime` and `texts` are mirrored into refs by their own
+  effects, and the `requestAnimationFrame` loop is created once with a stable
+  `paint` callback. That is what makes the props live without restarting the
+  animation: the loop is never torn down, and a prop change is picked up on the
+  next frame. The alternative — putting the timings in the effect's dependency
+  array — would cancel and re-create the loop on every change, restarting the
+  morph from zero each time. There is no React state in the loop at all, so
+  the animation cannot cause a re-render loop.
+
+  **THE FILTER IS INLINE AND PER-INSTANCE, NOT A GLOBAL CSS SELECTOR.** The
+  reference wraps the stage in a `<style>` block targeting `.relative.mx-auto`
+  — a selector that also matches any unrelated element on the page carrying
+  those two classes — and every instance would share the single
+  `<filter id="threshold">`. Here the id comes from `useId()` sanitised to
+  characters that are legal inside a `url(#…)` token (React 19 emits
+  `_R_…_`/`_r_…_`), so N instances have N filters (verified: five unique ids on
+  the test page), and the `filter` is an inline style on the stage, so
+  `filterBlur` is a live prop and nothing leaks into the rest of the page.
+  The `threshold` prop reaches the `feColorMatrix` values through ordinary
+  React rendering, so it updates live as well (verified: -140 / -40 / -220 on
+  the three test stages).
+
+  **THE FRAME DELTA IS CLAMPED TO 100ms.** A backgrounded tab reports one huge
+  delta when it wakes up; without the clamp the morph would jump straight to
+  its end state. The clamp costs nothing on a visible tab (a 60fps frame is
+  ~16ms).
+
+  **THE ANIMATED LAYERS ARE `aria-hidden` AND THE WORDS ARE PUBLISHED ONCE.**
+  The two layers are written to the DOM by hand, so their content changes
+  every frame; announcing them would be noise. The full list of words is
+  rendered once in an `sr-only` element for assistive technology. Under
+  `prefers-reduced-motion: reduce` the loop never starts — the first word is
+  painted once and held (verified in a `reduced_motion="reduce"` context).
