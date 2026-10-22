@@ -39,7 +39,7 @@ export function GooeyPagination({
   onPageChange,
   className,
   activeSize = 48,
-  inactiveSize = 16,
+  inactiveSize = 40,
   gap = 16,
   gooeyBlur = 8,
 }: GooeyPaginationProps) {
@@ -111,7 +111,7 @@ export function GooeyPagination({
                 animate={{
                   width: size,
                   height: size,
-                  opacity: isActive ? 1 : 0.45,
+                  opacity: isActive ? 1 : 0.6,
                 }}
                 transition={transition}
               >

@@ -6906,3 +6906,9 @@ commands handed over in the session report.
   every dot stays visible by default (smaller + dimmer) and only the active dot
   shows its number. The dots themselves are the click targets, so no separate
   control buttons are needed. No version bump — ships on `main`.
+
+  **POST-RELEASE FOLLOW-UP #2: INACTIVE DOTS MADE VISIBLE.** The gooey filter's
+  threshold (`20*A - 10`) kills any dot whose blurred alpha is below 0.5, so the
+  previous 16px inactive dots vanished entirely. The default `inactiveSize` is now
+  `40` (still smaller than the 48px active) so the dots survive the filter and
+  stay clearly visible. `gooeyBlur` stays at the spec's `8`. No version bump.

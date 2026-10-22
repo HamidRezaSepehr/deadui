@@ -22,14 +22,14 @@ and morphs through every intermediate circle, connected by a liquid SVG goo filt
     totalPages: 6,
     currentPage: 1,
     activeSize: 48,
-    inactiveSize: 16,
+    inactiveSize: 40,
     gap: 16,
     gooeyBlur: 8,
   }}
   controls={{
     totalPages: { type: "slider", min: 3, max: 10, step: 1 },
     activeSize: { type: "slider", min: 32, max: 72, step: 4, unit: "px" },
-    inactiveSize: { type: "slider", min: 8, max: 24, step: 2, unit: "px" },
+    inactiveSize: { type: "slider", min: 8, max: 48, step: 2, unit: "px" },
     gap: { type: "slider", min: 8, max: 32, step: 2, unit: "px" },
     gooeyBlur: { type: "slider", min: 2, max: 16, step: 1, unit: "px" },
   }}
@@ -104,7 +104,7 @@ with `useId()`, so several paginations on one page never share a filter.
 | `currentPage` | `number` | — (required) | The currently active page (1-based). |
 | `onPageChange` | `(page: number) => void` | — (required) | Fired when a page is clicked. |
 | `activeSize` | `number` | `48` | Diameter of the active circle in pixels. |
-| `inactiveSize` | `number` | `16` | Diameter of inactive dots in pixels. |
+| `inactiveSize` | `number` | `40` | Diameter of inactive dots in pixels. |
 | `gap` | `number` | `16` | Gap between items in pixels. |
 | `gooeyBlur` | `number` | `8` | `stdDeviation` of the gooey blur. |
 | `className` | `string` | — | Merged onto the wrapper. |
