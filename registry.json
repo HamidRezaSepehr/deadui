@@ -580,6 +580,23 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "gooey-menu",
+      "title": "Gooey Menu",
+      "description": "A floating action button whose satellites expand in 5 directions behind a liquid SVG goo filter, driven by Framer Motion springs.",
+      "tier": "free",
+      "dependencies": [
+        "motion",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "registry/gooey/gooey-menu.tsx",
+          "target": "components/ui/gooey-menu.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }

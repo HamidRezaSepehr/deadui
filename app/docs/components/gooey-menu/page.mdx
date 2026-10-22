@@ -1,0 +1,134 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GooeyMenuPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Gooey Menu",
+  description:
+    "A floating action button whose satellites expand in 5 directions behind a liquid SVG goo filter, driven by Framer Motion springs.",
+}
+
+# Gooey Menu
+
+A floating action button that expands into satellite items. The button and the
+satellites are rendered inside a container carrying an SVG `feGaussianBlur` +
+`feColorMatrix` filter, so the satellites stay connected to the button by a
+liquid bridge while they travel. Framer Motion springs drive the travel.
+
+## Preview
+
+<ComponentCustomizer
+  component={GooeyMenuPreview}
+  defaultProps={{
+    direction: "top",
+  }}
+  controls={{
+    direction: { type: "select", options: ["top", "bottom", "left", "right", "radial"] },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="gooey-menu" tier="free" />
+
+## Usage
+
+Pass the satellite items — each one needs an `icon`, and optionally an `href`,
+`onClick` and `label`:
+
+```tsx
+import { GooeyMenu } from "@/components/ui/gooey-menu"
+import { Home, Search, User, Settings } from "lucide-react"
+
+export function Fab() {
+  return (
+    <GooeyMenu
+      direction="top"
+      items={[
+        { icon: <Home size={20} />, label: "Home", href: "/" },
+        { icon: <Search size={20} />, label: "Search", href: "/search" },
+        { icon: <User size={20} />, label: "Profile", href: "/profile" },
+        { icon: <Settings size={20} />, label: "Settings", href: "/settings" },
+      ]}
+    />
+  )
+}
+```
+
+### Directions
+
+`direction` controls where the satellites travel from the button:
+
+```tsx
+<GooeyMenu items={items} direction="top" />      // up
+<GooeyMenu items={items} direction="bottom" />   // down
+<GooeyMenu items={items} direction="left" />     // left
+<GooeyMenu items={items} direction="right" />     // right
+<GooeyMenu items={items} direction="radial" />   // around the button
+```
+
+### Custom main icon
+
+Replace the default `+` with anything. It rotates 135° while the menu is open:
+
+```tsx
+<GooeyMenu items={items} mainIcon={<X size={22} />} />
+```
+
+## How it works
+
+The whole stage is filtered with a gooey SVG filter:
+
+```svg
+<filter id="gooey-filter-menu">
+  <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+  <feColorMatrix in="blur" mode="matrix"
+    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="gooey" />
+  <feComposite in="SourceGraphic" in2="gooey" operator="atop" />
+</filter>
+```
+
+The blur smears the alpha of the button and the satellites together; the matrix
+re-thresholds it, so the items read as connected to the button by a liquid
+bridge while they travel. The bridge stretches and snaps because Framer Motion
+springs drive the positions, and the satellites stagger in by `index * 0.05s`.
+
+The filter id is generated with `useId()`, so several menus on one page never
+share a filter.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `items` | `GooeyMenuItem[]` | — (required) | The satellite items. Each needs an `icon`; `href`, `onClick` and `label` are optional. |
+| `direction` | `"top" \| "bottom" \| "left" \| "right" \| "radial"` | `"top"` | Where the satellites travel from the button. |
+| `mainIcon` | `React.ReactNode` | `<span>+</span>` | The button's icon. Rotates 135° while open. |
+| `className` | `string` | — | Merged onto the wrapper. |
+
+### `GooeyMenuItem`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `icon` | `React.ReactNode` | (required) The item's icon. |
+| `href` | `string` | Rendered as an anchor when provided, otherwise a button. |
+| `onClick` | `() => void` | Click handler (button mode). |
+| `label` | `string` | Tooltip / `aria-label`. |
+
+## Dependencies
+
+- `motion` (Framer Motion)
+- `lucide-react` (icons in the examples only — any icon set works)
+
+## Performance
+
+- Only `transform` and `opacity` are animated by the springs; the SVG filter is
+  applied once to the stage.
+- Under `prefers-reduced-motion: reduce` the satellites appear instantly and the
+  button does not rotate.
+
+## Accessibility
+
+- The main button is a real `<button>` with `aria-expanded` and `aria-label`.
+- Each satellite is a real `<a>` or `<button>` with an `aria-label` from `label`.
+- Reduced motion disables the springs and the rotation.

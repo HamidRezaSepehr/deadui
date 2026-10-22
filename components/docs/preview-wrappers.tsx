@@ -24,6 +24,7 @@ import {
 } from "@/registry/shuffle-text";
 import { SpinningText } from "@/registry/spinning-text";
 import { MorphingText } from "@/registry/morphing-text";
+import { GooeyMenu } from "@/registry/gooey";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -435,6 +436,30 @@ export function MorphingTextPreview(props: Record<string, unknown>) {
         filterBlur={`${num(props.filterBlur, 0.6)}px`}
         className="text-[2.5rem] md:text-[3.5rem]"
       />
+    </div>
+  );
+}
+
+/**
+ * `GooeyMenu`'s `items` prop is a required array the customizer has no control
+ * for, so the demo satellites are supplied here. `direction` is the only control.
+ */
+export function GooeyMenuPreview(props: Record<string, unknown>) {
+  const direction = (props.direction as
+    | "top"
+    | "bottom"
+    | "left"
+    | "right"
+    | "radial") || "top";
+  const items = [
+    { icon: <span className="text-xs">A</span>, label: "Alpha" },
+    { icon: <span className="text-xs">B</span>, label: "Bravo" },
+    { icon: <span className="text-xs">C</span>, label: "Charlie" },
+    { icon: <span className="text-xs">D</span>, label: "Delta" },
+  ];
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center">
+      <GooeyMenu items={items} direction={direction} />
     </div>
   );
 }
