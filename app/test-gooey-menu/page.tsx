@@ -171,6 +171,41 @@ export default function GooeyMenuTestPage() {
             clamped to a minimum of 0.
           </p>
         </section>
+
+        {/* 09 — Distance × Direction */}
+        <section>
+          <SectionLabel index="09" title="Distance × Direction" />
+          <div className="grid gap-10 lg:grid-cols-3">
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                top · distance 120
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="top" distance={120} />
+              </Stage>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                left · distance 120
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="left" distance={120} />
+              </Stage>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                right · distance 120
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="right" distance={120} />
+              </Stage>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-dead-400">
+            <code className="text-dead-200">distance</code> works on every axis: top/bottom scale
+            the vertical step, left/right scale the horizontal step.
+          </p>
+        </section>
       </div>
     </main>
   );
