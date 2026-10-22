@@ -159,7 +159,7 @@ export function GooeyInput({
       collapsed: { width: collapsedWidth, marginLeft: 0, marginRight: 0 },
       expanded:
         direction === "right"
-          ? { width: expandedWidth, marginLeft: -expandedOffset, marginRight: 0 }
+          ? { width: expandedWidth, marginLeft: 0, marginRight: expandedOffset }
           : { width: expandedWidth, marginLeft: expandedOffset, marginRight: 0 },
     }),
     [collapsedWidth, expandedWidth, expandedOffset, direction],
