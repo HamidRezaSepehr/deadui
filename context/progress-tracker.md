@@ -5,47 +5,33 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 46 (Gooey Menu)
+Phase 1: Component Implementation — Feature 47 (Gooey Search)
 
 ## Current Goal
 
-**Feature 46: Gooey Menu (Free) — a floating action button whose satellites expand in 5 directions behind a liquid SVG goo filter** — complete.
-`registry/gooey/gooey-menu.tsx` exposes `items`, `direction` (`top`/`bottom`/`left`/`right`/`radial`), `mainIcon` and `className` as props.
-`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["motion", "lucide-react"]`) — manifest now **27 components**.
-Test page at `app/test-gooey-menu/page.tsx` (6 stages: 5 directions + custom main icon).
-Docs page at `app/docs/components/gooey-menu/page.mdx` with live `ComponentCustomizer` and the
-`GooeyMenuPreview` adapter in `components/docs/preview-wrappers.tsx`.
+**Feature 47: Gooey Search (Free) — an expandable search input whose icon detaches in a configurable direction while the input expands the opposite way** — complete.
+`registry/gooey/gooey-search.tsx` exposes `direction` (`left`/`right`/`top`/`bottom`), `placeholder`, `onSearch` and `className` as props.
+`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["motion", "lucide-react"]`) — manifest now **28 components**.
+Test page at `app/test-gooey-search/page.tsx` (5 stages: 4 directions + onSearch callback).
+Docs page at `app/docs/components/gooey-search/page.mdx` with live `ComponentCustomizer` and the
+`GooeySearchPreview` adapter in `components/docs/preview-wrappers.tsx`.
 
-**THE FILTER IS PER-INSTANCE.** The spec uses a fixed `id="gooey-filter-menu"`. On a page with
-several menus (the test page has six) they would all share one filter and one `stdDeviation`,
-which works but couples every instance to the first one's markup. The id here comes from
-`useId()` sanitised to characters legal inside a `url(#…)` token, so N menus have N filters
-(verified: six unique ids on the test page).
+**THE FILTER IS PER-INSTANCE.** The spec uses a fixed `id="gooey-filter-search"`. The id here
+comes from `useId()` sanitised to characters legal inside a `url(#…)` token, so N searches
+have N filters.
 
-**THE SATELLITES ARE REAL ELEMENTS, NOT DECORATIONS.** Each satellite is an `<a>` when it
-carries an `href` and a `<button>` otherwise, with an `aria-label` from `label`, so the menu
-is keyboard- and screen-reader-usable. The main button is a real `<button>` with
-`aria-expanded` and `aria-label`.
+**THE ICON AND INPUT MOVE IN OPPOSITE DIRECTIONS.** The icon travels `±220px` on the chosen
+axis while the input expands on the opposite side via absolute positioning (left/right/top/bottom
++ a centred translate for the vertical variants). Both are driven by the same spring so the
+liquid bridge stretches and snaps as one motion.
 
-**FRAMER MOTION SPRINGS DRIVE THE TRAVEL.** `AnimatePresence` mounts/unmounts the satellites
-with spring transitions (`stiffness: 200`, `damping: 15`, staggered by `index * 0.05s`), which
-is what makes the liquid bridge stretch and snap. Under `prefers-reduced-motion: reduce` the
-springs collapse to `{ duration: 0 }` and the button does not rotate.
+**COLORS ADAPTED TO THE DEAD THEME.** The spec uses `bg-primary`/`text-primary-foreground`,
+which do not exist in this codebase; the button and input use `bg-dead-red`/`text-white`.
 
-**INTERRUPTED TOGGLES DON'T FULLY REMOVE.** Toggling faster than the enter animation settles
-(~400 ms) leaves the exiting satellites in the DOM until the next toggle; this is a Framer
-Motion edge case with interrupted springs and does not affect normal usage (verified: open for
-700 ms then close removes all satellites; 16/16 Playwright assertions pass).
+Full verification: `npx tsc --noEmit` clean, `npm run build` clean with both new routes
+`○ (Static)`, `cd packages/cli && npm run build` clean (`deadui@0.1.24`).
 
-Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11 pre-existing
-warnings, none from the new files), `npm run build` clean with both new routes `○ (Static)`,
-`cd packages/cli && npm run build` clean (`deadui@0.1.23`), and **16/16** automated
-Playwright/Chromium assertions against `next start` on port 3200 — six unique gooey filters,
-`feGaussianBlur`/`feColorMatrix` per filter with `stdDeviation="10"` and `18 -7`, satellites
-appearing on open and removed on close, the docs playground rendering with its direction
-control, reduced motion still rendering the satellites, and zero console/page errors.
-
-`packages/cli` `0.1.22` → **`0.1.23`**. Tag `v0.1.23` created and pushed. The owner runs
+`packages/cli` `0.1.23` → **`0.1.24`**. Tag `v0.1.24` created and pushed. The owner runs
 the manual npm publish from `packages/cli` — exact commands handed over in the session
 report.
 
@@ -1538,7 +1524,7 @@ both packages, 7 curl cases against the live route, and
 
 ## In Progress
 
-None. Feature 46 (Gooey Menu) is complete; `v0.1.23` is committed and
+None. Feature 47 (Gooey Search) is complete; `v0.1.24` is committed and
 pushed. The owner runs the manual npm publish from `packages/cli` — exact
 commands handed over in the session report.
 
@@ -1815,7 +1801,8 @@ commands handed over in the session report.
 | 22 | Globe | Free | COMPLETE (Feature 43) | ✅ (F43) | — (configurable via props: size, phi, theta, dark, diffuse, baseColor, markerColor, glowColor, markers, opacity, autoRotate, autoRotateSpeed) |
 | 23 | Shuffle Text | Free | COMPLETE (Feature 44) | ✅ (F44) | — (configurable via props: text, trigger load/inView/hover, iterations, revealDirection start/end/center/random, characters, useOriginalCharsOnly, fps) |
 | 24 | Morphing Text | Free | COMPLETE (Feature 45) | ✅ (F45) | — (configurable via props: texts, morphTime, cooldownTime, filterBlur, threshold) |
-| 25 | Gooey Menu | Free | COMPLETE (Feature 46) | ✅ (F46) | — (configurable via props: items, direction top/bottom/left/right/radial, mainIcon) |
+| 25 | Gooey Menu | Free | COMPLETE (Feature 46) | ✅ (F46) | — (configurable via props: items, direction top/bottom/left/right/radial, mainIcon, speed, distance) |
+| 26 | Gooey Search | Free | COMPLETE (Feature 47) | ✅ (F47) | — (configurable via props: direction left/right/top/bottom, placeholder, onSearch) |
 
 ## Open Questions
 
@@ -6820,3 +6807,32 @@ commands handed over in the session report.
   clamped to a minimum of `0`. Exposed in the docs playground (`distance` slider,
   20–200 px) and demonstrated on the test route (40 / 80 / 140 px). No version
   bump — ships on `main` alongside `v0.1.23`.
+
+- Feature 47 (feature spec `47-gooey-search.md`): `GooeySearch` (Free). Created
+  `registry/gooey/gooey-search.tsx`, `app/test-gooey-search/page.tsx`,
+  `app/docs/components/gooey-search/page.mdx`; modified `registry.json` (entry
+  appended, 28 components), `components/docs/preview-wrappers.tsx`
+  (`GooeySearchPreview`), `registry/gooey/index.ts` (barrel export),
+  `packages/cli/package.json` (`0.1.23` → `0.1.24`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11
+  pre-existing warnings, none from the new files), `npm run build` clean with
+  both new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.24`). Branch, commit and tag `v0.1.24` pushed; manual npm
+  publish steps handed to the owner.
+
+  **THE FILTER IS PER-INSTANCE.** The spec uses a fixed `id="gooey-filter-search"`.
+  The id here comes from `useId()` sanitised to characters legal inside a
+  `url(#…)` token, so N searches have N filters.
+
+  **THE ICON AND INPUT MOVE IN OPPOSITE DIRECTIONS.** The icon travels `±220px`
+  on the chosen axis while the input expands on the opposite side via absolute
+  positioning (left/right/top/bottom, plus a centred translate for the vertical
+  variants). Both are driven by the same spring so the liquid bridge stretches
+  and snaps as one motion.
+
+  **COLORS ADAPTED TO THE DEAD THEME.** The spec uses `bg-primary` /
+  `text-primary-foreground`, which do not exist in this codebase; the button and
+  input use `bg-dead-red` / `text-white`.
+
+  **REDUCED MOTION.** Under `prefers-reduced-motion: reduce` the springs
+  collapse to `{ duration: 0 }`.
