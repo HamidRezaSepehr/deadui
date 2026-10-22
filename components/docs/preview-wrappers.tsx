@@ -25,6 +25,7 @@ import {
 import { SpinningText } from "@/registry/spinning-text";
 import { MorphingText } from "@/registry/morphing-text";
 import { GooeyMenu } from "@/registry/gooey";
+import { GooeySearch } from "@/registry/gooey";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -464,6 +465,22 @@ export function GooeyMenuPreview(props: Record<string, unknown>) {
   return (
     <div className="flex min-h-[300px] w-full items-center justify-center">
       <GooeyMenu items={items} direction={direction} speed={resolvedSpeed} distance={resolvedDistance} />
+    </div>
+  );
+}
+
+/**
+ * `GooeySearch`'s `direction` control maps straight through.
+ */
+export function GooeySearchPreview(props: Record<string, unknown>) {
+  const direction = (props.direction as
+    | "left"
+    | "right"
+    | "top"
+    | "bottom") || "right";
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center">
+      <GooeySearch direction={direction} />
     </div>
   );
 }

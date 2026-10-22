@@ -154,3 +154,13 @@ Add entry:
     }
   ]
 }
+
+
+### 3. Test Page & Documentation
+app/test-gooey-search/page.tsx: Showcase the search input in all 4 directions (left, right, top, bottom).
+app/docs/components/gooey-search/page.mdx: Document the direction prop, onSearch callback, and the underlying SVG filter mechanism.
+
+### 4. Release Workflow
+Bump packages/cli/package.json to 0.1.24.
+Commit, tag v0.1.24, push.
+Provide manual npm publish commands at the end.

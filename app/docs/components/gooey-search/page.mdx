@@ -1,0 +1,123 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GooeySearchPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Gooey Search",
+  description:
+    "An expandable search input whose icon detaches in a configurable direction while the input expands the opposite way, connected by a liquid SVG goo filter.",
+}
+
+# Gooey Search
+
+A circular search button that, when clicked, detaches its icon in the chosen
+`direction` while an input expands in the opposite direction. The button and the
+input live inside a container carrying an SVG `feGaussianBlur` + `feColorMatrix`
+filter, so the two stay connected by a liquid bridge while they travel. Framer
+Motion springs drive the motion.
+
+## Preview
+
+<ComponentCustomizer
+  component={GooeySearchPreview}
+  defaultProps={{
+    direction: "right",
+  }}
+  controls={{
+    direction: { type: "select", options: ["left", "right", "top", "bottom"] },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="gooey-search" tier="free" />
+
+## Usage
+
+```tsx
+import { GooeySearch } from "@/components/ui/gooey-search"
+
+export function Header() {
+  return (
+    <GooeySearch
+      direction="right"
+      placeholder="Search…"
+      onSearch={(value) => console.log(value)}
+    />
+  )
+}
+```
+
+### Directions
+
+`direction` controls where the icon travels; the input expands the opposite way:
+
+```tsx
+<GooeySearch direction="right" />  // icon right, input expands left
+<GooeySearch direction="left" />   // icon left,  input expands right
+<GooeySearch direction="top" />    // icon up,    input expands down
+<GooeySearch direction="bottom" /> // icon down,  input expands up
+```
+
+### Callbacks
+
+Pressing Enter fires `onSearch` with the current value; Escape (or blurring an
+empty input) closes and clears the field:
+
+```tsx
+<GooeySearch
+  direction="right"
+  placeholder="Type and press Enter…"
+  onSearch={(value) => router.push(`/search?q=${value}`)}
+/>
+```
+
+## How it works
+
+The whole stage is filtered with a gooey SVG filter:
+
+```svg
+<filter id="gooey-filter-search">
+  <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+  <feColorMatrix in="blur" mode="matrix"
+    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="gooey" />
+  <feComposite in="SourceGraphic" in2="gooey" operator="atop" />
+</filter>
+```
+
+The icon is a real `<button>` that animates to `±220px` on the chosen axis, and
+the input is an absolutely positioned `motion.div` that scales in from zero on
+the opposite side. The blur smears their alpha together and the matrix
+re-thresholds it, so the icon stays connected to the input by a liquid bridge
+while they travel.
+
+The filter id is generated with `useId()`, so several searches on one page never
+share a filter.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `direction` | `"left" \| "right" \| "top" \| "bottom"` | `"right"` | Where the icon travels; the input expands the opposite way. |
+| `placeholder` | `string` | `"Search..."` | Placeholder text for the input. |
+| `onSearch` | `(value: string) => void` | — | Fired when Enter is pressed. |
+| `className` | `string` | — | Merged onto the wrapper. |
+
+## Dependencies
+
+- `motion` (Framer Motion)
+- `lucide-react` (icons only — any icon set works)
+
+## Performance
+
+- Only `transform`, `opacity` and `scale` are animated by the springs; the SVG
+  filter is applied once to the stage.
+- Under `prefers-reduced-motion: reduce` the springs collapse to `{ duration: 0 }`.
+
+## Accessibility
+
+- The trigger is a real `<button>` with `aria-expanded` and `aria-label`.
+- The input is a real `<input>` with `autoFocus` on open, Escape to close, and
+  blur-to-close when empty.
+- Reduced motion disables the springs.
