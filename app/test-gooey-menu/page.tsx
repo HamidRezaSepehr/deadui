@@ -99,6 +99,42 @@ export default function GooeyMenuTestPage() {
             <code className="text-dead-200">+</code>, which rotates 135° while the menu is open.
           </p>
         </section>
+
+        {/* 07 — Speed */}
+        <section>
+          <SectionLabel index="07" title="Speed" />
+          <div className="grid gap-10 lg:grid-cols-3">
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                speed 0.5 — slow
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="top" speed={0.5} />
+              </Stage>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                speed 1 — default
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="top" speed={1} />
+              </Stage>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                speed 2.5 — fast
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="top" speed={2.5} />
+              </Stage>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-dead-400">
+            <code className="text-dead-200">speed</code> multiplies the spring stiffness and
+            divides the stagger delay, so higher values snap in faster. Values are clamped to a
+            minimum of 0.1.
+          </p>
+        </section>
       </div>
     </main>
   );

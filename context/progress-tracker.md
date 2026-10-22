@@ -6807,3 +6807,9 @@ commands handed over in the session report.
   next toggle; this is a Framer Motion edge case with interrupted springs and
   does not affect normal usage (verified: open for 700 ms then close removes
   all satellites).
+
+  **POST-RELEASE FOLLOW-UP: `speed` PROP ADDED.** `GooeyMenu` now accepts a
+  `speed?: number` (default `1`) multiplier on the spring stiffness and the
+  inverse of the stagger delay; clamped to a minimum of `0.1`. Exposed in the
+  docs playground (`speed` slider, 0.2–4×) and demonstrated on the test route
+  (0.5× / 1× / 2.5×). No version bump — ships on `main` alongside `v0.1.23`.

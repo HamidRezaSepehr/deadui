@@ -21,9 +21,11 @@ liquid bridge while they travel. Framer Motion springs drive the travel.
   component={GooeyMenuPreview}
   defaultProps={{
     direction: "top",
+    speed: 1,
   }}
   controls={{
     direction: { type: "select", options: ["top", "bottom", "left", "right", "radial"] },
+    speed: { type: "slider", min: 0.2, max: 4, step: 0.1, unit: "×" },
   }}
   className="not-prose my-8"
 />
@@ -68,6 +70,20 @@ export function Fab() {
 <GooeyMenu items={items} direction="radial" />   // around the button
 ```
 
+### Speed
+
+`speed` is a multiplier on the spring stiffness (and an inverse multiplier on the
+stagger delay). `1` is the default; higher values snap in faster:
+
+```tsx
+<GooeyMenu items={items} speed={0.5} />  // slow, molten
+<GooeyMenu items={items} speed={1} />    // default
+<GooeyMenu items={items} speed={2.5} />  // snappy
+```
+
+Values are clamped to a minimum of `0.1` so a stray `0` can't freeze the
+animation.
+
 ### Custom main icon
 
 Replace the default `+` with anything. It rotates 135° while the menu is open:
@@ -104,7 +120,7 @@ share a filter.
 | `items` | `GooeyMenuItem[]` | — (required) | The satellite items. Each needs an `icon`; `href`, `onClick` and `label` are optional. |
 | `direction` | `"top" \| "bottom" \| "left" \| "right" \| "radial"` | `"top"` | Where the satellites travel from the button. |
 | `mainIcon` | `React.ReactNode` | `<span>+</span>` | The button's icon. Rotates 135° while open. |
-| `className` | `string` | — | Merged onto the wrapper. |
+| `speed` | `number` | `1` | Animation speed multiplier. Higher snaps in faster. Clamped to a minimum of 0.1. |
 
 ### `GooeyMenuItem`
 

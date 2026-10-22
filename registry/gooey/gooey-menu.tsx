@@ -18,6 +18,11 @@ export interface GooeyMenuProps {
   direction?: GooeyDirection;
   mainIcon?: React.ReactNode;
   className?: string;
+  /**
+   * Animation speed multiplier. `1` is the default; higher values make the
+   * satellites snap in faster (stiffer spring, shorter stagger). Default: 1
+   */
+  speed?: number;
 }
 
 const ITEM_DISTANCE = 80;
@@ -49,15 +54,25 @@ export function GooeyMenu({
   direction = "top",
   mainIcon = <span>+</span>,
   className,
+  speed = 1,
 }: GooeyMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const reduceMotion = useReducedMotion();
   const filterId = `gooey-filter-menu-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
+  // Clamp to a sane range so a stray `0` or negative value can't freeze the
+  // animation or invert the stagger order.
+  const safeSpeed = Math.max(speed, 0.1);
+
   const transition = (index: number) =>
     reduceMotion
       ? { duration: 0 }
-      : { type: "spring" as const, stiffness: 200, damping: 15, delay: index * 0.05 };
+      : {
+          type: "spring" as const,
+          stiffness: 200 * safeSpeed,
+          damping: 15,
+          delay: (index * 0.05) / safeSpeed,
+        };
 
   return (
     <div className={cn("relative flex items-center justify-center", className)}>
@@ -84,7 +99,7 @@ export function GooeyMenu({
           aria-label={isOpen ? "Close menu" : "Open menu"}
           className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-dead-red text-white shadow-lg"
           animate={{ rotate: reduceMotion ? 0 : (isOpen ? 135 : 0) }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          transition={{ type: "spring", stiffness: 260 * safeSpeed, damping: 20 }}
         >
           {mainIcon}
         </motion.button>
