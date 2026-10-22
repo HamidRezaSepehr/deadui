@@ -23,6 +23,7 @@ import {
   type ShuffleTrigger,
 } from "@/registry/shuffle-text";
 import { SpinningText } from "@/registry/spinning-text";
+import { MorphingText } from "@/registry/morphing-text";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -406,6 +407,33 @@ export function SpinningTextPreview(props: Record<string, unknown>) {
         className="h-64 w-64"
         duration={Number(props.duration) || 10}
         direction={(props.direction as "clockwise" | "counter-clockwise") || "clockwise"}
+      />
+    </div>
+  );
+}
+
+/**
+ * `MorphingText`'s `texts` prop is a required array the customizer has no
+ * control for, so the demo words are supplied here. `filterBlur` is a CSS
+ * length on the component but a plain number of pixels on the slider — a
+ * slider can only emit numbers, and the component needs `"2px"`, so the
+ * conversion happens here rather than in the component.
+ */
+export function MorphingTextPreview(props: Record<string, unknown>) {
+  const num = (value: unknown, fallback: number) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center px-4">
+      <MorphingText
+        texts={["MORPH", "LIQUID", "GLOW", "DEAD"]}
+        morphTime={num(props.morphTime, 1.5)}
+        cooldownTime={num(props.cooldownTime, 0.5)}
+        threshold={num(props.threshold, -140)}
+        filterBlur={`${num(props.filterBlur, 0.6)}px`}
+        className="text-[2.5rem] md:text-[3.5rem]"
       />
     </div>
   );

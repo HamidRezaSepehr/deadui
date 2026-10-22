@@ -566,6 +566,20 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "morphing-text",
+      "title": "Morphing Text",
+      "description": "Liquid-like text morphing driven by requestAnimationFrame and an SVG threshold filter, with configurable morph time, cooldown, blur and threshold",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/morphing-text/morphing-text.tsx",
+          "target": "components/ui/morphing-text.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }

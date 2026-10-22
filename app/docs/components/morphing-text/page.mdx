@@ -1,0 +1,153 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { MorphingTextPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Morphing Text",
+  description:
+    "Liquid-like text morphing driven by requestAnimationFrame and an SVG threshold filter, with configurable morph time, cooldown, blur and threshold.",
+}
+
+# Morphing Text
+
+Two stacked layers of text cross-fade while an SVG `feColorMatrix` threshold filter
+eats away at the alpha of both. That filter is what turns a plain cross-fade into a
+liquid dissolve — the word breaks apart, flows, and reforms as the next one.
+
+The animation runs on `requestAnimationFrame` and writes straight to the DOM. React
+never re-renders while it plays.
+
+## Preview
+
+<ComponentCustomizer
+  component={MorphingTextPreview}
+  defaultProps={{
+    morphTime: 1.5,
+    cooldownTime: 0.5,
+    threshold: -140,
+    filterBlur: 0.6,
+  }}
+  controls={{
+    morphTime: { type: "slider", min: 0.2, max: 5, step: 0.1, unit: "s" },
+    cooldownTime: { type: "slider", min: 0, max: 3, step: 0.1, unit: "s" },
+    threshold: { type: "slider", min: -255, max: 0, step: 5 },
+    filterBlur: { type: "slider", min: 0, max: 4, step: 0.1, unit: "px" },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="morphing-text" tier="free" />
+
+## Usage
+
+Pass the words you want to morph into each other. They cycle in order and wrap
+around:
+
+```tsx
+import { MorphingText } from "@/components/ui/morphing-text"
+
+export function Hero() {
+  return <MorphingText texts={["MORPH", "LIQUID", "GLOW", "DEAD"]} />
+}
+```
+
+### Timing
+
+`morphTime` is how long a single transition takes and `cooldownTime` is how long the
+finished word is held before the next one starts. Both are in seconds:
+
+```tsx
+// Snappy
+<MorphingText texts={["FAST", "SNAP"]} morphTime={0.5} cooldownTime={0.15} />
+
+// Slow and molten
+<MorphingText texts={["SLOW", "MELT"]} morphTime={4} cooldownTime={1.5} />
+```
+
+Both props are read live: changing `morphTime` mid-morph takes effect on the next
+frame, and the animation is never restarted.
+
+### Blur and threshold
+
+`filterBlur` is the blur applied to the whole stage on top of the SVG filter, and
+`threshold` is the alpha offset in the `feColorMatrix`:
+
+```tsx
+// Soft, photographic
+<MorphingText texts={["SOFT", "EDGE"]} filterBlur="2px" threshold={-40} />
+
+// Gooey, broken apart
+<MorphingText texts={["HARD", "EDGE"]} filterBlur="0.2px" threshold={-220} />
+```
+
+The lower the threshold, the more of the glyph is clipped away, and the more the word
+breaks into fragments before it settles.
+
+## How it works
+
+Two absolutely positioned layers sit on top of each other. One holds the current
+word, the other the next one. On every frame the component writes both layers'
+`opacity` and `filter` directly:
+
+- the layer that is losing the word blurs out of focus (`blur` up to `100px`) while
+  its opacity falls off;
+- the layer that is winning the word sharpens up as its opacity rises;
+- the easing is `progress^0.4`, so the fade lingers on the sharp word and snaps
+  quickly through the middle.
+
+The `feColorMatrix` below is applied to the whole stage through
+`filter: url(#…)`. Its last row is `0 0 0 255 <threshold>`, which subtracts the
+threshold from the alpha channel — everything more transparent than the threshold
+disappears, and the clipped edge is what reads as liquid:
+
+```svg
+<filter id="threshold">
+  <feColorMatrix
+    in="SourceGraphic"
+    type="matrix"
+    values="1 0 0 0 0
+            0 1 0 0 0
+            0 0 1 0 0
+            0 0 0 255 -140"
+  />
+</filter>
+```
+
+The filter id is generated with `useId()`, so several instances on one page never
+share a filter, and the `feColorMatrix` values are re-rendered whenever the
+`threshold` prop changes — the effect updates live, with no remount.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `texts` | `string[]` | — (required) | The words that morph into each other, in order. The list wraps around. |
+| `morphTime` | `number` | `1.5` | Seconds a single morph takes. Lower is snappier. |
+| `cooldownTime` | `number` | `0.5` | Seconds the finished word is held before the next morph starts. |
+| `filterBlur` | `string` | `"0.6px"` | Blur applied to the stage on top of the SVG filter. Any CSS length. |
+| `threshold` | `number` | `-140` | Alpha offset in the `feColorMatrix`. Lower dissolves more. |
+| `className` | `string` | — | Merged onto the container, e.g. to change the size. |
+
+## Dependencies
+
+None. The component only needs React and the `cn` helper from `@/lib/utils`.
+
+## Performance
+
+- No React state is involved in the animation — the loop writes to the DOM, so the
+  component never re-renders while it plays.
+- The `requestAnimationFrame` loop is created once and never torn down, so changing
+  `morphTime`, `cooldownTime` or `texts` does not restart the morph.
+- Only `opacity` and `filter` are animated, both of which are compositor-friendly.
+- The frame delta is clamped to 100ms, so a backgrounded tab does not jump straight
+  to the end of the morph when it wakes up.
+
+## Accessibility
+
+- Under `prefers-reduced-motion: reduce` the animation never starts: the first word
+  is painted once and held.
+- The animated layers are `aria-hidden` — their content changes every frame, so
+  announcing them would be noise. The full list of words is published once in an
+  `sr-only` element for screen readers.
