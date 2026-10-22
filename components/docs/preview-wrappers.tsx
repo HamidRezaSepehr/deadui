@@ -493,21 +493,27 @@ export function GooeyInputPreview(props: Record<string, unknown>) {
 }
 
 /**
- * `GooeyPagination` keeps its own state so the playground can drive `currentPage`
- * through a slider without the consumer wiring it up.
+ * `GooeyPagination` is interactive, so the preview keeps its own `currentPage`
+ * state (seeded from the `currentPage` prop and re-synced when the slider moves)
+ * and lets the user click through the dots.
  */
 export function GooeyPaginationPreview(props: Record<string, unknown>) {
-  const totalPages = Math.max(2, Number(props.totalPages) || 7);
-  const requested = Number(props.currentPage) || 1;
-  const currentPage = Math.min(Math.max(requested, 1), totalPages);
-  const [page, setPage] = useState(currentPage);
-  // keep in sync when the slider moves
+  const totalPages = Math.max(1, Number(props.totalPages) || 6);
+  const [page, setPage] = useState(Math.min(Math.max(1, Number(props.currentPage) || 1), totalPages));
   useEffect(() => {
-    setPage(currentPage);
-  }, [currentPage]);
+    setPage(Math.min(Math.max(1, Number(props.currentPage) || 1), totalPages));
+  }, [props.currentPage, totalPages]);
   return (
-    <div className="flex min-h-[200px] w-full items-center justify-center">
-      <GooeyPagination totalPages={totalPages} currentPage={page} onPageChange={setPage} />
+    <div className="flex min-h-[300px] w-full items-center justify-center">
+      <GooeyPagination
+        totalPages={totalPages}
+        currentPage={page}
+        onPageChange={setPage}
+        activeSize={Number(props.activeSize) || 48}
+        inactiveSize={Number(props.inactiveSize) || 16}
+        gap={Number(props.gap) || 16}
+        gooeyBlur={Number(props.gooeyBlur) || 8}
+      />
     </div>
   );
 }

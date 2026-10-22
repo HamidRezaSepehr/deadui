@@ -16,7 +16,6 @@ function SectionLabel({ index, title }: { index: string; title: string }) {
 
 export default function GooeyPaginationTestPage() {
   const [page, setPage] = useState(1);
-  const totalPages = 7;
 
   return (
     <main className="min-h-screen bg-dead-950 px-4 py-16 text-dead-50">
@@ -24,61 +23,49 @@ export default function GooeyPaginationTestPage() {
         <header className="space-y-3">
           <h1 className="text-3xl font-bold">Gooey Pagination — QA</h1>
           <p className="max-w-2xl text-sm text-dead-400">
-            The active page is a large circle carrying its number; inactive pages are small
-            dots. Clicking a page makes the active background travel and stretch across the
-            intermediate dots, merged by the SVG gooey filter. Try jumping from page 1 to
-            page 7 to see the travel.
+            Click from page 1 to page 6 to watch the active background stretch and morph
+            through every intermediate circle. Current page:{" "}
+            <span className="font-mono text-dead-200">{page}</span>.
           </p>
         </header>
 
+        {/* 01 — Default */}
         <section>
-          <SectionLabel index="01" title="Default (7 pages)" />
-          <div className="flex flex-col items-center gap-6 rounded-xl border border-dead-800 bg-dead-900/40 py-10">
-            <GooeyPagination totalPages={totalPages} currentPage={page} onPageChange={setPage} />
-            <p className="font-mono text-xs text-dead-400">
-              Current page: {page} of {totalPages}
-            </p>
+          <SectionLabel index="01" title="Default (6 pages)" />
+          <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+            <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} />
           </div>
         </section>
 
+        {/* 02 — Jump to extremes */}
         <section>
-          <SectionLabel index="02" title="5 pages" />
-          <div className="flex flex-col items-center gap-6 rounded-xl border border-dead-800 bg-dead-900/40 py-10">
-            <GooeyPagination totalPages={5} currentPage={page > 5 ? 5 : page} onPageChange={setPage} />
+          <SectionLabel index="02" title="Jump Controls" />
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {[1, 2, 3, 4, 5, 6].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className="rounded-md border border-dead-800 bg-dead-900 px-3 py-1.5 font-mono text-xs text-dead-200 hover:bg-dead-800"
+              >
+                Go to {p}
+              </button>
+            ))}
           </div>
         </section>
 
+        {/* 03 — Custom sizes */}
         <section>
-          <SectionLabel index="03" title="Jump controls" />
-          <div className="flex flex-wrap items-center justify-center gap-3 rounded-xl border border-dead-800 bg-dead-900/40 py-10">
-            <button
-              type="button"
-              onClick={() => setPage(1)}
-              className="rounded-md border border-dead-800 bg-dead-900 px-3 py-1.5 font-mono text-xs text-dead-200 hover:bg-dead-800"
-            >
-              First
-            </button>
-            <button
-              type="button"
-              onClick={() => setPage(totalPages)}
-              className="rounded-md border border-dead-800 bg-dead-900 px-3 py-1.5 font-mono text-xs text-dead-200 hover:bg-dead-800"
-            >
-              Last
-            </button>
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="rounded-md border border-dead-800 bg-dead-900 px-3 py-1.5 font-mono text-xs text-dead-200 hover:bg-dead-800"
-            >
-              Prev
-            </button>
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="rounded-md border border-dead-800 bg-dead-900 px-3 py-1.5 font-mono text-xs text-dead-200 hover:bg-dead-800"
-            >
-              Next
-            </button>
+          <SectionLabel index="03" title="Custom Sizes" />
+          <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+            <GooeyPagination
+              totalPages={5}
+              currentPage={page > 5 ? 5 : page}
+              onPageChange={setPage}
+              activeSize={64}
+              inactiveSize={20}
+              gap={20}
+              gooeyBlur={12}
+            />
           </div>
         </section>
       </div>
