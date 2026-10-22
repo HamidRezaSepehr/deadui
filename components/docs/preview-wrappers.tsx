@@ -453,6 +453,8 @@ export function GooeyMenuPreview(props: Record<string, unknown>) {
     | "radial") || "top";
   const speed = Number(props.speed);
   const resolvedSpeed = Number.isFinite(speed) && speed > 0 ? speed : 1;
+  const distance = Number(props.distance);
+  const resolvedDistance = Number.isFinite(distance) && distance >= 0 ? distance : 80;
   const items = [
     { icon: <span className="text-xs">A</span>, label: "Alpha" },
     { icon: <span className="text-xs">B</span>, label: "Bravo" },
@@ -461,7 +463,7 @@ export function GooeyMenuPreview(props: Record<string, unknown>) {
   ];
   return (
     <div className="flex min-h-[300px] w-full items-center justify-center">
-      <GooeyMenu items={items} direction={direction} speed={resolvedSpeed} />
+      <GooeyMenu items={items} direction={direction} speed={resolvedSpeed} distance={resolvedDistance} />
     </div>
   );
 }

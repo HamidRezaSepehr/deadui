@@ -135,6 +135,42 @@ export default function GooeyMenuTestPage() {
             minimum of 0.1.
           </p>
         </section>
+
+        {/* 08 — Distance */}
+        <section>
+          <SectionLabel index="08" title="Distance" />
+          <div className="grid gap-10 lg:grid-cols-3">
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                distance 40 — tight
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="radial" distance={40} />
+              </Stage>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                distance 80 — default
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="radial" distance={80} />
+              </Stage>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                distance 140 — spread
+              </div>
+              <Stage>
+                <GooeyMenu items={ITEMS} direction="radial" distance={140} />
+              </Stage>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-dead-400">
+            <code className="text-dead-200">distance</code> sets the gap in pixels between
+            consecutive satellites (and between the button and the first satellite). Values are
+            clamped to a minimum of 0.
+          </p>
+        </section>
       </div>
     </main>
   );

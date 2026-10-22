@@ -6813,3 +6813,10 @@ commands handed over in the session report.
   inverse of the stagger delay; clamped to a minimum of `0.1`. Exposed in the
   docs playground (`speed` slider, 0.2–4×) and demonstrated on the test route
   (0.5× / 1× / 2.5×). No version bump — ships on `main` alongside `v0.1.23`.
+
+  **POST-RELEASE FOLLOW-UP: `distance` PROP ADDED.** `GooeyMenu` now accepts a
+  `distance?: number` (default `80`) controlling the gap in pixels between
+  consecutive satellites (and between the button and the first satellite);
+  clamped to a minimum of `0`. Exposed in the docs playground (`distance` slider,
+  20–200 px) and demonstrated on the test route (40 / 80 / 140 px). No version
+  bump — ships on `main` alongside `v0.1.23`.

@@ -23,18 +23,21 @@ export interface GooeyMenuProps {
    * satellites snap in faster (stiffer spring, shorter stagger). Default: 1
    */
   speed?: number;
+  /**
+   * Distance in pixels between consecutive satellites (and between the button
+   * and the first satellite). Default: 80
+   */
+  distance?: number;
 }
 
-const ITEM_DISTANCE = 80;
-
-function getItemOffset(index: number, total: number, direction: GooeyDirection) {
-  if (direction === "top") return { x: 0, y: -(index + 1) * ITEM_DISTANCE };
-  if (direction === "bottom") return { x: 0, y: (index + 1) * ITEM_DISTANCE };
-  if (direction === "left") return { x: -(index + 1) * ITEM_DISTANCE, y: 0 };
-  if (direction === "right") return { x: (index + 1) * ITEM_DISTANCE, y: 0 };
+function getItemOffset(index: number, total: number, direction: GooeyDirection, distance: number) {
+  if (direction === "top") return { x: 0, y: -(index + 1) * distance };
+  if (direction === "bottom") return { x: 0, y: (index + 1) * distance };
+  if (direction === "left") return { x: -(index + 1) * distance, y: 0 };
+  if (direction === "right") return { x: (index + 1) * distance, y: 0 };
   if (direction === "radial") {
     const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
-    return { x: Math.cos(angle) * ITEM_DISTANCE, y: Math.sin(angle) * ITEM_DISTANCE };
+    return { x: Math.cos(angle) * distance, y: Math.sin(angle) * distance };
   }
   return { x: 0, y: 0 };
 }
@@ -55,6 +58,7 @@ export function GooeyMenu({
   mainIcon = <span>+</span>,
   className,
   speed = 1,
+  distance = 80,
 }: GooeyMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -63,6 +67,7 @@ export function GooeyMenu({
   // Clamp to a sane range so a stray `0` or negative value can't freeze the
   // animation or invert the stagger order.
   const safeSpeed = Math.max(speed, 0.1);
+  const safeDistance = Math.max(distance, 0);
 
   const transition = (index: number) =>
     reduceMotion
@@ -107,7 +112,7 @@ export function GooeyMenu({
         <AnimatePresence>
           {isOpen &&
             items.map((item, index) => {
-              const offset = getItemOffset(index, items.length, direction);
+              const offset = getItemOffset(index, items.length, direction, safeDistance);
               const commonProps = {
                 initial: { x: 0, y: 0, opacity: 0, scale: 0 },
                 animate: { x: offset.x, y: offset.y, opacity: 1, scale: 1 },
