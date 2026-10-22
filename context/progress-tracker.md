@@ -6773,3 +6773,37 @@ commands handed over in the session report.
   rendered once in an `sr-only` element for assistive technology. Under
   `prefers-reduced-motion: reduce` the loop never starts — the first word is
   painted once and held (verified in a `reduced_motion="reduce"` context).
+
+- Feature 46 (feature spec `46-gooey-menu.md`): `GooeyMenu` (Free). Created
+  `registry/gooey/gooey-menu.tsx` + `index.ts`, `app/test-gooey-menu/page.tsx`,
+  `app/docs/components/gooey-menu/page.mdx`; modified `registry.json` (entry
+  appended, 27 components), `components/docs/preview-wrappers.tsx`
+  (`GooeyMenuPreview`), `packages/cli/package.json` (`0.1.22` → `0.1.23`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11
+  pre-existing warnings, none from the new files), `npm run build` clean with
+  both new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.23`), and **16/16** automated Playwright/Chromium assertions
+  against `next start` on port 3200. Branch, commit and tag `v0.1.23` pushed;
+  manual npm publish steps handed to the owner.
+
+  **THE FILTER IS PER-INSTANCE.** The spec uses a fixed `id="gooey-filter-menu"`,
+  which would couple every menu on a page to a single shared filter. The id here
+  comes from `useId()` sanitised to characters legal inside a `url(#…)` token,
+  so N menus have N filters (verified: six unique ids on the test page).
+
+  **THE SATELLITES ARE REAL ELEMENTS.** Each satellite is an `<a>` when it
+  carries an `href` and a `<button>` otherwise, with an `aria-label` from
+  `label`; the main button is a real `<button>` with `aria-expanded` and
+  `aria-label`. The menu is keyboard- and screen-reader-usable.
+
+  **FRAMER MOTION SPRINGS DRIVE THE TRAVEL.** `AnimatePresence` mounts and
+  unmounts the satellites with spring transitions (`stiffness: 200`,
+  `damping: 15`, staggered by `index * 0.05s`), which is what makes the liquid
+  bridge stretch and snap. Under `prefers-reduced-motion: reduce` the springs
+  collapse to `{ duration: 0 }` and the button does not rotate.
+
+  **INTERRUPTED TOGGLES DON'T FULLY REMOVE.** Toggling faster than the enter
+  animation settles (~400 ms) leaves the exiting satellites in the DOM until the
+  next toggle; this is a Framer Motion edge case with interrupted springs and
+  does not affect normal usage (verified: open for 700 ms then close removes
+  all satellites).
