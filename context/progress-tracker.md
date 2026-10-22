@@ -5,38 +5,38 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 48 (Gooey Input)
+Phase 1: Component Implementation — Feature 49 (Gooey Pagination)
 
 ## Current Goal
 
-**Feature 48: Gooey Input (Free) — an expandable search input whose icon morphs between the trigger and a bubble via `layoutId`** — complete.
-`registry/gooey/gooey-input.tsx` exposes `direction` (`left`/`right`), `placeholder`, `speed`,
-`collapsedWidth`, `expandedWidth`, `expandedOffset`, `gooeyBlur`, `value`/`defaultValue`,
-`onValueChange`, `onOpenChange`, `disabled`, `className` and `classNames`.
-`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["motion"]`) — manifest now **28 components** (gooey-search replaced).
-Test page at `app/test-gooey-input/page.tsx` (6 stages: default, direction right, custom widths, custom blur, speed, controlled value).
-Docs page at `app/docs/components/gooey-input/page.mdx` with live `ComponentCustomizer` and the
-`GooeyInputPreview` adapter in `components/docs/preview-wrappers.tsx`.
+**Feature 49: Gooey Pagination (Free) — a liquid, morphing pagination where the active state travels across pages** — complete.
+`registry/gooey/gooey-pagination.tsx` exposes `totalPages`, `currentPage`, `onPageChange` and `className` as props.
+`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["motion"]`) — manifest now **29 components**.
+Test page at `app/test-gooey-pagination/page.tsx` (3 stages: 7 pages, 5 pages, jump controls).
+Docs page at `app/docs/components/gooey-pagination/page.mdx` with live `ComponentCustomizer` and the
+`GooeyPaginationPreview` adapter in `components/docs/preview-wrappers.tsx`.
 
-**THE EXACT ACETERNITY IMPLEMENTATION IS PRESERVED.** The `layoutId` logic
-(`gooey-input-icon-…` shared between the trigger and the bubble, `gooey-input-field-…` on the
-input), the SVG filter (`feGaussianBlur` stdDeviation, `feColorMatrix` `20 -10`, `feComposite
-atop`), and the spring transition (`duration: 0.4`, `type: "spring"`, `bounce: 0.25`) are
-taken verbatim from the spec. Only two additions were made on top: a `direction` prop
-(`"left"`/`"right"`) that mirrors the layout, and a `speed` prop that scales the duration.
+**LAYOUTGROUP + LAYOUTID DRIVE THE TRAVEL.** The active background is a single
+`motion.div` with `layoutId="gooey-pagination-active"` wrapped in a `LayoutGroup`, so when
+`currentPage` changes Framer Motion animates it from one button to the next, stretching across
+the intermediate dots. The whole row sits behind an SVG gooey filter (per-instance id via
+`useId()`) that merges the stretching background with the dots.
 
-**THE FILTER IS PER-INSTANCE.** The spec uses a fixed `id="gooey-filter-…"`. The id here
-comes from `useId()` sanitised (colons stripped), so N inputs have N filters.
+**FIXED BUTTON SIZE.** The `<button>` containers are fixed at `h-12 w-12`; only the inner
+visual changes size (`h-4 w-4` dot for inactive, `h-12 w-12` circle for active), so the
+layout never shifts while the active state travels.
 
-**COLORS ADAPTED TO THE DEAD THEME.** The spec uses `bg-foreground`/`text-background`, which
-resolve to the dead ramp; kept as-is since they map onto the theme tokens.
+**COLORS ADAPTED TO THE DEAD THEME.** The spec uses `bg-primary`/`text-primary-foreground`,
+which do not exist in this codebase; the active circle uses `bg-dead-red`/`text-white` and
+inactive dots `bg-dead-red/50`.
 
 Full verification: `npx tsc --noEmit` clean, `npm run build` clean with both new routes
-`○ (Static)`, `cd packages/cli && npm run build` clean (`deadui@0.1.25`).
+`○ (Static)`, `cd packages/cli && npm run build` clean (`deadui@0.1.26`).
 
-`packages/cli` `0.1.24` → **`0.1.25`**. Tag `v0.1.25` created and pushed. The owner runs
-the manual npm publish from `packages/cli` — exact commands handed over in the session
-report.
+`packages/cli` `0.1.25` → **`0.1.26`** (the spec said 0.1.25, but that tag was already
+released for Gooey Input, so 0.1.26 was used to avoid clobbering). Tag `v0.1.26` created
+and pushed. The owner runs the manual npm publish from `packages/cli` — exact commands
+handed over in the session report.
 
 ## Completed
 
@@ -1527,7 +1527,7 @@ both packages, 7 curl cases against the live route, and
 
 ## In Progress
 
-None. Feature 48 (Gooey Input) is complete; `v0.1.25` is committed and
+None. Feature 49 (Gooey Pagination) is complete; `v0.1.26` is committed and
 pushed. The owner runs the manual npm publish from `packages/cli` — exact
 commands handed over in the session report.
 
@@ -1806,6 +1806,7 @@ commands handed over in the session report.
 | 24 | Morphing Text | Free | COMPLETE (Feature 45) | ✅ (F45) | — (configurable via props: texts, morphTime, cooldownTime, filterBlur, threshold) |
 | 25 | Gooey Menu | Free | COMPLETE (Feature 46) | ✅ (F46) | — (configurable via props: items, direction top/bottom/left/right/radial, mainIcon, speed, distance) |
 | 26 | Gooey Input | Free | COMPLETE (Feature 48) | ✅ (F48) | — (configurable via props: direction left/right, speed, collapsedWidth, expandedWidth, expandedOffset, gooeyBlur, value/defaultValue, onValueChange, onOpenChange) |
+| 27 | Gooey Pagination | Free | COMPLETE (Feature 49) | ✅ (F49) | — (configurable via props: totalPages, currentPage, onPageChange) |
 
 ## Open Questions
 
@@ -6869,3 +6870,33 @@ commands handed over in the session report.
   is built with `safeSpeed`; reduced motion is not explicitly handled in the spec
   code, so the morph still animates. Acceptable per spec ("do not alter ... spring
   physics").
+
+- Feature 49 (feature spec `48-gooey-pagination.md`): `GooeyPagination` (Free).
+  Created `registry/gooey/gooey-pagination.tsx`, `app/test-gooey-pagination/page.tsx`,
+  `app/docs/components/gooey-pagination/page.mdx`; modified `registry.json` (entry
+  appended, 29 components), `components/docs/preview-wrappers.tsx`
+  (`GooeyPaginationPreview`), `registry/gooey/index.ts` (barrel export),
+  `packages/cli/package.json` (`0.1.25` → `0.1.26`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11 pre-existing
+  warnings, none from the new files), `npm run build` clean with both new routes
+  `○ (Static)`, `cd packages/cli && npm run build` clean (`deadui@0.1.26`). Branch,
+  commit and tag `v0.1.26` pushed; manual npm publish steps handed to the owner.
+
+  **LAYOUTGROUP + LAYOUTID DRIVE THE TRAVEL.** The active background is a single
+  `motion.div` with `layoutId="gooey-pagination-active"` wrapped in a `LayoutGroup`,
+  so when `currentPage` changes Framer Motion animates it from one button to the next,
+  stretching across the intermediate dots. The whole row sits behind an SVG gooey
+  filter (per-instance id via `useId()`) that merges the stretching background with
+  the dots.
+
+  **FIXED BUTTON SIZE.** The `<button>` containers are fixed at `h-12 w-12`; only the
+  inner visual changes size (`h-4 w-4` dot for inactive, `h-12 w-12` circle for
+  active), so the layout never shifts while the active state travels.
+
+  **COLORS ADAPTED TO THE DEAD THEME.** The spec uses `bg-primary` /
+  `text-primary-foreground`, which do not exist in this codebase; the active circle
+  uses `bg-dead-red` / `text-white` and inactive dots `bg-dead-red/50`.
+
+  **NOTE ON VERSION.** The spec asked for `0.1.25` / `v0.1.25`, but that version and
+  tag were already released for Gooey Input. `0.1.26` / `v0.1.26` was used instead
+  to avoid clobbering the prior release.
