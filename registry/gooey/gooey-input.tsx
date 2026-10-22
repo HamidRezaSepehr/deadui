@@ -221,7 +221,9 @@ export function GooeyInput({
               classNames?.trigger,
             )}
           >
-            {!isExpanded ? <SearchIcon layoutId={iconLayoutId} /> : null}
+            {direction === "left" && !isExpanded ? (
+              <SearchIcon layoutId={iconLayoutId} />
+            ) : null}
             <motion.input
               layoutId={inputLayoutId}
               ref={inputRef}
@@ -241,6 +243,9 @@ export function GooeyInput({
                 classNames?.input,
               )}
             />
+            {direction === "right" && !isExpanded ? (
+              <SearchIcon layoutId={iconLayoutId} />
+            ) : null}
           </button>
         </motion.div>
         <motion.div
