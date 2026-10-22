@@ -481,7 +481,7 @@ export function GooeyInputPreview(props: Record<string, unknown>) {
       <GooeyInput
         direction={direction}
         speed={resolvedSpeed}
-        collapsedWidth={Number(props.collapsedWidth) || 115}
+        collapsedWidth={Number(props.collapsedWidth) || 130}
         expandedWidth={Number(props.expandedWidth) || 200}
         expandedOffset={Number(props.expandedOffset) || 50}
         gooeyBlur={Number(props.gooeyBlur) || 5}

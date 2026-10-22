@@ -36,6 +36,7 @@ function SearchIcon({ layoutId }: { layoutId: string }) {
   return (
     <motion.svg
       layoutId={layoutId}
+      initial={false}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
@@ -93,7 +94,7 @@ export function GooeyInput({
   placeholder = "Type to search...",
   className,
   classNames,
-  collapsedWidth = 115,
+  collapsedWidth = 130,
   expandedWidth = 200,
   expandedOffset = 50,
   gooeyBlur = 5,
@@ -262,7 +263,7 @@ export function GooeyInput({
               classNames?.bubbleSurface,
             )}
           >
-            <SearchIcon layoutId={iconLayoutId} />
+            {isExpanded ? <SearchIcon layoutId={iconLayoutId} /> : null}
           </div>
         </motion.div>
       </div>
