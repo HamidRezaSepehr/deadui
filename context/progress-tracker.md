@@ -5,31 +5,70 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 43 (Globe)
+Phase 1: Component Implementation — Feature 44 (Shuffle Text)
 
 ## Current Goal
 
-**Feature 43: Globe (Free) — a high-performance 3D globe powered by cobe WebGL** — complete.
-`registry/globe/globe.tsx` wraps `cobe@2.0.1` and exposes all major globe options as props.
-`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["cobe"]`) — manifest now **24 components**.
-Test page at `app/test-globe/page.tsx` (4 sections: default / dark mode / with markers / paused).
-Docs page at `app/docs/components/globe/page.mdx` with live `ComponentCustomizer` and `GlobePreview` adapter.
-`cobe@2.0.1` installed as a root dependency.
+**Feature 44: Shuffle Text (Free) — a character-shuffle text reveal powered by shuffle-letters** — complete.
+`registry/shuffle-text/shuffle-text.tsx` wraps `shuffle-letters@1.1.0` and exposes three triggers
+(`load`, `inView`, `hover`) plus `iterations`, `revealDirection`, `characters`,
+`useOriginalCharsOnly` and `fps` as props.
+`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["shuffle-letters"]`) —
+manifest now **25 components**.
+Test page at `app/test-shuffle-text/page.tsx` (7 sections: load / live text / in-view / hover /
+reveal directions / character pools / speed).
+Docs page at `app/docs/components/shuffle-text/page.mdx` with live `ComponentCustomizer` and the
+`ShuffleTextPreview` adapter in `components/docs/preview-wrappers.tsx`.
+`shuffle-letters@1.1.0` installed as a root dependency.
 
-One critical deviation from the spec's reference code: **`onRender` does not exist in cobe v2's `COBEOptions`**.
-The spec's reference implementation uses `onRender: (state) => { state.phi = ... }` in the options object,
-but the cobe v2 type definitions (`node_modules/cobe/dist/index.d.ts`) have no such property. The
-correct v2 pattern is `requestAnimationFrame` + `globe.update({ phi, theta })` — the animation loop
-runs in the component's `useEffect` using refs for `phi`, `theta`, `autoRotate` and `autoRotateSpeed`
-to avoid React re-renders, and `globe.update()` is called on every frame to advance rotation.
-Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (5 pre-existing `<img>` warnings),
-`npm run build` clean with `/docs/components/globe` and `/test-globe` both `○ (Static)`,
-`cd packages/cli && npm run build` clean (`deadui@0.1.19`).
+**THE SPEC'S REFERENCE CODE CALLS AN API THE PACKAGE DOES NOT HAVE.** The spec writes
+`new ShuffleLetters(el, {...})` with `.start()` / `.destroy()` and the options `revealDirection`,
+`characters` and `useOriginalCharsOnly`. The published `shuffle-letters` package exposes exactly
+one function — `shuffleLetters(element, config)` — which returns the function that STOPS the
+animation; there is no constructor, no `start()`, no `destroy()`, no `revealDirection`, no custom
+character pool and no `useOriginalCharsOnly` (those three are options of the ORIGINAL jQuery
+plugin the package was ported from). Shipping the spec's snippet verbatim would have crashed on
+mount with `ShuffleLetters is not a constructor`.
 
-The CLI package is already at `v0.1.19` from Feature 42. The tag `v0.1.19` exists and was not
-re-created. Feature 43 ships as part of the existing `v0.1.19` release. GitHub Actions is not
-currently publishing, so the owner runs the manual npm publish from `packages/cli` — exact
-commands handed over in the session report.
+**THE COMPONENT THEREFORE SHIPS A SMALL ENGINE OF ITS OWN, AND THE PACKAGE IS STILL THE ENGINE
+FOR THE DEFAULT CONFIGURATION.** The standard configuration — a left-to-right reveal with the
+library's own type-matched character pools — runs on `shuffle-letters` itself, so
+`shuffle-letters` stays a real runtime dependency of the installed component and the default look
+is the library's own. Every configuration the library cannot express (any reveal order other than
+`start`, a custom `characters` pool, `useOriginalCharsOnly`) runs on a local engine that mirrors
+the library's algorithm frame for frame and adds those three options. The two paths write the same
+frames and both end on the exact text.
+
+**A REVEAL ORDER IS ONLY MEANINGFUL IF THE CHARACTERS STAY WHERE THEY ARE.** The library's frame
+model drops the not-yet-revealed characters out of the string (they become `''`), which is fine for
+a left-to-right reveal — the text simply grows from the left — but it makes "the tail reveals
+first" read as *reversed text* rather than as a reveal. The local engine therefore keeps the
+unrevealed slots as blanks, and the animated copy is rendered with `whitespace-pre-wrap` so those
+blanks survive. The browser proved it: the first scrambled frame of `revealDirection="end"` on
+"Reveal order" is `'           b'` (eleven blanks, then the scrambling tail), against `'G '` for
+`"start"`.
+
+Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11 pre-existing warnings,
+none from the new files), `npm run build` clean with `/docs/components/shuffle-text` and
+`/test-shuffle-text` both `○ (Static)`, `cd packages/cli && npm run build` clean
+(`deadui@0.1.21`), a live CLI install of the component from the local checkout
+(`components/ui/shuffle-text.tsx` + `components/ui/shuffle-letters.d.ts`, dependency
+`shuffle-letters` detected and offered), and **29/29** automated Playwright/Chromium assertions
+against `next start` on port 3100 — load/in-view/hover triggers, in-view playing exactly once,
+hover replaying, the three reveal orders resolving in place, the custom pool and the
+original-characters pool, a stable root width (zero CLS), reduced motion skipping the animation
+and rendering the text statically, the docs playground controls reaching the component, and zero
+console/page errors.
+
+**THE COMPONENT RENDERS THE TEXT THREE TIMES.** An invisible copy reserves the final width (so the
+shuffle can never shift the layout — zero CLS), the animated copy is painted on top of it, and an
+`sr-only` copy carries the text for assistive technology, because the animated copy is scrambled
+while it runs and must not be announced.
+
+`packages/cli` `0.1.19` → **`0.1.21`** (the spec's `0.1.21`; note that `0.1.20` is skipped —
+see Next Up #21). Tag `v0.1.21` created and pushed. GitHub Actions is not currently publishing,
+so the owner runs the manual npm publish from `packages/cli` — exact commands handed over in the
+session report.
 
 ## Completed
 
@@ -1397,11 +1436,103 @@ both packages, 7 curl cases against the live route, and
      (`/docs/components/globe`, `/test-globe`), `cd packages/cli && npm run
      build` clean (`deadui@0.1.19`).
 
+54. **Feature 44: Shuffle Text (Free)** —
+     `registry/shuffle-text/shuffle-text.tsx` (component + engine) +
+     `registry/shuffle-text/shuffle-letters.d.ts` (ambient typings — the
+     package ships none) + `registry/shuffle-text/index.ts` (docs barrel),
+     a `registry.json` entry (`tier: "free"`, `dependencies:
+     ["shuffle-letters"]`, two file targets — `components/ui/shuffle-text.tsx`
+     and `components/ui/shuffle-letters.d.ts` — manifest now **25
+     components**), test page `app/test-shuffle-text/page.tsx` (7 sections:
+     load / live text / in-view / hover / reveal directions / character
+     pools / speed) and docs page
+     `app/docs/components/shuffle-text/page.mdx` (live `ComponentCustomizer`
+     with 7 controls, InstallTabs, usage snippets, props table,
+     dependencies / performance / accessibility), plus the
+     `ShuffleTextPreview` adapter in `components/docs/preview-wrappers.tsx`.
+     `shuffle-letters@1.1.0` installed as a root dependency.
+     `packages/cli` `0.1.19` → **`0.1.21`**; tag `v0.1.21` created and
+     pushed.
+
+     **THE SPEC'S REFERENCE CODE CALLS AN API THE PACKAGE DOES NOT
+     HAVE — the same shape of deviation as Feature 43's `onRender`.**
+     The spec writes `new ShuffleLetters(el, {...})` with `.start()` /
+     `.destroy()` and the options `revealDirection`, `characters` and
+     `useOriginalCharsOnly`. The published package exposes exactly one
+     function — `shuffleLetters(element, config)` — which RETURNS the
+     function that stops the animation. There is no constructor, no
+     `start()`, no `destroy()`, and the three named options belong to the
+     original jQuery plugin the package was ported from, not to the
+     package. The spec's snippet would have crashed on mount with
+     `ShuffleLetters is not a constructor`.
+
+     **THE PACKAGE IS STILL THE ENGINE FOR THE DEFAULT CONFIGURATION.**
+     The standard configuration — a left-to-right reveal with the library's
+     own type-matched character pools — runs on `shuffle-letters` itself, so
+     `shuffle-letters` stays a real runtime dependency of the installed
+     component. Every configuration the library cannot express (any reveal
+     order other than `start`, a custom `characters` pool,
+     `useOriginalCharsOnly`) runs on a local engine that mirrors the
+     library's algorithm frame for frame — same `iterations` window, same
+     type-matched pools, same `fps` timing, spaces never scrambled and
+     never hidden — and adds those three options. Both paths write the
+     same frames and both end on the exact text.
+
+     **A REVEAL ORDER IS ONLY MEANINGFUL IF THE CHARACTERS STAY WHERE
+     THEY ARE, AND THE LIBRARY'S FRAME MODEL DROPS THEM.** The library
+     replaces the not-yet-revealed characters with `''`, so the string
+     shrinks as it resolves — correct for a left-to-right reveal (the text
+     grows from the left) but it makes "the tail reveals first" read as
+     REVERSED TEXT rather than as a reveal. The local engine therefore
+     keeps the unrevealed slots as blanks and the animated copy is
+     rendered with `whitespace-pre-wrap` so those blanks survive. Measured
+     in Chromium: the first scrambled frame of `revealDirection="end"` on
+     "Reveal order" is `'           b'` (eleven blanks, then the scrambling
+     tail) against `'G '` for `"start"` and `'     w      '` for
+     `"center"`.
+
+     **THE COMPONENT RENDERS THE TEXT THREE TIMES.** An invisible copy
+     reserves the final width (the shuffle can never shift the layout —
+     zero CLS; the measured root width was constant across the run), the
+     animated copy is painted on top of it, and an `sr-only` copy carries
+     the text for assistive technology, because the animated copy is
+     scrambled while it runs and must not be announced.
+
+     **THE IN-VIEW TRIGGER PLAYS EXACTLY ONCE** — the observer unobserves
+     the element as soon as it fires, and a `hasAnimatedRef` guard backs
+     that up, so scrolling back and forth cannot replay it. The hover
+     trigger restarts on every pointer entry, and the load trigger
+     replays when the text or the options change (which is what makes the
+     docs playground live).
+
+     **THE COMPLETION CALLBACK IS READ THROUGH A REF.** An inline
+     `onComplete={() => ...}` is a new identity on every parent render; if
+     it were a dependency of the start callback, the load animation would
+     restart on every parent render — an infinite loop of animations. The
+     same reason the text prop is re-synced into the DOM by hand: the
+     engine replaces the element's text node, so React's own text update
+     can land on a detached node.
+
+     Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors
+     (11 pre-existing warnings, none from the new files), `npm run build`
+     clean with both new routes `○ (Static)`, `cd packages/cli && npm run
+     build` clean (`deadui@0.1.21`), a live CLI install of the component
+     from the local checkout (`components/ui/shuffle-text.tsx` +
+     `components/ui/shuffle-letters.d.ts`, dependency `shuffle-letters`
+     detected and offered), and **29/29** automated Playwright/Chromium
+     assertions against `next start` on port 3100 — the three triggers,
+     in-view playing exactly once, hover replaying, the three reveal
+     orders resolving in place, the custom pool and the
+     original-characters pool, a stable root width, reduced motion
+     skipping the animation and rendering the text statically, the docs
+     playground controls reaching the component, and zero console/page
+     errors.
+
 ## In Progress
 
-None. Feature 43 (Globe) is complete; `v0.1.19` is committed and pushed.
-GitHub Actions is not currently publishing, so the owner runs the manual
-npm publish from `packages/cli` — exact commands handed over in the
+None. Feature 44 (Shuffle Text) is complete; `v0.1.21` is committed and
+pushed. GitHub Actions is not currently publishing, so the owner runs the
+manual npm publish from `packages/cli` — exact commands handed over in the
 session report.
 
 ## Next Up
@@ -1627,12 +1758,24 @@ session report.
      `0.1.0`, `0.1.2` and `0.1.5`; the next version to publish
      would be `0.1.20` (see Next Up #20).
 
-20. **`v0.1.20` IS THE NEXT VERSION TO BUMP.** The next feature should
-     bump `packages/cli/package.json` to `0.1.20` and tag `v0.1.20`.
-     `v0.1.19` is the current git tag (points at the Feature 42 commit);
-     Feature 43 ships as part of that same tag. npm still only has
-     `0.1.0`, `0.1.2` and `0.1.5`, so `0.1.6`–`0.1.19` are all
-     git-tag-only pending the first successful GitHub Actions publish.
+20. ~~**`v0.1.20` IS THE NEXT VERSION TO BUMP.**~~ — SUPERSEDED by #21.
+      The next feature should
+      bump `packages/cli/package.json` to `0.1.20` and tag `v0.1.20`.
+      `v0.1.19` is the current git tag (points at the Feature 42 commit);
+      Feature 43 ships as part of that same tag. npm still only has
+      `0.1.0`, `0.1.2` and `0.1.5`, so `0.1.6`–`0.1.19` are all
+      git-tag-only pending the first successful GitHub Actions publish.
+
+21. **`v0.1.20` IS SKIPPED — FEATURE 44 SHIPS AS `v0.1.21`.** The
+      Feature 44 spec says bump to `0.1.21` and tag `v0.1.21`, and that
+      is what was done; `0.1.20` is simply never used as a version
+      number. Neither `v0.1.20` nor `v0.1.21` existed before this
+      feature (`git ls-remote --tags origin` showed `v0.1.19` as the
+      newest tag), so no published tag had to be burned — this is the
+      #13 / #16 / #17 / #18 precedent with nothing burned. npm still only
+      has `0.1.0`, `0.1.2` and `0.1.5`, so `0.1.6`–`0.1.21` are all
+      git-tag-only pending the first successful GitHub Actions publish,
+      and the owner's manual npm publish lands `0.1.21` directly.
 
 
 ## Component Status
@@ -1663,6 +1806,7 @@ session report.
 | 20 | Gradient Blur | Free | COMPLETE (Feature 41) | ✅ (F41) | — (configurable via props: variant bottom-to-top/center-peak, position fixed/absolute/sticky, side top/bottom, height, zIndex) |
 | 21 | Typewriter | Free | COMPLETE (Feature 42) | ✅ (F42) | — (configurable via props: text string/array, delay, deleteSpeed, loop, autoStart, cursor glyph, cursorColor, cursorWidth, cursorHeight, onComplete) |
 | 22 | Globe | Free | COMPLETE (Feature 43) | ✅ (F43) | — (configurable via props: size, phi, theta, dark, diffuse, baseColor, markerColor, glowColor, markers, opacity, autoRotate, autoRotateSpeed) |
+| 23 | Shuffle Text | Free | COMPLETE (Feature 44) | ✅ (F44) | — (configurable via props: text, trigger load/inView/hover, iterations, revealDirection start/end/center/random, characters, useOriginalCharsOnly, fps) |
 
 ## Open Questions
 

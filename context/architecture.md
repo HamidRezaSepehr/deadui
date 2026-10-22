@@ -514,6 +514,7 @@ The CLI installs required dependencies directly into the user's project.
 | `class-variance-authority` | `^0.7+` | Variant management | Apache-2.0 |
 | `clsx` | `^2+` | Class merging | MIT |
 | `tailwind-merge` | `^2+` | Tailwind class deduplication | MIT |
+| `shuffle-letters` | `^1.1+` | Character-shuffle text reveal | MIT |
 
 ## Invariants
 

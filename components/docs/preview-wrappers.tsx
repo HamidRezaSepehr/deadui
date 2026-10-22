@@ -17,6 +17,11 @@ import { Dock, DockIcon } from "@/registry/dock";
 import { AvatarCircles } from "@/registry/avatar-circles";
 import { Orbit, OrbitingCircles, OrbitItem } from "@/registry/orbiting-circles";
 import { ScrollProgress } from "@/registry/scroll-progress";
+import {
+  ShuffleText,
+  type ShuffleRevealDirection,
+  type ShuffleTrigger,
+} from "@/registry/shuffle-text";
 import { SpinningText } from "@/registry/spinning-text";
 import { Typewriter } from "@/registry/typewriter";
 import {
@@ -506,6 +511,34 @@ export function TypewriterPreview(props: Record<string, unknown>) {
         cursorWidth={(props.cursorWidth as string) || "2px"}
         cursorHeight={(props.cursorHeight as string) || "1em"}
         className="text-center text-2xl font-semibold md:text-3xl"
+      />
+    </div>
+  );
+}
+
+/**
+ * `ShuffleText`'s `useOriginalCharsOnly` is a string-valued boolean control
+ * (the customizer's select can only emit strings), so `toBool` coerces it — the
+ * same reason the marquee and typewriter adapters need it. The `trigger` and
+ * `revealDirection` selects already emit strings, which are exactly what those
+ * two unions are.
+ */
+export function ShuffleTextPreview(props: Record<string, unknown>) {
+  const characters = props.characters as string | undefined
+
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center px-4">
+      <ShuffleText
+        text={(props.text as string) || "Dead UI"}
+        trigger={(props.trigger as ShuffleTrigger) || "load"}
+        iterations={Number(props.iterations) || 10}
+        revealDirection={
+          (props.revealDirection as ShuffleRevealDirection) || "start"
+        }
+        characters={characters && characters !== "(default)" ? characters : undefined}
+        useOriginalCharsOnly={toBool(props.useOriginalCharsOnly)}
+        fps={Number(props.fps) || 30}
+        className="text-center text-3xl font-bold tracking-tight"
       />
     </div>
   );

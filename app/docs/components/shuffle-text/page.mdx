@@ -1,0 +1,182 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { ShuffleTextPreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Shuffle Text",
+  description:
+    "Character-shuffle text reveal with load, in-view and hover triggers, custom character pools and reveal orders.",
+}
+
+# Shuffle Text
+
+Text that scrambles itself into place, character by character, powered by
+[`shuffle-letters`](https://github.com/georapbox/shuffle-letters). Three
+triggers — it can play on load, when it scrolls into view, or every time the
+pointer lands on it — and the characters can resolve left to right, right to
+left, outwards from the centre, or in a random order.
+
+## Preview
+
+<ComponentCustomizer
+  component={ShuffleTextPreview}
+  defaultProps={{
+    text: "Dead UI",
+    trigger: "load",
+    iterations: 10,
+    revealDirection: "start",
+    characters: "(default)",
+    useOriginalCharsOnly: false,
+    fps: 30,
+  }}
+  controls={{
+    text: {
+      type: "select",
+      options: ["Dead UI", "Make it move.", "Copy. Paste. Ship."],
+    },
+    trigger: { type: "select", options: ["load", "inView", "hover"] },
+    iterations: { type: "slider", min: 1, max: 30, step: 1, unit: " frames" },
+    revealDirection: {
+      type: "select",
+      options: ["start", "end", "center", "random"],
+    },
+    characters: {
+      type: "select",
+      options: ["(default)", "01", "▓▒░", "!@#$%"],
+    },
+    useOriginalCharsOnly: { type: "select", options: ["false", "true"] },
+    fps: { type: "slider", min: 10, max: 60, step: 5, unit: " fps" },
+  }}
+  className="not-prose my-8"
+/>
+
+Move any control and the animation replays with the new configuration. Set
+**Trigger** to `hover` and the text waits for the pointer. The **Characters**
+entry `(default)` is the library's own type-matched pool — pick `01` for a
+digital glitch or `▓▒░` for a matrix sweep.
+
+## Installation
+
+<InstallTabs componentName="shuffle-text" tier="free" />
+
+The component also needs its engine:
+
+```bash
+npm install shuffle-letters
+```
+
+## Usage
+
+### On load
+
+```tsx
+import { ShuffleText } from "@/components/ui/shuffle-text"
+
+export function Example() {
+  return (
+    <h1 className="text-4xl font-bold">
+      <ShuffleText text="Dead simple animations" />
+    </h1>
+  )
+}
+```
+
+### When it scrolls into view
+
+```tsx
+<ShuffleText text="Revealed on scroll" trigger="inView" />
+```
+
+The animation plays **once**, when 50% of the element is on screen. Scrolling
+back and forth will not replay it.
+
+### On hover
+
+```tsx
+<ShuffleText text="Hover me" trigger="hover" />
+```
+
+Every pointer entry restarts the animation.
+
+### Reveal order
+
+```tsx
+<ShuffleText text="Centre out" revealDirection="center" />
+```
+
+| Value | The characters resolve |
+|---|---|
+| `start` | Left to right (default) |
+| `end` | Right to left |
+| `center` | Outwards from the middle |
+| `random` | A new random order on every run |
+
+### Custom character pools
+
+```tsx
+<ShuffleText text="Digital glitch" characters="01" />
+<ShuffleText text="Matrix sweep" characters="▓▒░" />
+```
+
+`characters` replaces the scrambling pool outright — every character is
+swapped for a random one from the pool, whatever the original was.
+
+```tsx
+<ShuffleText text="Original characters only" useOriginalCharsOnly />
+```
+
+`useOriginalCharsOnly` keeps the text's own characters instead of a generic
+pool, preserving case where the text has a matching character. It takes
+precedence over `characters`.
+
+### Speed
+
+```tsx
+<ShuffleText text="Quick snap" iterations={1} />
+<ShuffleText text="Sixty frames" fps={60} />
+```
+
+`iterations` is how many frames each character spends scrambling before it
+locks in; `fps` is how fast those frames run.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `text` | `string` | — | **Required.** The text to shuffle. |
+| `trigger` | `"load" \| "inView" \| "hover"` | `"load"` | When the animation plays. `load` on mount, `inView` once at 50% visibility, `hover` on every pointer entry. |
+| `iterations` | `number` | `10` | Frames each character spends scrambling before it locks in. |
+| `revealDirection` | `"start" \| "end" \| "center" \| "random"` | `"start"` | The order in which the characters resolve. |
+| `characters` | `string` | — | A custom pool of scrambling characters. Every character is replaced by a random one from this pool. |
+| `useOriginalCharsOnly` | `boolean` | `false` | Scramble with the text's own characters instead of a generic pool. Takes precedence over `characters`. |
+| `fps` | `number` | `30` | Frames per second. |
+| `onComplete` | `() => void` | — | Called when a run finishes. Not called under `prefers-reduced-motion`. |
+| `className` | `string` | — | Merged onto the component's `relative inline-block` root. |
+| `...props` | `HTMLAttributes<HTMLSpanElement>` | — | Spread onto the rendered element. |
+
+## Dependencies
+
+- [`shuffle-letters`](https://github.com/georapbox/shuffle-letters) — the
+  shuffle engine (listed in `registry.json`, so the CLI installs it for you).
+  The package ships no type declarations, so the component installs a small
+  ambient `.d.ts` next to itself.
+
+## Performance
+
+- The React tree renders once. The animation writes the element's text
+  directly, so nothing re-renders while it plays.
+- The component reserves the final text's width with an invisible copy and
+  paints the animated copy on top of it, so the shuffle can never shift the
+  layout around it — zero CLS.
+- Every run is stopped when the component unmounts, so its timer can never
+  outlive the element it writes to.
+- `shuffle-letters` is a small, dependency-free package (well under 2KB
+  minified + gzipped).
+
+## Accessibility
+
+- Under `prefers-reduced-motion: reduce` the animation is skipped entirely and
+  the text is rendered statically.
+- The animated copy is `aria-hidden`: while it scrambles, its content is
+  noise. Screen readers get a stable, correct copy of the text instead.
+- The animation is decorative — nothing is communicated by the motion alone.

@@ -1,6 +1,26 @@
 {
   "components": [
     {
+      "name": "shuffle-text",
+      "title": "Shuffle Text",
+      "description": "Character-shuffle text reveal with load, in-view and hover triggers, custom character pools and reveal orders.",
+      "tier": "free",
+      "dependencies": [
+        "shuffle-letters"
+      ],
+      "files": [
+        {
+          "path": "registry/shuffle-text/shuffle-text.tsx",
+          "target": "components/ui/shuffle-text.tsx"
+        },
+        {
+          "path": "registry/shuffle-text/shuffle-letters.d.ts",
+          "target": "components/ui/shuffle-letters.d.ts"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "globe",
       "title": "Globe",
       "description": "A highly customizable, high-performance 3D globe powered by cobe WebGL.",
