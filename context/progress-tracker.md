@@ -5,33 +5,36 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 47 (Gooey Search)
+Phase 1: Component Implementation — Feature 48 (Gooey Input)
 
 ## Current Goal
 
-**Feature 47: Gooey Search (Free) — an expandable search input whose icon detaches in a configurable direction while the input expands the opposite way** — complete.
-`registry/gooey/gooey-search.tsx` exposes `direction` (`left`/`right`/`top`/`bottom`), `placeholder`, `onSearch` and `className` as props.
-`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["motion", "lucide-react"]`) — manifest now **28 components**.
-Test page at `app/test-gooey-search/page.tsx` (5 stages: 4 directions + onSearch callback).
-Docs page at `app/docs/components/gooey-search/page.mdx` with live `ComponentCustomizer` and the
-`GooeySearchPreview` adapter in `components/docs/preview-wrappers.tsx`.
+**Feature 48: Gooey Input (Free) — an expandable search input whose icon morphs between the trigger and a bubble via `layoutId`** — complete.
+`registry/gooey/gooey-input.tsx` exposes `direction` (`left`/`right`), `placeholder`, `speed`,
+`collapsedWidth`, `expandedWidth`, `expandedOffset`, `gooeyBlur`, `value`/`defaultValue`,
+`onValueChange`, `onOpenChange`, `disabled`, `className` and `classNames`.
+`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["motion"]`) — manifest now **28 components** (gooey-search replaced).
+Test page at `app/test-gooey-input/page.tsx` (6 stages: default, direction right, custom widths, custom blur, speed, controlled value).
+Docs page at `app/docs/components/gooey-input/page.mdx` with live `ComponentCustomizer` and the
+`GooeyInputPreview` adapter in `components/docs/preview-wrappers.tsx`.
 
-**THE FILTER IS PER-INSTANCE.** The spec uses a fixed `id="gooey-filter-search"`. The id here
-comes from `useId()` sanitised to characters legal inside a `url(#…)` token, so N searches
-have N filters.
+**THE EXACT ACETERNITY IMPLEMENTATION IS PRESERVED.** The `layoutId` logic
+(`gooey-input-icon-…` shared between the trigger and the bubble, `gooey-input-field-…` on the
+input), the SVG filter (`feGaussianBlur` stdDeviation, `feColorMatrix` `20 -10`, `feComposite
+atop`), and the spring transition (`duration: 0.4`, `type: "spring"`, `bounce: 0.25`) are
+taken verbatim from the spec. Only two additions were made on top: a `direction` prop
+(`"left"`/`"right"`) that mirrors the layout, and a `speed` prop that scales the duration.
 
-**THE ICON AND INPUT MOVE IN OPPOSITE DIRECTIONS.** The icon travels `±220px` on the chosen
-axis while the input expands on the opposite side via absolute positioning (left/right/top/bottom
-+ a centred translate for the vertical variants). Both are driven by the same spring so the
-liquid bridge stretches and snaps as one motion.
+**THE FILTER IS PER-INSTANCE.** The spec uses a fixed `id="gooey-filter-…"`. The id here
+comes from `useId()` sanitised (colons stripped), so N inputs have N filters.
 
-**COLORS ADAPTED TO THE DEAD THEME.** The spec uses `bg-primary`/`text-primary-foreground`,
-which do not exist in this codebase; the button and input use `bg-dead-red`/`text-white`.
+**COLORS ADAPTED TO THE DEAD THEME.** The spec uses `bg-foreground`/`text-background`, which
+resolve to the dead ramp; kept as-is since they map onto the theme tokens.
 
 Full verification: `npx tsc --noEmit` clean, `npm run build` clean with both new routes
-`○ (Static)`, `cd packages/cli && npm run build` clean (`deadui@0.1.24`).
+`○ (Static)`, `cd packages/cli && npm run build` clean (`deadui@0.1.25`).
 
-`packages/cli` `0.1.23` → **`0.1.24`**. Tag `v0.1.24` created and pushed. The owner runs
+`packages/cli` `0.1.24` → **`0.1.25`**. Tag `v0.1.25` created and pushed. The owner runs
 the manual npm publish from `packages/cli` — exact commands handed over in the session
 report.
 
@@ -1524,7 +1527,7 @@ both packages, 7 curl cases against the live route, and
 
 ## In Progress
 
-None. Feature 47 (Gooey Search) is complete; `v0.1.24` is committed and
+None. Feature 48 (Gooey Input) is complete; `v0.1.25` is committed and
 pushed. The owner runs the manual npm publish from `packages/cli` — exact
 commands handed over in the session report.
 
@@ -1802,7 +1805,7 @@ commands handed over in the session report.
 | 23 | Shuffle Text | Free | COMPLETE (Feature 44) | ✅ (F44) | — (configurable via props: text, trigger load/inView/hover, iterations, revealDirection start/end/center/random, characters, useOriginalCharsOnly, fps) |
 | 24 | Morphing Text | Free | COMPLETE (Feature 45) | ✅ (F45) | — (configurable via props: texts, morphTime, cooldownTime, filterBlur, threshold) |
 | 25 | Gooey Menu | Free | COMPLETE (Feature 46) | ✅ (F46) | — (configurable via props: items, direction top/bottom/left/right/radial, mainIcon, speed, distance) |
-| 26 | Gooey Search | Free | COMPLETE (Feature 47) | ✅ (F47) | — (configurable via props: direction left/right/top/bottom, placeholder, onSearch) |
+| 26 | Gooey Input | Free | COMPLETE (Feature 48) | ✅ (F48) | — (configurable via props: direction left/right, speed, collapsedWidth, expandedWidth, expandedOffset, gooeyBlur, value/defaultValue, onValueChange, onOpenChange) |
 
 ## Open Questions
 
@@ -6836,3 +6839,33 @@ commands handed over in the session report.
 
   **REDUCED MOTION.** Under `prefers-reduced-motion: reduce` the springs
   collapse to `{ duration: 0 }`.
+
+- Feature 48 (feature spec `47-gooey-search.md`, replaced): `GooeyInput` (Free).
+  Created `registry/gooey/gooey-input.tsx`, `app/test-gooey-input/page.tsx`,
+  `app/docs/components/gooey-input/page.mdx`; removed `registry/gooey/gooey-search.tsx`,
+  `app/test-gooey-search/page.tsx`, `app/docs/components/gooey-search/page.mdx`; modified
+  `registry.json` (gooey-search → gooey-input, 28 components), `registry/gooey/index.ts`
+  (barrel), `components/docs/preview-wrappers.tsx` (`GooeyInputPreview`),
+  `packages/cli/package.json` (`0.1.24` → `0.1.25`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11 pre-existing
+  warnings, none from the new files), `npm run build` clean with both new routes
+  `○ (Static)`, `cd packages/cli && npm run build` clean (`deadui@0.1.25`). Branch,
+  commit and tag `v0.1.25` pushed; manual npm publish steps handed to the owner.
+
+  **THE EXACT ACETERNITY IMPLEMENTATION IS PRESERVED.** The `layoutId` logic
+  (`gooey-input-icon-…` shared between the trigger and the bubble,
+  `gooey-input-field-…` on the input), the SVG filter (`feGaussianBlur` stdDeviation,
+  `feColorMatrix` `20 -10`, `feComposite atop`), and the spring transition
+  (`duration: 0.4`, `type: "spring"`, `bounce: 0.25`) are taken verbatim. Only two
+  additions on top: a `direction` prop (`"left"`/`"right"`) that mirrors the layout
+  (button shift + bubble side), and a `speed` prop that scales the duration
+  (`0.4 / speed`).
+
+  **THE FILTER IS PER-INSTANCE.** The spec uses a fixed id. The id here comes from
+  `useId()` with colons stripped, so N inputs have N filters.
+
+  **REDUCED MOTION.** The transition collapses to `{ duration: 0 }` when
+  `prefers-reduced-motion: reduce` is set... actually the spec's transition object
+  is built with `safeSpeed`; reduced motion is not explicitly handled in the spec
+  code, so the morph still animates. Acceptable per spec ("do not alter ... spring
+  physics").
