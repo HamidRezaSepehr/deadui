@@ -510,9 +510,9 @@ export function GooeyPaginationPreview(props: Record<string, unknown>) {
         currentPage={page}
         onPageChange={setPage}
         activeSize={Number(props.activeSize) || 48}
-        inactiveSize={Number(props.inactiveSize) || 40}
+        inactiveSize={Number(props.inactiveSize) || 36}
         gap={Number(props.gap) || 16}
-        gooeyBlur={Number(props.gooeyBlur) || 8}
+        gooeyBlur={Number(props.gooeyBlur) || 5}
         speed={Number(props.speed) || 1}
       />
     </div>

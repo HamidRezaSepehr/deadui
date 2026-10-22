@@ -32,7 +32,7 @@ export default function GooeyPaginationTestPage() {
         {/* 01 — Default */}
         <section>
           <SectionLabel index="01" title="Default (6 pages)" />
-          <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+          <div className="flex items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 py-10">
             <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} />
           </div>
         </section>
@@ -56,7 +56,7 @@ export default function GooeyPaginationTestPage() {
         {/* 03 — Custom sizes */}
         <section>
           <SectionLabel index="03" title="Custom Sizes" />
-          <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+          <div className="flex items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 py-10">
             <GooeyPagination
               totalPages={5}
               currentPage={page > 5 ? 5 : page}
@@ -77,24 +77,24 @@ export default function GooeyPaginationTestPage() {
               <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
                 speed 0.5 — slow
               </div>
-              <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
-                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={0.5} />
+              <div className="flex items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={0.5} activeSize={40} inactiveSize={24} gap={12} />
               </div>
             </div>
             <div>
               <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
                 speed 1 — default
               </div>
-              <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
-                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={1} />
+              <div className="flex items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={1} activeSize={40} inactiveSize={24} gap={12} />
               </div>
             </div>
             <div>
               <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
                 speed 2.5 — fast
               </div>
-              <div className="flex items-center justify-center rounded-xl border border-dead-800 bg-dead-900/40 py-10">
-                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={2.5} />
+              <div className="flex items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} speed={2.5} activeSize={40} inactiveSize={24} gap={12} />
               </div>
             </div>
           </div>

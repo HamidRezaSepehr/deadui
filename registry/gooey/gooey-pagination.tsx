@@ -77,6 +77,7 @@ export function GooeyPagination({
     <div className={cn("relative flex items-center justify-center", className)}>
       <GooeyFilter filterId={filterId} blur={gooeyBlur} />
 
+      {/* Filtered layer: drives the gooey travel effect. */}
       <div
         className="relative flex items-center"
         style={{ filter: `url(#${filterId})`, gap: `${gap}px` }}
@@ -91,6 +92,7 @@ export function GooeyPagination({
               onClick={() => handlePageClick(page)}
               className="relative flex items-center justify-center outline-none cursor-pointer"
               style={{ width: activeSize, height: activeSize }}
+              aria-label={`Page ${page}`}
             >
               {/* The traveling active background with layoutId */}
               {isActive && (
@@ -105,24 +107,51 @@ export function GooeyPagination({
                 />
               )}
 
-              {/* The visual circle / number */}
+              {/* Blurry dot (gooey source) */}
               <motion.div
-                className={cn(
-                  "relative z-10 flex items-center justify-center rounded-full bg-dead-red transition-all",
-                  isActive
-                    ? "text-white font-bold"
-                    : "text-white/70 hover:bg-dead-red/80"
-                )}
+                className="relative z-10 flex items-center justify-center rounded-full bg-dead-red"
                 animate={{
                   width: size,
                   height: size,
                   opacity: isActive ? 1 : 0.6,
                 }}
                 transition={transition}
+              />
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Crisp overlay: sharp, non-filtered dots on top. */}
+      <div
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        style={{ gap: `${gap}px` }}
+        aria-hidden
+      >
+        {pages.map((page) => {
+          const isActive = page === currentPage
+          const size = isActive ? activeSize : inactiveSize
+
+          return (
+            <div
+              key={`crisp-${page}`}
+              className="relative flex items-center justify-center"
+              style={{ width: activeSize, height: activeSize }}
+            >
+              <div
+                className={cn(
+                  "flex items-center justify-center rounded-full bg-dead-red transition-colors",
+                  isActive ? "text-white font-bold" : "text-white/70"
+                )}
+                style={{
+                  width: size,
+                  height: size,
+                  opacity: isActive ? 1 : 0.7,
+                }}
               >
                 {isActive && <span className="text-lg">{page}</span>}
-              </motion.div>
-            </button>
+              </div>
+            </div>
           )
         })}
       </div>
