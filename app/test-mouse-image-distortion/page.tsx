@@ -78,48 +78,6 @@ export default function MouseImageDistortionTestPage() {
           </div>
         </section>
 
-        <section>
-          <SectionLabel index="02" title="High Velocity Multiplier" />
-          <div className="overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 p-6">
-            <MouseImageDistortion items={ITEMS} velocityMultiplier={0.15} />
-          </div>
-          <p className="mt-3 text-sm text-dead-400">
-            <code className="text-dead-200">velocityMultiplier</code> scales how much
-            velocity affects skew and scale. Higher = more dramatic warp.
-          </p>
-        </section>
-
-        <section>
-          <SectionLabel index="03" title="Custom Size & Radius" />
-          <div className="overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 p-6">
-            <MouseImageDistortion
-              items={ITEMS}
-              imageWidth={200}
-              imageHeight={140}
-              imageBorderRadius="9999px"
-            />
-          </div>
-          <p className="mt-3 text-sm text-dead-400">
-            <code className="text-dead-200">imageWidth</code>,{" "}
-            <code className="text-dead-200">imageHeight</code>, and{" "}
-            <code className="text-dead-200">imageBorderRadius</code> control the
-            floating image.
-          </p>
-        </section>
-
-        <section>
-          <SectionLabel index="04" title="Custom Text & Row Styling" />
-          <div className="overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 p-6">
-            <MouseImageDistortion
-              items={ITEMS}
-              textColor="text-dead-200"
-              textSize="text-2xl"
-              rowPadding="py-4"
-              rowBorderColor="border-dead-800"
-              rowHoverBgColor="bg-dead-800/60"
-            />
-          </div>
-        </section>
       </div>
     </main>
   );

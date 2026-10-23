@@ -3,15 +3,16 @@ import { InstallTabs } from "@/components/docs/install-tabs"
 export const metadata = {
   title: "Mouse Image Distortion",
   description:
-    "A list component where hovering reveals an image that follows the cursor and warps based on movement velocity.",
+    "A list component where hovering reveals a WebGL image that follows the cursor and warps based on movement velocity.",
 }
 
 # Mouse Image Distortion
 
 A list of text rows. Hovering a row reveals a floating image that follows the
-cursor; the image warps (skews and scales) based on the cursor's movement
-velocity, creating a smooth, liquid-like distortion. Built on Framer Motion's
-`useVelocity` and `useSpring` — no WebGL required.
+cursor; the image warps (vertex displacement driven by mouse velocity) using a
+custom GLSL shader, creating a liquid-like distortion. Built on
+`@react-three/fiber`, `@react-three/drei` and `three` — no Framer Motion
+distortion required.
 
 ## Installation
 
@@ -23,8 +24,8 @@ velocity, creating a smooth, liquid-like distortion. Built on Framer Motion's
 import { MouseImageDistortion } from "@/components/ui/mouse-image-distortion"
 
 const items = [
-  { id: "1", title: "Aurora", subtitle: "Light in the dark", imageUrl: "/aurora.jpg" },
-  { id: "2", title: "Basalt", subtitle: "Stone and silence", imageUrl: "/basalt.jpg" },
+  { title: "Aurora", subtitle: "Light in the dark", imageUrl: "/aurora.jpg" },
+  { title: "Basalt", subtitle: "Stone and silence", imageUrl: "/basalt.jpg" },
 ]
 
 export function Projects() {
@@ -34,46 +35,42 @@ export function Projects() {
 
 ## How it works
 
-The component tracks the cursor with `useMotionValue` on `mousemove`, smooths it
-with `useSpring` (damping 25, stiffness 150), and derives velocity with
-`useVelocity`. The velocity drives three transforms on the floating image:
+The component renders two layers:
 
-- `skewX` / `skewY`: mapped from velocity `[-1000, 1000]` to `[-15, 15]`
-  degrees.
-- `scale`: `1 + min(|vx| + |vy|, 500) * (velocityMultiplier / 100)`.
+1. The text list (rows), styled with `mix-blend-difference` so the white text
+   inverts the background.
+2. A fixed full-screen `<Canvas>` (pointer-events none) containing a 3D plane
+   mesh textured with the hovered row's image.
 
-The image is `position: fixed` with `translateX/Y: "-50%"` so it is perfectly
-centered on the cursor. Rows toggle the hovered id on enter/leave; the floating
-image only renders while a row is hovered.
+On hover, the mesh fades in (opacity 0 → 1 over 0.2s) and its texture swaps to
+the hovered row's image. The mesh follows the cursor: its position is mapped
+from screen pixels to world space, smoothed by a `0.1` lerp per frame. The
+vertex shader displaces vertices with `sin(uv.y * PI) * uDelta.x * uAmplitude`
+(and the symmetric form on Y), where `uDelta` is the per-frame mouse delta —
+this is what produces the liquid warp. The fragment shader samples the texture
+and multiplies by `uAlpha`.
 
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `items` | `DistortionItem[]` | — (required) | List items: `{ id, title, subtitle?, imageUrl }`. |
-| `velocityMultiplier` | `number` | `0.05` | Scales how much velocity affects skew and scale. |
-| `imageWidth` | `number` | `300` | Width of the floating image in pixels. |
-| `imageHeight` | `number` | `200` | Height of the floating image in pixels. |
-| `imageBorderRadius` | `string` | `"12px"` | CSS border-radius of the floating image. |
-| `textColor` | `string` | `"text-foreground"` | Tailwind text color class for titles/subtitles. |
-| `textSize` | `string` | `"text-4xl"` | Tailwind text size class for titles. |
-| `rowPadding` | `string` | `"py-6"` | Tailwind padding class for each row. |
-| `rowBorderColor` | `string` | `"border-border"` | Tailwind border color class for row dividers. |
-| `rowHoverBgColor` | `string` | `"bg-muted/50"` | Tailwind background class applied on hover. |
+| `items` | `DistortionItem[]` | — (required) | List items: `{ id?, title, subtitle?, imageUrl }`. |
 | `className` | `string` | — | Merged onto the container. |
 
 ## Dependencies
 
-- `motion` (Framer Motion)
+- `three`
+- `@react-three/fiber`
+- `@react-three/drei`
 
 ## Performance
 
-- Velocity and transforms are computed on the animation frame via Framer Motion;
-  no React re-renders occur during movement.
-- The floating image is a single element toggled by hover; rows are plain divs.
+- A single canvas and a single mesh; only the texture and opacity change on
+  hover.
+- Vertex displacement runs on the GPU; no React re-renders during movement.
 
 ## Accessibility
 
 - Rows are not focusable by default; consider wrapping titles in links for
   keyboard navigation.
-- The floating image is `pointer-events-none` and decorative.
+- The canvas is `pointer-events-none` and decorative.

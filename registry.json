@@ -661,10 +661,12 @@
     {
       "name": "mouse-image-distortion",
       "title": "Mouse Image Distortion",
-      "description": "A list component where hovering reveals an image that follows the cursor and warps based on movement velocity.",
+      "description": "A list component where hovering reveals a WebGL image that follows the cursor and warps based on movement velocity.",
       "tier": "free",
       "dependencies": [
-        "motion"
+        "three",
+        "@react-three/fiber",
+        "@react-three/drei"
       ],
       "files": [
         {
