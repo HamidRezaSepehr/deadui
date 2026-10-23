@@ -7091,6 +7091,11 @@ commands handed over in the session report.
   documented repo precedent, the next valid version `0.1.33` / `v0.1.33` was
   used instead.
 
+  **TEST PAGE USES WHITE BACKGROUND.** The reference repo renders on a
+  white page (mix-blend-difference inverts the white text to black). The test
+  route now uses a white background so the effect is visible; on a dark
+  background the blend mode inverts differently.
+
   **WEBGL REWRITE (MATCHES REFERENCE REPO).** The initial implementation used
   Framer Motion skew/scale, which did not match the requested effect. The
   component was rewritten to port `olivierlarose/mouse-image-distortion`: a
