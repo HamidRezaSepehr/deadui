@@ -1,0 +1,79 @@
+import { InstallTabs } from "@/components/docs/install-tabs"
+
+export const metadata = {
+  title: "Mouse Image Distortion",
+  description:
+    "A list component where hovering reveals an image that follows the cursor and warps based on movement velocity.",
+}
+
+# Mouse Image Distortion
+
+A list of text rows. Hovering a row reveals a floating image that follows the
+cursor; the image warps (skews and scales) based on the cursor's movement
+velocity, creating a smooth, liquid-like distortion. Built on Framer Motion's
+`useVelocity` and `useSpring` — no WebGL required.
+
+## Installation
+
+<InstallTabs componentName="mouse-image-distortion" tier="free" />
+
+## Usage
+
+```tsx
+import { MouseImageDistortion } from "@/components/ui/mouse-image-distortion"
+
+const items = [
+  { id: "1", title: "Aurora", subtitle: "Light in the dark", imageUrl: "/aurora.jpg" },
+  { id: "2", title: "Basalt", subtitle: "Stone and silence", imageUrl: "/basalt.jpg" },
+]
+
+export function Projects() {
+  return <MouseImageDistortion items={items} />
+}
+```
+
+## How it works
+
+The component tracks the cursor with `useMotionValue` on `mousemove`, smooths it
+with `useSpring` (damping 25, stiffness 150), and derives velocity with
+`useVelocity`. The velocity drives three transforms on the floating image:
+
+- `skewX` / `skewY`: mapped from velocity `[-1000, 1000]` to `[-15, 15]`
+  degrees.
+- `scale`: `1 + min(|vx| + |vy|, 500) * (velocityMultiplier / 100)`.
+
+The image is `position: fixed` with `translateX/Y: "-50%"` so it is perfectly
+centered on the cursor. Rows toggle the hovered id on enter/leave; the floating
+image only renders while a row is hovered.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `items` | `DistortionItem[]` | — (required) | List items: `{ id, title, subtitle?, imageUrl }`. |
+| `velocityMultiplier` | `number` | `0.05` | Scales how much velocity affects skew and scale. |
+| `imageWidth` | `number` | `300` | Width of the floating image in pixels. |
+| `imageHeight` | `number` | `200` | Height of the floating image in pixels. |
+| `imageBorderRadius` | `string` | `"12px"` | CSS border-radius of the floating image. |
+| `textColor` | `string` | `"text-foreground"` | Tailwind text color class for titles/subtitles. |
+| `textSize` | `string` | `"text-4xl"` | Tailwind text size class for titles. |
+| `rowPadding` | `string` | `"py-6"` | Tailwind padding class for each row. |
+| `rowBorderColor` | `string` | `"border-border"` | Tailwind border color class for row dividers. |
+| `rowHoverBgColor` | `string` | `"bg-muted/50"` | Tailwind background class applied on hover. |
+| `className` | `string` | — | Merged onto the container. |
+
+## Dependencies
+
+- `motion` (Framer Motion)
+
+## Performance
+
+- Velocity and transforms are computed on the animation frame via Framer Motion;
+  no React re-renders occur during movement.
+- The floating image is a single element toggled by hover; rows are plain divs.
+
+## Accessibility
+
+- Rows are not focusable by default; consider wrapping titles in links for
+  keyboard navigation.
+- The floating image is `pointer-events-none` and decorative.

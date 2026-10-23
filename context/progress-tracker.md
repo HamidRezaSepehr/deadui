@@ -7072,3 +7072,31 @@ commands handed over in the session report.
   dimensions match container (1022×260 at dpr 1), `touch-none` present, zero
   console/page errors on `/test-paint-reveal` and `/docs/components/paint-reveal`.
   Registry invariant: 31 components, 0 missing file paths.
+
+
+- Feature 52 (feature spec `51-mouse-image-distortion.md`): `MouseImageDistortion` (Free).
+  Created `registry/mouse-image-distortion/mouse-image-distortion.tsx` + `index.ts`,
+  `app/test-mouse-image-distortion/page.tsx`,
+  `app/docs/components/mouse-image-distortion/page.mdx`; modified `registry.json`
+  (entry appended, 32 components, `dependencies: ["motion"]`),
+  `packages/cli/package.json` (`0.1.32` → `0.1.33`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (12
+  pre-existing warnings, none from the new files), `npm run build` clean with both
+  new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.33`). Branch, commit and tag `v0.1.33` pushed; manual npm publish
+  steps handed to the owner.
+
+  **VERSION DEVIATION.** The spec asks for `0.1.28` / `v0.1.28`, but that version
+  and tag already exist and HEAD's manifest was already `0.1.32`. Following the
+  documented repo precedent, the next valid version `0.1.33` / `v0.1.33` was
+  used instead.
+
+  **VELOCITY DISTORTION.** The floating image is driven by `useMotionValue` (x/y)
+  → `useSpring` (damping 25, stiffness 150) → `useVelocity`. `skewX`/`skewY` map
+  velocity `[-1000, 1000]` → `[-15, 15]` deg; `scale` is `1 + min(|vx|+|vy|,
+  500) * (velocityMultiplier / 100)`. The image is `position: fixed` with
+  `translateX/Y: "-50%"` so it is centered on the cursor. Verified: hovering a
+  row shows the floating image with `translateX(-50%) translateY(-50%)` plus
+  `scale(1.25) skewX(10.85deg) skewY(5.65deg)` while moving, settling back to
+  `scale(1)` when still; zero console/page errors on both routes. Registry
+  invariant: 32 components, 0 missing file paths.

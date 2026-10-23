@@ -657,6 +657,22 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "mouse-image-distortion",
+      "title": "Mouse Image Distortion",
+      "description": "A list component where hovering reveals an image that follows the cursor and warps based on movement velocity.",
+      "tier": "free",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/mouse-image-distortion/mouse-image-distortion.tsx",
+          "target": "components/ui/mouse-image-distortion.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }
