@@ -41,9 +41,9 @@ export function GooeyPagination({
   onPageChange,
   className,
   activeSize = 48,
-  inactiveSize = 36,
+  inactiveSize = 20,
   gap = 16,
-  gooeyBlur = 5,
+  gooeyBlur = 8,
   speed = 1,
 }: GooeyPaginationProps) {
   const reactId = useId()
@@ -146,7 +146,7 @@ export function GooeyPagination({
                 style={{
                   width: size,
                   height: size,
-                  opacity: isActive ? 1 : 0.7,
+                  opacity: 1,
                 }}
               >
                 {isActive && <span className="text-lg">{page}</span>}

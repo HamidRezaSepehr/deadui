@@ -62,7 +62,7 @@ export default function GooeyPaginationTestPage() {
               currentPage={page > 5 ? 5 : page}
               onPageChange={setPage}
               activeSize={64}
-              inactiveSize={20}
+              inactiveSize={32}
               gap={20}
               gooeyBlur={12}
             />

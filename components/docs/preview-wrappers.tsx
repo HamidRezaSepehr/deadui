@@ -485,7 +485,7 @@ export function GooeyInputPreview(props: Record<string, unknown>) {
         collapsedWidth={Number(props.collapsedWidth) || 130}
         expandedWidth={Number(props.expandedWidth) || 200}
         expandedOffset={Number(props.expandedOffset) || 50}
-        gooeyBlur={Number(props.gooeyBlur) || 5}
+        gooeyBlur={Number(props.gooeyBlur) || 8}
         placeholder={(props.placeholder as string) || "Type to search..."}
       />
     </div>
@@ -510,9 +510,9 @@ export function GooeyPaginationPreview(props: Record<string, unknown>) {
         currentPage={page}
         onPageChange={setPage}
         activeSize={Number(props.activeSize) || 48}
-        inactiveSize={Number(props.inactiveSize) || 36}
+        inactiveSize={Number(props.inactiveSize) || 20}
         gap={Number(props.gap) || 16}
-        gooeyBlur={Number(props.gooeyBlur) || 5}
+        gooeyBlur={Number(props.gooeyBlur) || 8}
         speed={Number(props.speed) || 1}
       />
     </div>
