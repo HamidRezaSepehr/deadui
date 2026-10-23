@@ -1,25 +1,42 @@
-"use client";
+"use client"
 
-import React, { useEffect, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useTexture, useAspect } from "@react-three/drei";
-import * as THREE from "three";
-import { animate, useMotionValue } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { useTexture, useAspect } from "@react-three/drei"
+import * as THREE from "three"
+import { animate, useMotionValue } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 export interface DistortionItem {
-  id?: string;
-  title: string;
-  subtitle?: string;
-  imageUrl: string;
+  id?: string
+  title: string
+  subtitle?: string
+  imageUrl: string
 }
 
 export interface MouseImageDistortionProps {
-  items: DistortionItem[];
-  className?: string;
+  items: DistortionItem[]
+  className?: string
+  /** Size of the image relative to the viewport (0‑1). Default: 0.225 */
+  scale?: number
+  /** Strength of the vertex‑displacement warp. Default: 0.0005 */
+  amplitude?: number
+  /** Mouse‑follow smoothing factor (0‑1). Higher = snappier. Default: 0.1 */
+  smoothing?: number
+  /** Fade‑in duration on hover (seconds). Default: 0.2 */
+  fadeDuration?: number
+  /** Tailwind text‑color class for row titles. Default: "text-white" */
+  textColor?: string
+  /** Tailwind text‑size class for row titles. Default: "text-[4vw]" */
+  textSize?: string
+  /** Tailwind padding class for each row. Default: "p-5" */
+  rowPadding?: string
+  /** Tailwind border‑color class for row dividers. Default: "border-white/20" */
+  rowBorderColor?: string
 }
 
-// --- Vertex / Fragment shaders (from the reference) ---
+// ─── GLSL shaders (from the reference) ───────────────────────────────────────
+
 const vertexShader = `
 varying vec2 vUv;
 uniform vec2 uDelta;
@@ -33,176 +50,250 @@ void main() {
   newPosition.y += sin(uv.x * PI) * uDelta.y * uAmplitude;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
 }
-`;
+`
 
 const fragmentShader = `
 varying vec2 vUv;
 uniform sampler2D uTexture;
 uniform float uAlpha;
 void main() {
-  vec3 texture = texture2D(uTexture, vUv).rgb;
-  gl_FragColor = vec4(texture, uAlpha);
+  vec3 tex = texture2D(uTexture, vUv).rgb;
+  gl_FragColor = vec4(tex, uAlpha);
 }
-`;
+`
 
-// --- Hooks (ported from the reference) ---
+// ─── Hooks (ported from the reference) ────────────────────────────────────────
+
 function useMouse() {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const [mouse, setMouse] = useState({ x: 0, y: 0 })
   useEffect(() => {
-    const handler = (e: globalThis.MouseEvent) => {
-      setMouse({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", handler);
-    return () => window.removeEventListener("mousemove", handler);
-  }, []);
-  return mouse;
+    const handler = (e: globalThis.MouseEvent) => setMouse({ x: e.clientX, y: e.clientY })
+    window.addEventListener("mousemove", handler)
+    return () => window.removeEventListener("mousemove", handler)
+  }, [])
+  return mouse
 }
 
 function useDimension() {
-  const [dimension, setDimension] = useState({ width: 0, height: 0 });
+  const [dim, setDim] = useState({ width: 0, height: 0 })
   useEffect(() => {
-    const resize = () => {
-      setDimension({ width: window.innerWidth, height: window.innerHeight });
-    };
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
-  return dimension;
+    const resize = () => setDim({ width: window.innerWidth, height: window.innerHeight })
+    resize()
+    window.addEventListener("resize", resize)
+    return () => window.removeEventListener("resize", resize)
+  }, [])
+  return dim
 }
 
-// --- 3D Model ---
-function Model({ items, activeMenu }: { items: DistortionItem[]; activeMenu: number | null }) {
-  const plane = useRef<THREE.Mesh>(null);
-  const { viewport } = useThree();
-  const dimension = useDimension();
-  const mouse = useMouse();
-  const opacity = useMotionValue(0);
+function lerp(x: number, y: number, a: number) {
+  return x * (1 - a) + y * a
+}
 
-  const textures = useTexture(items.map((item) => item.imageUrl));
+// ─── 3D Model (one mesh per instance) ──────────────────────────────────────
 
-  const { width, height } = (textures[0]?.image as { width: number; height: number }) ?? { width: 1, height: 1 };
+function Model({
+  items,
+  activeMenu,
+  amplitude,
+  smoothing,
+  fadeDuration,
+  imageScale,
+}: {
+  items: DistortionItem[]
+  activeMenu: number | null
+  amplitude: number
+  smoothing: number
+  fadeDuration: number
+  imageScale: number
+}) {
+  const plane = useRef<THREE.Mesh>(null)
+  const { viewport } = useThree()
+  const dim = useDimension()
+  const mouse = useMouse()
+  const opacity = useMotionValue(0)
 
-  const scale = useAspect(width, height, 0.225);
+  const textures = useTexture(items.map((item) => item.imageUrl))
 
-  const smoothMouse = useRef({ x: useMotionValue(0), y: useMotionValue(0) });
+  const firstImg = textures[0]?.image as HTMLImageElement | undefined
+  const tw = firstImg?.width ?? 1
+  const th = firstImg?.height ?? 1
+  const size = useAspect(tw, th, imageScale)
+
+  const sm = useRef({ x: useMotionValue(0), y: useMotionValue(0) })
 
   const uniforms = useRef({
     uDelta: { value: { x: 0, y: 0 } },
-    uAmplitude: { value: 0.0005 },
+    uAmplitude: { value: amplitude },
     uTexture: { value: textures[0] },
     uAlpha: { value: 0 },
-  });
+  })
 
+  // Sync uAmplitude when prop changes (the ref is captured at creation)
   useEffect(() => {
-    if (activeMenu !== null && activeMenu >= 0 && activeMenu < textures.length) {
-      uniforms.current.uTexture.value = textures[activeMenu];
-      animate(opacity, 1, {
-        duration: 0.2,
-        onUpdate: (latest) => {
-          uniforms.current.uAlpha.value = latest;
-        },
-      });
-    } else {
-      animate(opacity, 0, {
-        duration: 0.2,
-        onUpdate: (latest) => {
-          uniforms.current.uAlpha.value = latest;
-        },
-      });
-    }
-  }, [activeMenu, textures, opacity]);
+    uniforms.current.uAmplitude.value = amplitude
+  }, [amplitude])
 
-  const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a;
+  // Fade in/out and switch texture on hover
+  useEffect(() => {
+    const tex = textures[activeMenu ?? 0]
+    if (tex) uniforms.current.uTexture.value = tex
 
-  useFrame((state) => {
-    const mesh = plane.current;
-    if (!mesh) return;
+    const target = activeMenu !== null ? 1 : 0
+    animate(opacity, target, {
+      duration: fadeDuration,
+      onUpdate: (latest) => {
+        uniforms.current.uAlpha.value = latest
+      },
+    })
+  }, [activeMenu, textures, opacity, fadeDuration])
 
-    const { x, y } = mouse;
-    const smoothX = smoothMouse.current.x.get();
-    const smoothY = smoothMouse.current.y.get();
+  useFrame(() => {
+    const mesh = plane.current
+    if (!mesh) return
 
-    if (Math.abs(x - smoothX) > 1) {
-      smoothMouse.current.x.set(lerp(smoothX, x, 0.1));
-      smoothMouse.current.y.set(lerp(smoothY, y, 0.1));
+    const { x, y } = mouse
+    const sx = sm.current.x.get()
+    const sy = sm.current.y.get()
+
+    if (Math.abs(x - sx) > 1) {
+      sm.current.x.set(lerp(sx, x, smoothing))
+      sm.current.y.set(lerp(sy, y, smoothing))
       uniforms.current.uDelta.value = {
-        x: x - smoothX,
-        y: -1 * (y - smoothY),
-      };
+        x: x - sx,
+        y: -(y - sy),
+      }
     }
 
-    if (dimension.width > 0) {
-      const nx = smoothMouse.current.x.get() / dimension.width;
-      const ny = smoothMouse.current.y.get() / dimension.height;
-      mesh.position.x = (nx - 0.5) * viewport.width;
-      mesh.position.y = (0.5 - ny) * viewport.height;
-
+    if (dim.width > 0) {
+      const nx = sm.current.x.get() / dim.width
+      const ny = sm.current.y.get() / dim.height
+      mesh.position.x = (nx - 0.5) * viewport.width
+      mesh.position.y = (0.5 - ny) * viewport.height
     }
-  });
+  })
 
   return (
-    <mesh ref={plane} scale={scale}>
+    <mesh ref={plane} scale={size}>
       <planeGeometry args={[1, 1, 15, 15]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
         uniforms={uniforms.current}
-        transparent={true}
+        transparent
+        depthWrite={false}
       />
     </mesh>
-  );
+  )
 }
 
-// --- Scene ---
-function Scene({ items, activeMenu }: { items: DistortionItem[]; activeMenu: number | null }) {
+// ─── Scene (fixed full‑screen canvas) ──────────────────────────────────────
+
+function Scene({
+  items,
+  activeMenu,
+  amplitude,
+  smoothing,
+  fadeDuration,
+  imageScale,
+}: {
+  items: DistortionItem[]
+  activeMenu: number | null
+  amplitude: number
+  smoothing: number
+  fadeDuration: number
+  imageScale: number
+}) {
   return (
-    <div className="fixed top-0 left-0 h-screen w-full pointer-events-none">
+    <div className="pointer-events-none fixed left-0 top-0 h-screen w-full">
       <Canvas>
-        <Model items={items} activeMenu={activeMenu} />
+        <Model
+          items={items}
+          activeMenu={activeMenu}
+          amplitude={amplitude}
+          smoothing={smoothing}
+          fadeDuration={fadeDuration}
+          imageScale={imageScale}
+        />
       </Canvas>
     </div>
-  );
+  )
 }
 
-// --- Projects list ---
+// ─── Row list (mix‑blend‑difference like the reference) ─────────────────────
+
 function Projects({
   items,
   activeMenu,
   setActiveMenu,
+  textColor,
+  textSize,
+  rowPadding,
+  rowBorderColor,
 }: {
-  items: DistortionItem[];
-  activeMenu: number | null;
-  setActiveMenu: (i: number | null) => void;
+  items: DistortionItem[]
+  activeMenu: number | null
+  setActiveMenu: (i: number | null) => void
+  textColor: string
+  textSize: string
+  rowPadding: string
+  rowBorderColor: string
 }) {
   return (
-    <div className="relative z-10 mix-blend-difference text-white w-full">
-      <ul className="border-b border-white/20">
-        {items.map((project, i) => (
+    <div className="relative z-10 w-full mix-blend-difference text-white">
+      <ul className={cn("border-b", rowBorderColor)}>
+        {items.map((item, i) => (
           <li
-            key={project.id ?? project.title}
+            key={item.id ?? item.title}
             onMouseEnter={() => setActiveMenu(i)}
             onMouseLeave={() => setActiveMenu(null)}
-            className="text-[4vw] p-5 border-t border-white/20 cursor-pointer"
+            className={cn("cursor-pointer border-t", rowPadding, rowBorderColor)}
           >
-            <p>{project.title}</p>
-            {project.subtitle && (
-              <p className="text-[1.2vw] opacity-60">{project.subtitle}</p>
+            <p className={cn("font-bold", textSize, textColor)}>{item.title}</p>
+            {item.subtitle && (
+              <p className={cn("opacity-60 text-sm", textColor)}>{item.subtitle}</p>
             )}
           </li>
         ))}
       </ul>
     </div>
-  );
+  )
 }
 
-export function MouseImageDistortion({ items, className }: MouseImageDistortionProps) {
-  const [activeMenu, setActiveMenu] = useState<number | null>(null);
+// ─── Public component ──────────────────────────────────────────────────────
+
+export function MouseImageDistortion({
+  items,
+  className,
+  scale: imageScale = 0.225,
+  amplitude = 0.0005,
+  smoothing = 0.1,
+  fadeDuration = 0.2,
+  textColor = "text-white",
+  textSize = "text-[4vw]",
+  rowPadding = "p-5",
+  rowBorderColor = "border-white/20",
+}: MouseImageDistortionProps) {
+  const [activeMenu, setActiveMenu] = useState<number | null>(null)
 
   return (
     <div className={cn("relative w-full min-h-screen", className)}>
-      <Projects items={items} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
-      <Scene items={items} activeMenu={activeMenu} />
+      <Projects
+        items={items}
+        activeMenu={activeMenu}
+        setActiveMenu={setActiveMenu}
+        textColor={textColor}
+        textSize={textSize}
+        rowPadding={rowPadding}
+        rowBorderColor={rowBorderColor}
+      />
+      <Scene
+        items={items}
+        activeMenu={activeMenu}
+        amplitude={amplitude}
+        smoothing={smoothing}
+        fadeDuration={fadeDuration}
+        imageScale={imageScale}
+      />
     </div>
-  );
+  )
 }

@@ -7119,3 +7119,13 @@ commands handed over in the session report.
   `scale(1.25) skewX(10.85deg) skewY(5.65deg)` while moving, settling back to
   `scale(1)` when still; zero console/page errors on both routes. Registry
   invariant: 32 components, 0 missing file paths.
+
+
+  **CONFIGURABLE REWRITE (v0.1.34).** The component was fully rewritten to
+  support all configuration props: `scale`, `amplitude`, `smoothing`,
+  `fadeDuration`, `textColor`, `textSize`, `rowPadding`, `rowBorderColor`.
+  Added `depthWrite={false}` on the shaderMaterial to fix blending issues. The
+  test page now uses a white background (required for mix-blend-difference) and
+  demonstrates 5 configurations. Verified: image renders (35695 non-white px on
+  a 1280×900 canvas), follows cursor, warps on movement, zero page errors.
+  Version bumped to `0.1.34`, tag `v0.1.34`.
