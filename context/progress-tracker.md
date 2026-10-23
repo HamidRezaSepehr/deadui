@@ -6993,6 +6993,15 @@ commands handed over in the session report.
   renders the customizer (1 range), the color select switches the track live, and
   drag still pops. Registry invariant: 30 components, 0 missing file paths.
 
+  **POST-RELEASE FOLLOW-UP #2: COLOR-AGNOSTIC FILTER RESTORED + LABEL SPACING.**
+  The blue-only matrix from the reference example made the goo render blue for
+  every track color, so custom-color tracks showed a blue goo bridge. The matrix
+  is back to the color-agnostic form (`1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0
+  20 -9`), stdDeviation 8.6, so the goo now follows the track color for any
+  `color`. The 0/100 labels gained spacing (14px from each edge). The controlled
+  example on the test page now uses the default color. Bumped to `0.1.29` /
+  `v0.1.29`.
+
   **POST-RELEASE FOLLOW-UP: FILTER MATCHED TO THE REFERENCE EXAMPLE.** The
   gooey filter was changed from the color-agnostic matrix
   (`1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9`, stdDeviation 8) to the

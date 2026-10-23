@@ -133,7 +133,7 @@ export function GooeyRange({
             <feColorMatrix
               in="blur"
               type="matrix"
-              values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 20 -9"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
               result="goo"
             />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
@@ -147,12 +147,12 @@ export function GooeyRange({
       >
         {/* 0 / 100 labels, gooed together with the track. */}
         <span
-          className="pointer-events-none absolute left-[10px] top-0 font-medium text-[12px] leading-[40px] text-white/75"
+          className="pointer-events-none absolute left-[14px] top-0 font-medium text-[12px] leading-[40px] text-white/75"
         >
           0
         </span>
         <span
-          className="pointer-events-none absolute right-[5px] top-0 font-medium text-[12px] leading-[40px] text-white/75"
+          className="pointer-events-none absolute right-[14px] top-0 font-medium text-[12px] leading-[40px] text-white/75"
         >
           100
         </span>

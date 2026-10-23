@@ -144,7 +144,6 @@ export default function GooeyRangeTestPage() {
               min={0}
               max={100}
               step={5}
-              color="bg-blue-500"
             />
           </Stage>
           <p className="mt-3 text-sm text-dead-400">
