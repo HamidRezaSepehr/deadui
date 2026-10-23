@@ -643,6 +643,20 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "paint-reveal",
+      "title": "Paint Reveal",
+      "description": "An interactive container that reveals its content as the user moves their mouse, erasing a solid overlay color.",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/paint-reveal/paint-reveal.tsx",
+          "target": "components/ui/paint-reveal.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }

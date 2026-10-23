@@ -7031,3 +7031,37 @@ commands handed over in the session report.
   the bubble transition is `top 0.34s cubic-bezier(0.42, 0.05, 0.31, 1.36),
   box-shadow 0.14s` (matching the example). Defaults: `color = "bg-[#0000ff]"`,
   `step = 0.1`, `gooeyBlur = 8.6`. Bumped to `0.1.28` / `v0.1.28`.
+
+
+- Feature 51 (feature spec `50-paint-reveal.md`): `PaintReveal` (Free). Created
+  `registry/paint-reveal/paint-reveal.tsx` + `index.ts`, `app/test-paint-reveal/page.tsx`,
+  `app/docs/components/paint-reveal/page.mdx`; modified `registry.json` (entry
+  appended, 31 components), `packages/cli/package.json` (`0.1.31` → `0.1.32`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (12
+  pre-existing warnings, none from the new files), `npm run build` clean with both
+  new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.32`). Branch, commit and tag `v0.1.32` pushed; manual npm publish
+  steps handed to the owner.
+
+  **VERSION DEVIATION.** The spec asks for `0.1.27` / `v0.1.27`, but that version
+  and tag already exist (Gooey Range was released on them) and HEAD's manifest
+  was already `0.1.31`. Following the documented repo precedent (Features 38/39/40/
+  49), the next valid version `0.1.32` / `v0.1.32` was used instead of clobbering
+  the prior release.
+
+  **CANVAS LOGIC.** The canvas is sized to the container's bounding box with
+  `devicePixelRatio` scaling (crisp on retina), re-filled whenever `overlayColor`
+  changes or the window resizes, and uses `ctx.setTransform(dpr,0,0,dpr,0,0)`
+  instead of `ctx.scale` so repeated resizes don't compound. The overlay is drawn
+  with `globalCompositeOperation = "source-over"`; erasing uses
+  `destination-out` with a circular arc of diameter `brushSize`.
+
+  **TOUCH SUPPORT.** The canvas carries `touch-none` so dragging paints instead
+  of scrolling on mobile; `touchmove` is registered with `{ passive: true }`.
+
+  **NO REACT STATE DURING PAINTING.** `mousemove`/`touchmove` write directly to
+  the canvas context; `isReady` is the only state, toggled once after the first
+  fill. Verified: overlay pixel `[0,0,0,255]`, erased pixel alpha `0`, canvas
+  dimensions match container (1022×260 at dpr 1), `touch-none` present, zero
+  console/page errors on `/test-paint-reveal` and `/docs/components/paint-reveal`.
+  Registry invariant: 31 components, 0 missing file paths.

@@ -1,0 +1,85 @@
+import { InstallTabs } from "@/components/docs/install-tabs"
+
+export const metadata = {
+  title: "Paint Reveal",
+  description:
+    "An interactive container that reveals its content as the user moves their mouse, erasing a solid overlay color.",
+}
+
+# Paint Reveal
+
+A container that hides its `children` behind a solid overlay color drawn on an
+HTML5 `<canvas>`. As the user moves the mouse (or drags on touch), a circular
+brush erases the overlay using `globalCompositeOperation = 'destination-out'`,
+revealing the content underneath with an interactive paint effect.
+
+## Installation
+
+<InstallTabs componentName="paint-reveal" tier="free" />
+
+## Usage
+
+```tsx
+import { PaintReveal } from "@/components/ui/paint-reveal"
+
+export function Hero() {
+  return (
+    <PaintReveal overlayColor="#000000" brushSize={60}>
+      <h1 className="text-6xl font-bold">Hidden until you paint</h1>
+    </PaintReveal>
+  )
+}
+```
+
+### Custom brush size and overlay color
+
+```tsx
+<PaintReveal overlayColor="#1d4ed8" brushSize={80}>
+  <img src="/photo.jpg" alt="..." />
+</PaintReveal>
+```
+
+## How it works
+
+The container holds two layers:
+
+1. `children` rendered at `z-0`.
+2. A `<canvas>` at `z-10` covering the container, initially filled with
+   `overlayColor`.
+
+The canvas is sized to the container's bounding box with `devicePixelRatio`
+scaling for crisp rendering on retina displays, and re-filled whenever
+`overlayColor` changes or the window resizes.
+
+On `mousemove` / `touchmove`, a circle of diameter `brushSize` is drawn with
+`globalCompositeOperation = 'destination-out'`, which removes the overlay pixels
+and makes that region transparent — revealing the children behind it. The canvas
+carries `touch-none` so dragging on mobile paints instead of scrolling the page.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `brushSize` | `number` | `40` | Diameter of the erasing brush in pixels. |
+| `overlayColor` | `string` | `"#000000"` | Solid color filling the overlay canvas. |
+| `children` | `React.ReactNode` | — (required) | Content revealed by painting. |
+| `className` | `string` | — | Merged onto the container. |
+| `...props` | `React.HTMLAttributes<HTMLDivElement>` | — | Forwarded to the container. |
+
+## Dependencies
+
+None — the component uses the native Canvas API and React.
+
+## Performance
+
+- One canvas per instance, resized only on container resize or `overlayColor`
+  change.
+- Painting draws a single arc per pointer move; no state updates during
+  interaction, so React never re-renders while painting.
+
+## Accessibility
+
+- The control is purely visual; the underlying `children` remain in the DOM and
+  are readable by assistive technology even before being revealed.
+- Provide meaningful `children` (text/alt text) rather than relying on the
+  reveal effect for essential information.
