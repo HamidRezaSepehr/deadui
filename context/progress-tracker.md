@@ -6912,3 +6912,84 @@ commands handed over in the session report.
   previous 16px inactive dots vanished entirely. The default `inactiveSize` is now
   `40` (still smaller than the 48px active) so the dots survive the filter and
   stay clearly visible. `gooeyBlur` stays at the spec's `8`. No version bump.
+
+  **POST-RELEASE FOLLOW-UP #3: CRISP OVERLAY, SINGLE CIRCLE, SMOOTH SCALE, GAP
+  EXAMPLES.** The filtered layer now only drives the gooey travel; a second,
+  non-filtered overlay layer draws the dots crisply on top (`pointer-events-none`,
+  `aria-hidden`). The overlay is fully opaque (`opacity: 1`) so the blurry
+  filtered dot no longer shows through and creates a double circle. The overlay
+  dot is a `motion.div` animating its `width`/`height` with the same spring, so an
+  inactive dot scales up smoothly when it becomes active. `inactiveSize` is back to
+  `20` (visible because the overlay is unfiltered), `gooeyBlur` is `8`. The test
+  route now includes a dedicated Gap section (8 / 16 / 32 px) and the speed cards
+  use `overflow-hidden` + smaller sizes so nothing spills out. No version bump.
+
+- Feature 50 (feature spec `49-gooey-range.md`): `GooeyRange` (Free). Created
+  `registry/gooey/gooey-range.tsx`, `app/test-gooey-range/page.tsx`,
+  `app/docs/components/gooey-range/page.mdx`; modified `registry.json` (entry
+  appended, **30 components**), `registry/gooey/index.ts` (barrel export),
+  `components/docs/preview-wrappers.tsx` (`GooeyRangePreview`),
+  `packages/cli/package.json` (`0.1.26` → `0.1.27`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11
+  pre-existing warnings, none from the new files), `npm run build` clean with both
+  new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.27`). Branch, commit and tag `v0.1.27` pushed; manual npm publish
+  steps handed to the owner.
+
+  **VERSION DEVIATION.** The spec asks for `0.1.26` / `v0.1.26`, but that version
+  and tag already exist (Gooey Pagination was released on them) and HEAD's
+  manifest was already `0.1.26`. Following the documented repo precedent
+  (Features 38/39/40), the next valid version `0.1.27` / `v0.1.27` was used
+  instead of clobbering the prior release.
+
+  **COLOR-AGNOSTIC FILTER.** The filter is `feGaussianBlur` + `feColorMatrix
+  values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"` + `feComposite atop`.
+  The matrix only rewrites alpha (`20*A - 9`) and leaves RGB untouched, so
+  `color` accepts any Tailwind `bg-*` class; verified on the test route with
+  `bg-dead-red`, `bg-blue-500`, `bg-emerald-500`, `bg-violet-500` (computed track
+  colors all resolve correctly).
+
+  **FILTER ID USES `useId()`, NOT `Math.random()`.** The spec's
+  `Math.random().toString(36)` inside `useMemo` would produce a different id on
+  the server and client, risking a hydration mismatch. The id is
+  `gooey-range-${useId() sanitised to [a-zA-Z0-9_-]}`, so N ranges get N filters
+  (verified: 15 inputs → 15 unique filter ids on the test route).
+
+  **`thumbSize` ACTUALLY DRIVES THE NATIVE THUMB.** The spec left the webkit
+  thumb classes hardcoded at `28px` and only wrote an unused `--thumb-size` var.
+  Here the input sets `--thumb-size` inline and the pseudo-element classes read
+  `h-[var(--thumb-size)]` / `w-[var(--thumb-size)]` (both webkit and moz), so the
+  thumb tracks the prop. The bubble shares the same size. Verified pixel
+  bounding boxes: 20×20, 28×28, 40×40 for `thumbSize` 20/28/40.
+
+  **BUBBLE POSITION + DRAG STATE.** `left` is
+  `calc(${percentage}% - ${thumbSize / 2}px)` exactly as specified (verified:
+  value 50 → bubble centre at 50.0% of a 448px track). Resting `top` is
+  `(40 - thumbSize) / 2` (the spec's hardcoded `6px`, now correct for any size);
+  `onPointerDown` sets `isDragging`, `onPointerUp`/`onPointerLeave` clear it, and
+  the bubble animates to `-popOffset` with an expanded white halo ring (verified
+  `-38px` on drag, back to `6px` on release). The spec's
+  `--tw-shadow-color`/`currentColor` halo was replaced with explicit
+  `rgba(255,255,255,…)` rings; `currentColor` on a white bubble is black, so the
+  halo would have been invisible against the dark page.
+
+  **BUBBLE TEXT IS `text-black`, NOT `text-foreground`.** The bubble is white;
+  in this dark-default theme `text-foreground` resolves near-white, which would
+  hide the value. `text-black` is theme-independent (same precedent as the
+  line-shadow light demo card).
+
+  **DEPENDENCIES: NONE.** The component is pure React + Tailwind (native
+  `<input type="range">`), so the registry entry declares `dependencies: []`.
+  Dragging is handled by the browser; the only React state updated during
+  interaction is `isDragging` (and the value when uncontrolled), so there is no
+  pointer-move handler. `ariaLabel` names the slider; reduced-motion is not
+  special-cased because the pop is a short CSS transition, but the native range
+  keyboard semantics remain intact.
+
+  **VERIFIED (Playwright/Chromium vs `next dev` on port 3000).** `/test-gooey-range`
+  renders 15 ranges with 15 unique filters, correct track colors, bubble sizes
+  20/28/40, bubble centre at 50% for value 50, pop `-38px` → `6px` with the halo
+  ring expanding 4px → 8px, and zero console/page errors. `/docs/components/gooey-range`
+  renders the customizer (1 range), the color select switches the track live
+  (`rgb(220,38,38)` → blue `lab(...)`), and drag still pops. Registry invariant:
+  30 components, 0 missing file paths.

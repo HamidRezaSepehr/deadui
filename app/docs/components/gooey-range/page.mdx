@@ -1,0 +1,171 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GooeyRangePreview } from "@/components/docs/preview-wrappers"
+
+export const metadata = {
+  title: "Gooey Range",
+  description:
+    "A liquid, morphing range slider with a pop-up value bubble, powered by SVG filters.",
+}
+
+# Gooey Range
+
+A range slider whose thumb and value bubble are rendered inside a container
+carrying an SVG `feGaussianBlur` + `feColorMatrix` filter. The blur smears their
+alpha together and the matrix re-thresholds it, so the bubble stays connected to
+the thumb by a liquid bridge and "pops" upward while you drag.
+
+## Preview
+
+<ComponentCustomizer
+  component={GooeyRangePreview}
+  defaultProps={{
+    min: 0,
+    max: 100,
+    step: 1,
+    defaultValue: 50,
+    color: "bg-dead-red",
+    thumbSize: 28,
+    popOffset: 38,
+    gooeyBlur: 8,
+  }}
+  controls={{
+    color: {
+      type: "select",
+      options: ["bg-dead-red", "bg-blue-500", "bg-emerald-500", "bg-violet-500"],
+    },
+    step: { type: "slider", min: 1, max: 10, step: 1 },
+    thumbSize: { type: "slider", min: 16, max: 48, step: 2, unit: "px" },
+    popOffset: { type: "slider", min: 0, max: 80, step: 2, unit: "px" },
+    gooeyBlur: { type: "slider", min: 2, max: 16, step: 1, unit: "px" },
+  }}
+  className="not-prose my-8"
+/>
+
+## Installation
+
+<InstallTabs componentName="gooey-range" tier="free" />
+
+## Usage
+
+Uncontrolled — pass a `defaultValue` and read changes through `onChange`:
+
+```tsx
+import { GooeyRange } from "@/components/ui/gooey-range"
+
+export function Volume() {
+  return (
+    <GooeyRange
+      min={0}
+      max={100}
+      defaultValue={50}
+      onChange={(value) => console.log(value)}
+    />
+  )
+}
+```
+
+Controlled — pass `value` and update it in `onChange`:
+
+```tsx
+import { GooeyRange } from "@/components/ui/gooey-range"
+import { useState } from "react"
+
+export function ControlledRange() {
+  const [value, setValue] = useState(35)
+  return (
+    <GooeyRange
+      value={value}
+      onChange={setValue}
+      min={0}
+      max={100}
+      step={5}
+      color="bg-blue-500"
+    />
+  )
+}
+```
+
+### Custom track colors
+
+`color` is any Tailwind `bg-*` class. The filter only thresholds alpha, so the
+RGB of the track is preserved and every color gets the same liquid effect:
+
+```tsx
+<GooeyRange color="bg-blue-500" defaultValue={40} />
+<GooeyRange color="bg-emerald-500" defaultValue={60} />
+<GooeyRange color="bg-violet-500" defaultValue={80} />
+```
+
+### Thumb size and pop distance
+
+`thumbSize` scales both the native thumb and the value bubble. `popOffset`
+controls how far the bubble rises while dragging:
+
+```tsx
+<GooeyRange thumbSize={40} popOffset={64} gooeyBlur={12} />
+```
+
+## How it works
+
+The track, native thumb and bubble share one filtered container:
+
+```svg
+<filter id="gooey-range-…" x="-50%" y="-50%" width="200%" height="200%">
+  <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+  <feColorMatrix in="blur" type="matrix"
+    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo" />
+  <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+</filter>
+```
+
+Because the color matrix only rewrites the alpha channel (`20 × A − 9`), the
+filter is color-agnostic: the track can be any Tailwind background class. When
+`isDragging` flips true on `pointerdown`, the bubble's `top` animates to
+`-popOffset` and its shadow ring expands; the blur stretches the gap into a
+liquid bridge until the pointer is released.
+
+The bubble's horizontal position is computed from the value:
+
+```tsx
+left: `calc(${percentage}% - ${thumbSize / 2}px)`
+```
+
+so the bubble is centred on the thumb at any value. Filter ids come from
+`useId()`, so multiple ranges on one page never share a filter.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `min` | `number` | `0` | Minimum value. |
+| `max` | `number` | `100` | Maximum value. |
+| `step` | `number` | `1` | Step increment. |
+| `value` | `number` | — | Controlled value. Omit for internal state. |
+| `defaultValue` | `number` | `50` | Initial value when uncontrolled. |
+| `onChange` | `(value: number) => void` | — | Fired with the numeric value. |
+| `color` | `string` | `"bg-dead-red"` | Tailwind background class for the track. |
+| `thumbSize` | `number` | `28` | Thumb and bubble diameter in pixels. |
+| `popOffset` | `number` | `38` | How far the bubble pops up while dragging. |
+| `gooeyBlur` | `number` | `8` | `stdDeviation` of the gooey blur. |
+| `ariaLabel` | `string` | `"Value"` | Accessible name for the range input. |
+| `className` | `string` | — | Merged onto the wrapper. |
+
+## Dependencies
+
+None — the component uses React and Tailwind only.
+
+## Performance
+
+- One SVG filter per instance, applied once to the track container.
+- Only the bubble's `top`, `left` and box-shadow transition; dragging is handled
+  by the browser's native range input, so there is no pointer-move handler.
+- Drag state is the only React state updated while interacting.
+
+## Accessibility
+
+- The control is a real `<input type="range">`, so keyboard arrows, Home/End and
+  form semantics work natively.
+- `ariaLabel` names the slider; the visible bubble is decorative and
+  `pointer-events-none`.
+- The track is focusable and shows a focus ring.

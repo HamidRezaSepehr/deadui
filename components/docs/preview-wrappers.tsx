@@ -27,6 +27,7 @@ import { MorphingText } from "@/registry/morphing-text";
 import { GooeyMenu } from "@/registry/gooey";
 import { GooeyInput } from "@/registry/gooey";
 import { GooeyPagination } from "@/registry/gooey";
+import { GooeyRange } from "@/registry/gooey";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -494,20 +495,21 @@ export function GooeyInputPreview(props: Record<string, unknown>) {
 
 /**
  * `GooeyPagination` is interactive, so the preview keeps its own `currentPage`
- * state (seeded from the `currentPage` prop and re-synced when the slider moves)
- * and lets the user click through the dots.
+ * state (seeded once from the `currentPage` prop) and lets the user click
+ * through the dots; the rendered page is clamped so shrinking `totalPages`
+ * cannot strand it out of range.
  */
 export function GooeyPaginationPreview(props: Record<string, unknown>) {
   const totalPages = Math.max(1, Number(props.totalPages) || 6);
-  const [page, setPage] = useState(Math.min(Math.max(1, Number(props.currentPage) || 1), totalPages));
-  useEffect(() => {
-    setPage(Math.min(Math.max(1, Number(props.currentPage) || 1), totalPages));
-  }, [props.currentPage, totalPages]);
+  const [page, setPage] = useState(() =>
+    Math.min(Math.max(1, Number(props.currentPage) || 1), totalPages)
+  );
+  const safePage = Math.min(page, totalPages);
   return (
     <div className="flex min-h-[300px] w-full items-center justify-center">
       <GooeyPagination
         totalPages={totalPages}
-        currentPage={page}
+        currentPage={safePage}
         onPageChange={setPage}
         activeSize={Number(props.activeSize) || 48}
         inactiveSize={Number(props.inactiveSize) || 20}
@@ -515,6 +517,47 @@ export function GooeyPaginationPreview(props: Record<string, unknown>) {
         gooeyBlur={Number(props.gooeyBlur) || 8}
         speed={Number(props.speed) || 1}
       />
+    </div>
+  );
+}
+
+/**
+ * `GooeyRange` is interactive, so the preview owns the value (seeded once from
+ * `defaultValue`) and forwards it as a controlled prop. That way dragging
+ * updates the bubble in the panel.
+ */
+export function GooeyRangePreview(props: Record<string, unknown>) {
+  const min = Number.isFinite(Number(props.min)) ? Number(props.min) : 0;
+  const max = Number.isFinite(Number(props.max)) ? Number(props.max) : 100;
+  const defaultValue = Number(props.defaultValue);
+  const [value, setValue] = useState(() =>
+    Number.isFinite(defaultValue) ? defaultValue : 50
+  );
+
+  const color =
+    typeof props.color === "string" && props.color ? props.color : "bg-dead-red";
+
+  return (
+    <div className="flex min-h-[300px] w-full items-center justify-center px-2">
+      <div className="w-full max-w-md">
+        <GooeyRange
+          min={min}
+          max={max}
+          step={Number.isFinite(Number(props.step)) ? Number(props.step) : 1}
+          value={value}
+          onChange={setValue}
+          color={color}
+          thumbSize={
+            Number.isFinite(Number(props.thumbSize)) ? Number(props.thumbSize) : 28
+          }
+          popOffset={
+            Number.isFinite(Number(props.popOffset)) ? Number(props.popOffset) : 38
+          }
+          gooeyBlur={
+            Number.isFinite(Number(props.gooeyBlur)) ? Number(props.gooeyBlur) : 8
+          }
+        />
+      </div>
     </div>
   );
 }

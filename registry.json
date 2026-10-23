@@ -629,6 +629,20 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "gooey-range",
+      "title": "Gooey Range",
+      "description": "A liquid, morphing range slider with a pop-up value bubble, powered by SVG filters.",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/gooey/gooey-range.tsx",
+          "target": "components/ui/gooey-range.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }
