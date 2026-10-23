@@ -114,13 +114,15 @@ The track, native thumb and bubble share one filtered container:
 <filter id="gooey-range-…" x="-50%" y="-50%" width="200%" height="200%">
   <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
   <feColorMatrix in="blur" type="matrix"
-    values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo" />
+    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo" />
   <feComposite in="SourceGraphic" in2="goo" operator="atop" />
 </filter>
 ```
 
-The matrix keeps only the blue channel and rewrites alpha (`20 × A − 9`),
-which is what gives the reference its blue goo look (stdDeviation 8.6).
+The matrix rewrites only the alpha channel (`20 × A − 9`) and leaves RGB
+untouched, so the goo follows whatever `color` you pass (stdDeviation 8.6).
+The filtered (track-colored) bubble feeds the goo without adding white; the
+visible white bubble is a crisp overlay on top.
 
 When `isDragging` flips true on `pointerdown`, the bubble's `top` animates to
 `-popOffset` and its shadow ring expands; the blur stretches the gap into a

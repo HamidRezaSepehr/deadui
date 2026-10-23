@@ -6993,6 +6993,17 @@ commands handed over in the session report.
   renders the customizer (1 range), the color select switches the track live, and
   drag still pops. Registry invariant: 30 components, 0 missing file paths.
 
+  **POST-RELEASE FOLLOW-UP #4: CRISP OVERLAY — GOO MATCHES TRACK COLOR, NO WHITE.**
+  The blue-only matrix made the goo blue for every track, so custom colors still
+  mismatched. Final approach (gooey-pagination pattern): the filtered layer now
+  contains a track-colored bubble (feeds the goo with no white contribution) and
+  a crisp, unfiltered white bubble is rendered on top as an overlay, so the goo
+  follows the track color for any `color` while the visible bubble stays white
+  with track-colored text/shadow. Matrix is all-channels (`1 0 0 0 0  0 1 0 0 0
+  0 0 1 0 0  0 0 0 20 -9`), stdDeviation 8.6. Verified: emerald track drag has
+  0 white-ish pixels in the filtered layer, crisp white bubble (524 px) on top,
+  zero console/page errors. Bumped to `0.1.31` / `v0.1.31`.
+
   **POST-RELEASE FOLLOW-UP #3: BLUE-ONLY MATRIX (MATCHES EXAMPLE) + NO WHITE BLUR.**
   The color-agnostic matrix let the white bubble contribute white to the goo,
   producing a white blur on drag that mismatched the track. The matrix is back to

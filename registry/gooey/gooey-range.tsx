@@ -133,7 +133,7 @@ export function GooeyRange({
             <feColorMatrix
               in="blur"
               type="matrix"
-              values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 20 -9"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
               result="goo"
             />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
@@ -183,17 +183,38 @@ export function GooeyRange({
           style={thumbVars}
         />
 
-        {/* Value bubble. */}
+        {/* Filtered bubble (track-colored) — contributes to the goo without white. */}
         <div
           className={cn(
-            "pointer-events-none absolute flex items-center justify-center rounded-full bg-white font-bold",
+            "pointer-events-none absolute flex items-center justify-center rounded-full font-bold",
+            color,
             textColorClass,
           )}
           style={bubbleVars}
         >
-          <span className="text-[10px] font-bold tabular-nums">
+          <span className="text-[10px] font-bold tabular-nums opacity-0">
             {Math.round(value * 10) / 10}
           </span>
+        </div>
+      </div>
+
+      {/* Crisp overlay — white bubble on top, no filter, so it stays sharp. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
+      >
+        <div className="relative h-10 w-full">
+          <div
+            className={cn(
+              "pointer-events-none absolute flex items-center justify-center rounded-full bg-white font-bold",
+              textColorClass,
+            )}
+            style={bubbleVars}
+          >
+            <span className="text-[10px] font-bold tabular-nums">
+              {Math.round(value * 10) / 10}
+            </span>
+          </div>
         </div>
       </div>
     </div>
