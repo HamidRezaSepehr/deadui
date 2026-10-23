@@ -61,6 +61,35 @@ export function PaintReveal({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    let lastX: number | null = null;
+    let lastY: number | null = null;
+
+    const paintAt = (x: number, y: number) => {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      ctx.strokeStyle = "rgba(0,0,0,1)";
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      if (lastX === null || lastY === null) {
+        ctx.beginPath();
+        ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      lastX = x;
+      lastY = y;
+    };
+
     const handleMove = (e: MouseEvent | TouchEvent) => {
       const rect = container.getBoundingClientRect();
       let clientX: number, clientY: number;
@@ -76,18 +105,26 @@ export function PaintReveal({
       const x = clientX - rect.left;
       const y = clientY - rect.top;
 
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.beginPath();
-      ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-      ctx.fill();
+      paintAt(x, y);
+    };
+
+    const resetLast = () => {
+      lastX = null;
+      lastY = null;
     };
 
     container.addEventListener("mousemove", handleMove);
     container.addEventListener("touchmove", handleMove, { passive: true });
+    container.addEventListener("mouseleave", resetLast);
+    container.addEventListener("touchend", resetLast);
+    container.addEventListener("touchcancel", resetLast);
 
     return () => {
       container.removeEventListener("mousemove", handleMove);
       container.removeEventListener("touchmove", handleMove);
+      container.removeEventListener("mouseleave", resetLast);
+      container.removeEventListener("touchend", resetLast);
+      container.removeEventListener("touchcancel", resetLast);
     };
   }, [isReady, brushSize]);
 
