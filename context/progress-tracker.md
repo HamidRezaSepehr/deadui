@@ -7091,7 +7091,21 @@ commands handed over in the session report.
   documented repo precedent, the next valid version `0.1.33` / `v0.1.33` was
   used instead.
 
-  **VELOCITY DISTORTION.** The floating image is driven by `useMotionValue` (x/y)
+  **WEBGL REWRITE (MATCHES REFERENCE REPO).** The initial implementation used
+  Framer Motion skew/scale, which did not match the requested effect. The
+  component was rewritten to port `olivierlarose/mouse-image-distortion`: a
+  fixed full-screen `@react-three/fiber` canvas with a single plane mesh
+  textured with the hovered row's image, warped by a custom GLSL shader
+  (`sin(uv.y * PI) * uDelta.x * uAmplitude` on X, symmetric on Y) driven by
+  the per-frame mouse delta. The mesh follows the cursor via a `0.1` lerp. Rows
+  use `mix-blend-difference` (white text inverts the background), exactly like
+  the reference. Dependencies changed from `motion` to `three`,
+  `@react-three/fiber`, `@react-three/drei`. Verified: hovering a row fades the
+  image in, it follows the cursor, and warps on movement; zero console/page
+  errors on both routes.
+
+  **VELOCITY DISTORTION (SUPERSEDED).** The floating image was originally driven
+  by `useMotionValue` (x/y)
   → `useSpring` (damping 25, stiffness 150) → `useVelocity`. `skewX`/`skewY` map
   velocity `[-1000, 1000]` → `[-15, 15]` deg; `scale` is `1 + min(|vx|+|vy|,
   500) * (velocityMultiplier / 100)`. The image is `position: fixed` with
