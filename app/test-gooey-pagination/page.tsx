@@ -69,9 +69,43 @@ export default function GooeyPaginationTestPage() {
           </div>
         </section>
 
-        {/* 04 — Speed */}
+        {/* 04 — Gap */}
         <section>
-          <SectionLabel index="04" title="Speed" />
+          <SectionLabel index="04" title="Gap" />
+          <div className="grid gap-10 lg:grid-cols-3">
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                gap 8 — tight
+              </div>
+              <div className="flex items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} gap={8} activeSize={40} inactiveSize={20} />
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                gap 16 — default
+              </div>
+              <div className="flex items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} gap={16} activeSize={40} inactiveSize={20} />
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
+                gap 32 — spread
+              </div>
+              <div className="flex items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 py-10">
+                <GooeyPagination totalPages={6} currentPage={page} onPageChange={setPage} gap={32} activeSize={40} inactiveSize={20} />
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-dead-400">
+            <code className="text-dead-200">gap</code> sets the spacing in pixels between consecutive items.
+          </p>
+        </section>
+
+        {/* 05 — Speed */}
+        <section>
+          <SectionLabel index="05" title="Speed" />
           <div className="grid gap-10 lg:grid-cols-3">
             <div>
               <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-dead-500">
