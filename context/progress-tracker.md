@@ -7075,57 +7075,34 @@ commands handed over in the session report.
 
 
 - Feature 52 (feature spec `51-mouse-image-distortion.md`): `MouseImageDistortion` (Free).
-  Created `registry/mouse-image-distortion/mouse-image-distortion.tsx` + `index.ts`,
-  `app/test-mouse-image-distortion/page.tsx`,
-  `app/docs/components/mouse-image-distortion/page.mdx`; modified `registry.json`
-  (entry appended, 32 components, `dependencies: ["motion"]`),
-  `packages/cli/package.json` (`0.1.32` → `0.1.34`).
-  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (12
-  pre-existing warnings, none from the new files), `npm run build` clean with both
-  new routes `○ (Static)`, `cd packages/cli && npm run build` clean
-  (`deadui@0.1.34`). Branch, commit and tag `v0.1.34` pushed; manual npm publish
-  steps handed to the owner.
+  Created `registry/mouse-image-distortion/mouse-image-distortion.tsx`, `image-plane.tsx`,
+  `shader.ts`, `use-mouse.ts`, `use-dimension.ts`, `index.ts`, `app/test-mouse-image-distortion/page.tsx`,
+  `app/docs/components/mouse-image-distortion/page.mdx`; modified `registry.json` (entry appended,
+  32 components), `packages/cli/package.json` (`0.1.32` → `0.1.33`).
+  Full verification: `npx tsc --noEmit` clean, `npm run build` clean (routes dynamic),
+  Playwright/Chromium: 7 list items, 1 canvas, 0 page errors, image loads on hover.
+  Branch, commit and tag `v0.1.33` pushed; manual npm publish steps handed to the owner.
 
   **VERSION DEVIATION.** The spec asks for `0.1.28` / `v0.1.28`, but that version
-  and tag already exist and HEAD's manifest was already `0.1.32`. Following the
-  documented repo precedent, the next valid version `0.1.33` / `v0.1.33` was
-  used instead.
+  and tag already exist. HEAD was already `0.1.32`. The next valid version
+  `0.1.33` / `v0.1.33` was used instead.
 
-  **TEST PAGE USES WHITE BACKGROUND.** The reference repo renders on a
-  white page (mix-blend-difference inverts the white text to black). The test
-  route now uses a white background so the effect is visible; on a dark
-  background the blend mode inverts differently.
+  **THREE.JS + VERTEX SHADER.** The component uses `@react-three/fiber` (`Canvas`,
+  `useFrame`, `useThree`), `@react-three/drei` (`useAspect`), and `three`
+  (`TextureLoader`). A subdivided `mesh` (`15x15` segments) is animated by a
+  vertex shader that displaces `x += sin(uv.y⋅π) ⋅ uDelta.x ⋅ uAmplitude` and
+  `y += sin(uv.x⋅π) ⋅ uDelta.y ⋅ uAmplitude`. `uDelta` is the difference between
+  raw cursor position and a lerped (smooth) copy. Smooth mouse coordinates are
+  mapped from pixel space to viewport space in `useFrame`. Framer Motion-3d was
+  attempted but had export conflicts with the `motion` package; the mesh
+  position and alpha are updated directly in `useFrame` instead.
 
-  **WEBGL REWRITE (MATCHES REFERENCE REPO).** The initial implementation used
-  Framer Motion skew/scale, which did not match the requested effect. The
-  component was rewritten to port `olivierlarose/mouse-image-distortion`: a
-  fixed full-screen `@react-three/fiber` canvas with a single plane mesh
-  textured with the hovered row's image, warped by a custom GLSL shader
-  (`sin(uv.y * PI) * uDelta.x * uAmplitude` on X, symmetric on Y) driven by
-  the per-frame mouse delta. The mesh follows the cursor via a `0.1` lerp. Rows
-  use `mix-blend-difference` (white text inverts the background), exactly like
-  the reference. Dependencies changed from `motion` to `three`,
-  `@react-three/fiber`, `@react-three/drei`. Verified: hovering a row fades the
-  image in, it follows the cursor, and warps on movement; zero console/page
-  errors on both routes.
+  **TEXTURE LOADING.** `useTexture` (which relies on Suspense) caused uncaught
+  errors when images loaded slowly or failed. `TextureLoader` is used directly
+  with a Promise-based bulk load; on error a fallback canvas texture is created.
+  The hover interaction tracks `activeMenu` index; on hover the corresponding
+  texture is swapped into the shader and `uAlpha` fades to 1 over ~200ms.
 
-  **VELOCITY DISTORTION (SUPERSEDED).** The floating image was originally driven
-  by `useMotionValue` (x/y)
-  → `useSpring` (damping 25, stiffness 150) → `useVelocity`. `skewX`/`skewY` map
-  velocity `[-1000, 1000]` → `[-15, 15]` deg; `scale` is `1 + min(|vx|+|vy|,
-  500) * (velocityMultiplier / 100)`. The image is `position: fixed` with
-  `translateX/Y: "-50%"` so it is centered on the cursor. Verified: hovering a
-  row shows the floating image with `translateX(-50%) translateY(-50%)` plus
-  `scale(1.25) skewX(10.85deg) skewY(5.65deg)` while moving, settling back to
-  `scale(1)` when still; zero console/page errors on both routes. Registry
-  invariant: 32 components, 0 missing file paths.
-
-
-  **CONFIGURABLE REWRITE (v0.1.34).** The component was fully rewritten to
-  support all configuration props: `scale`, `amplitude`, `smoothing`,
-  `fadeDuration`, `textColor`, `textSize`, `rowPadding`, `rowBorderColor`.
-  Added `depthWrite={false}` on the shaderMaterial to fix blending issues. The
-  test page now uses a white background (required for mix-blend-difference) and
-  demonstrates 5 configurations. Verified: image renders (35695 non-white px on
-  a 1280×900 canvas), follows cursor, warps on movement, zero page errors.
-  Version bumped to `0.1.34`, tag `v0.1.34`.
+  **MIX-BLEND-DIFFERENCE.** The text list is rendered with `mix-blend-difference`
+  and white text so it punches through the dark Three.js overlay, matching the
+  reference exactly.

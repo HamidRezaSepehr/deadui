@@ -3,24 +3,21 @@ import { InstallTabs } from "@/components/docs/install-tabs"
 export const metadata = {
   title: "Mouse Image Distortion",
   description:
-    "A list component where hovering reveals a WebGL image that follows the cursor and warps based on movement velocity.",
+    "A list component where hovering reveals an image that displaces through a Three.js vertex shader driven by mouse velocity.",
 }
 
 # Mouse Image Distortion
 
-A list of text rows. Hovering a row reveals a floating image that follows the
-cursor; the image warps (vertex displacement driven by mouse delta) using a
-custom GLSL shader — no WebGL framework is required beyond
-`@react-three/fiber`.
-
-The visual is exactly the effect shown in
-[olivierlarose/mouse-image-distortion](https://github.com/olivierlarose/mouse-image-distortion).
+A list of text rows. Hover over any row: an image plane fades in behind the
+cursor and warps with a liquid vertex displacement shader based on the speed
+and direction of your mouse movement. The effect uses `@react-three/fiber` and
+a custom GLSL vertex shader.
 
 ## Preview
 
-Try it on the [`/test-mouse-image-distortion`](/test-mouse-image-distortion)
-page (requires a light background to correctly render the
-`mix-blend-difference` text).
+Open the test page and hover over the items:
+
+- [`/test-mouse-image-distortion`](/test-mouse-image-distortion)
 
 ## Installation
 
@@ -32,120 +29,79 @@ page (requires a light background to correctly render the
 import { MouseImageDistortion } from "@/components/ui/mouse-image-distortion"
 
 const items = [
-  { title: "Aurora", subtitle: "Light in the dark", imageUrl: "/aurora.jpg" },
-  { title: "Basalt", subtitle: "Stone and silence", imageUrl: "/basalt.jpg" },
+  {
+    id: "1",
+    title: "Richard Gaston",
+    subtitle: "Landscape photography",
+    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+  },
+  // ...
 ]
 
-export function Projects() {
-  return <MouseImageDistortion items={items} />
+export function Portfolio() {
+  return (
+    <MouseImageDistortion items={items} />
+  )
 }
-```
-
-### Custom warp strength, scale and smoothing
-
-```tsx
-<MouseImageDistortion
-  items={items}
-  scale={0.35}
-  amplitude={0.003}
-  smoothing={0.3}
-  fadeDuration={0.4}
-/>
-```
-
-### Custom row text
-
-```tsx
-<MouseImageDistortion
-  items={items}
-  textColor="text-gray-600"
-  textSize="text-3xl font-light"
-  rowPadding="py-4"
-  rowBorderColor="border-gray-300"
-/>
 ```
 
 ## How it works
 
-The component renders two layers:
-
-1. **Text list** — a `<ul>` with `mix-blend-difference` so white text on a
-   light background appears black and image colours pass through.
-2. **Fixed full-screen `<Canvas>`** (pointer-events none) containing a 3D plane
-   mesh textured with the hovered row's image.
-
-On hover the mesh fades in (`uAlpha` 0 → 1) and its texture swaps to the
-hovered row's image. The mesh follows the cursor: its screen position is mapped
-to Three.js world space via the viewport dimensions, smoothed per frame with a
-lerp (controlled by `smoothing`). The vertex shader displaces X and Y using
-`sin(uv.y * PI) * uDelta.x * uAmplitude` where `uDelta` is the per-frame mouse
-difference — this is the liquid warp. The fragment shader samples the texture
-and multiplies by `uAlpha`.
-
-Shaders (ported verbatim from the reference):
+A `<Canvas>` from `@react-three/fiber` is rendered as a `fixed` layer behind
+the text list. Inside it, a subdivided `planeGeometry` (`15×15` segments) is
+animated by a custom vertex shader:
 
 ```glsl
-// Vertex
-varying vec2 vUv;
-uniform vec2 uDelta;
-uniform float uAmplitude;
-float PI = 3.141592653589793238;
-void main() {
-  vUv = uv;
-  vec3 newPosition = position;
-  newPosition.x += sin(uv.y * PI) * uDelta.x * uAmplitude;
-  newPosition.y += sin(uv.x * PI) * uDelta.y * uAmplitude;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-}
+newPosition.x += sin(uv.y * PI) * uDelta.x * uAmplitude;
+newPosition.y += sin(uv.x * PI) * uDelta.y * uAmplitude;
 ```
 
-```glsl
-// Fragment
-varying vec2 vUv;
-uniform sampler2D uTexture;
-uniform float uAlpha;
-void main() {
-  vec3 tex = texture2D(uTexture, vUv).rgb;
-  gl_FragColor = vec4(tex, uAlpha);
-}
-```
+`uDelta` is the difference between the raw cursor position and a smoothed
+(lerped) copy. When you move the mouse quickly, `uDelta` grows, the sine-based
+displacement increases, and the image ripples like a liquid surface. The texture
+fades in/out with a 200 ms Framer Motion animation.
+
+The mouse is tracked via a `mousemove` listener on `window`. Smooth coordinates
+are stored in Framer Motion's `useMotionValue` and interpolated in
+`useFrame`. The mesh position is mapped from pixel space to Three.js viewport
+space via `useTransform`.
 
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `items` | `DistortionItem[]` | — | Array of `{ id?, title, subtitle?, imageUrl }`. |
-| `scale` | `number` | `0.225` | Image size relative to viewport (0–1). |
-| `amplitude` | `number` | `0.0005` | Vertex displacement strength of the shader. |
-| `smoothing` | `number` | `0.1` | Mouse‑follow lerp factor (0–1). Higher = snappier. |
-| `fadeDuration` | `number` | `0.2` | Fade‑in/out duration on hover (seconds). |
-| `textColor` | `string` | `"text-white"` | Tailwind text‑color class for row titles. |
-| `textSize` | `string` | `"text-[4vw]"` | Tailwind text‑size class for row titles. |
-| `rowPadding` | `string` | `"p-5"` | Tailwind padding class for each row. |
-| `rowBorderColor` | `string` | `"border-white/20"` | Tailwind border‑colour class. |
-| `className` | `string` | — | Merged onto the container. |
+| `items` | `DistortionItem[]` | — (required) | Array of `{ id, title, subtitle?, imageUrl }`. |
+| `className` | `string` | — | Merged onto the wrapper. |
 
-> **Background.** The component uses `mix-blend-difference` which requires a
-> light (preferably white) background to render the text as black and let the
-> image pass through correctly. On a dark background the effect is inverted and
-> may be hard to see.
+### DistortionItem
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Unique identifier. |
+| `title` | `string` | Primary row text. |
+| `subtitle` | `string` | Optional secondary text. |
+| `imageUrl` | `string` | Image source shown on hover. |
 
 ## Dependencies
 
-- `three`
-- `@react-three/fiber`
-- `@react-three/drei`
-- `framer-motion` (for the `animate` helper on `uAlpha`)
+- `three` (WebGL renderer)
+- `@react-three/fiber` (React renderer for Three.js)
+- `@react-three/drei` (Three.js helpers)
+- `framer-motion-3d` (Framer Motion for Three.js)
+- `motion` (Framer Motion)
+
+All are already present in the project.
 
 ## Performance
 
-- One fixed canvas, one mesh, one geometry, one shader program. The texture is
-  swapped on hover.
-- Vertex displacement runs entirely on the GPU. No React re-renders during mouse
-  movement (the `activeMenu` state changes only on hover enter/leave).
+- The shader runs on the GPU; the JavaScript load is limited to `useFrame`
+  (two lerps per frame) and the 200 ms fade animation on hover change.
+- The subdivided plane (`15×15` segments) is a single draw call — 256 vertices.
+- Images are preloaded by `useTexture`.
 
 ## Accessibility
 
-- Rows are not focusable by default; wrap titles in `<a>` or `<button>` for
-  keyboard navigation.
-- The floating image is `pointer-events-none` and purely decorative.
+- The text list is a semantic `<ul>` / `<li>`.
+- The canvas is purely decorative and carries no focusable content.
+- Reduced motion is not special-cased; the vertex displacement runs on GPU
+  and cannot be disabled through CSS media queries.
