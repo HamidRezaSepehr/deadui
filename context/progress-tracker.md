@@ -6929,7 +6929,7 @@ commands handed over in the session report.
   `app/docs/components/gooey-range/page.mdx`; modified `registry.json` (entry
   appended, **30 components**), `registry/gooey/index.ts` (barrel export),
   `components/docs/preview-wrappers.tsx` (`GooeyRangePreview`),
-  `packages/cli/package.json` (`0.1.26` → `0.1.27`).
+  `packages/cli/package.json` (`0.1.26` → `0.1.28`).
   Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (11
   pre-existing warnings, none from the new files), `npm run build` clean with both
   new routes `○ (Static)`, `cd packages/cli && npm run build` clean
@@ -6990,6 +6990,16 @@ commands handed over in the session report.
   renders 15 ranges with 15 unique filters, correct track colors, bubble sizes
   20/28/40, bubble centre at 50% for value 50, pop `-38px` → `6px` with the halo
   ring expanding 4px → 8px, and zero console/page errors. `/docs/components/gooey-range`
-  renders the customizer (1 range), the color select switches the track live
-  (`rgb(220,38,38)` → blue `lab(...)`), and drag still pops. Registry invariant:
-  30 components, 0 missing file paths.
+  renders the customizer (1 range), the color select switches the track live, and
+  drag still pops. Registry invariant: 30 components, 0 missing file paths.
+
+  **POST-RELEASE FOLLOW-UP: FILTER MATCHED TO THE REFERENCE EXAMPLE.** The
+  gooey filter was changed from the color-agnostic matrix
+  (`1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9`, stdDeviation 8) to the
+  reference example's exact filter: `0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 20 -9`,
+  stdDeviation 8.6. The bubble's text color and shadow now follow the track
+  color (blue by default) instead of white, the thumb is vertically centred via
+  `margin-top`, the 0/100 labels are rendered inside the filtered container, and
+  the bubble transition is `top 0.34s cubic-bezier(0.42, 0.05, 0.31, 1.36),
+  box-shadow 0.14s` (matching the example). Defaults: `color = "bg-[#0000ff]"`,
+  `step = 0.1`, `gooeyBlur = 8.6`. Bumped to `0.1.28` / `v0.1.28`.

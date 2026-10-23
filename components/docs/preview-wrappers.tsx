@@ -535,7 +535,7 @@ export function GooeyRangePreview(props: Record<string, unknown>) {
   );
 
   const color =
-    typeof props.color === "string" && props.color ? props.color : "bg-dead-red";
+    typeof props.color === "string" && props.color ? props.color : "bg-[#0000ff]";
 
   return (
     <div className="flex min-h-[300px] w-full items-center justify-center px-2">
@@ -554,7 +554,7 @@ export function GooeyRangePreview(props: Record<string, unknown>) {
             Number.isFinite(Number(props.popOffset)) ? Number(props.popOffset) : 38
           }
           gooeyBlur={
-            Number.isFinite(Number(props.gooeyBlur)) ? Number(props.gooeyBlur) : 8
+            Number.isFinite(Number(props.gooeyBlur)) ? Number(props.gooeyBlur) : 8.6
           }
         />
       </div>

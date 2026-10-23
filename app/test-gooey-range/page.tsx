@@ -50,16 +50,16 @@ export default function GooeyRangeTestPage() {
           <SectionLabel index="02" title="Custom Colors" />
           <div className="grid gap-10 lg:grid-cols-2">
             <Stage>
-              <GooeyRange color="bg-dead-red" defaultValue={40} />
+              <GooeyRange color="bg-[#0000ff]" defaultValue={40} />
             </Stage>
             <Stage>
-              <GooeyRange color="bg-blue-500" defaultValue={55} />
+              <GooeyRange color="bg-blue-400" defaultValue={55} />
             </Stage>
             <Stage>
-              <GooeyRange color="bg-emerald-500" defaultValue={70} />
+              <GooeyRange color="bg-blue-600" defaultValue={70} />
             </Stage>
             <Stage>
-              <GooeyRange color="bg-violet-500" defaultValue={25} />
+              <GooeyRange color="bg-blue-800" defaultValue={25} />
             </Stage>
           </div>
           <p className="mt-3 text-sm text-dead-400">
