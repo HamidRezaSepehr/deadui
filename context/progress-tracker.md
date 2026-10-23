@@ -7059,6 +7059,13 @@ commands handed over in the session report.
   **TOUCH SUPPORT.** The canvas carries `touch-none` so dragging paints instead
   of scrolling on mobile; `touchmove` is registered with `{ passive: true }`.
 
+  **CONTINUOUS STROKE ON FAST DRAG.** The original implementation drew a
+  single circle per `mousemove`, which left gaps when the pointer moved faster
+  than the event rate. It now connects consecutive points with a thick rounded
+  stroke (`lineCap`/`lineJoin = "round"`, `lineWidth = brushSize`) and resets
+  the last point on `mouseleave`/`touchend`/`touchcancel`, so fast drags paint a
+  solid line. Verified: a 20-step rapid drag erased the mid-path pixel to alpha 0.
+
   **NO REACT STATE DURING PAINTING.** `mousemove`/`touchmove` write directly to
   the canvas context; `isReady` is the only state, toggled once after the first
   fill. Verified: overlay pixel `[0,0,0,255]`, erased pixel alpha `0`, canvas
