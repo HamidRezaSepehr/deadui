@@ -138,19 +138,20 @@ export function GooeyPagination({
               className="relative flex items-center justify-center"
               style={{ width: activeSize, height: activeSize }}
             >
-              <div
+              <motion.div
                 className={cn(
                   "flex items-center justify-center rounded-full bg-dead-red transition-colors",
                   isActive ? "text-white font-bold" : "text-white/70"
                 )}
-                style={{
+                animate={{
                   width: size,
                   height: size,
                   opacity: 1,
                 }}
+                transition={transition}
               >
                 {isActive && <span className="text-lg">{page}</span>}
-              </div>
+              </motion.div>
             </div>
           )
         })}
