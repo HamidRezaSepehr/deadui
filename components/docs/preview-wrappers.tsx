@@ -28,7 +28,7 @@ import { GooeyMenu } from "@/registry/gooey";
 import { GooeyInput } from "@/registry/gooey";
 import { GooeyPagination } from "@/registry/gooey";
 import { GooeyRange } from "@/registry/gooey";
-import { MouseImageDistortion } from "@/registry/mouse-image-distortion";
+import type { DistortionItem } from "@/registry/mouse-image-distortion";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -566,40 +566,78 @@ export function GooeyRangePreview(props: Record<string, unknown>) {
 /**
  * `MouseImageDistortion`'s controls map straight through.
  */
+const LazyMouseImageDistortion = dynamic(
+  () =>
+    import("@/registry/mouse-image-distortion").then(
+      (module) => module.MouseImageDistortion,
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="h-[360px] w-full rounded-xl bg-dead-900" />,
+  },
+);
+
+/** The demo image rows the playground distorts. */
+const DISTORTION_ITEMS: DistortionItem[] = [
+  {
+    id: "1",
+    title: "Richard Gaston",
+    subtitle: "Photographer",
+    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+  },
+  {
+    id: "2",
+    title: "KangHee Kim",
+    subtitle: "Artist",
+    imageUrl: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=1200&q=80",
+  },
+  {
+    id: "3",
+    title: "Inka and Niclas",
+    subtitle: "Design duo",
+    imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&q=80",
+  },
+  {
+    id: "4",
+    title: "Arch McLeish",
+    subtitle: "Architect",
+    imageUrl: "https://images.unsplash.com/photo-1487958449943-8a6c3a1a4f5e?w=1200&q=80",
+  },
+  {
+    id: "5",
+    title: "Nadir Bucan",
+    subtitle: "Creative director",
+    imageUrl: "https://images.unsplash.com/photo-1541698444083-023c97d3f4b6?w=1200&q=80",
+  },
+];
+
 export function MouseImageDistortionPreview(props: Record<string, unknown>) {
-  const imageSrc =
-    typeof props.imageSrc === "string" && props.imageSrc
-      ? props.imageSrc
-      : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80";
+  const amplitude = Number.isFinite(Number(props.amplitude))
+    ? Number(props.amplitude)
+    : 0.0005;
+  const imageScale = Number.isFinite(Number(props.imageScale))
+    ? Number(props.imageScale)
+    : 0.225;
+  const textSize = typeof props.textSize === "string" ? props.textSize : "text-[4vw]";
+  const textColor = typeof props.textColor === "string" ? props.textColor : "text-white";
+  const rowPadding = typeof props.rowPadding === "string" ? props.rowPadding : "p-5";
+  const rowBorderColor =
+    typeof props.rowBorderColor === "string" ? props.rowBorderColor : "border-white/20";
+  const rowHoverBgColor =
+    typeof props.rowHoverBgColor === "string" ? props.rowHoverBgColor : "bg-white/5";
+
   return (
-    <div className="relative h-[420px] w-full overflow-hidden rounded-xl border border-dead-800 bg-dead-900">
-      <MouseImageDistortion
-        imageSrc={imageSrc}
-        imageWidth={
-          Number.isFinite(Number(props.imageWidth)) ? Number(props.imageWidth) : 200
-        }
-        imageHeight={
-          Number.isFinite(Number(props.imageHeight)) ? Number(props.imageHeight) : 270
-        }
-        imageBorderRadius={
-          Number.isFinite(Number(props.imageBorderRadius))
-            ? Number(props.imageBorderRadius)
-            : 16
-        }
-        textColor={(props.textColor as string) || "text-white"}
-        textSize={Number.isFinite(Number(props.textSize)) ? Number(props.textSize) : 32}
-        rowPadding={
-          Number.isFinite(Number(props.rowPadding)) ? Number(props.rowPadding) : 20
-        }
-        rowBorderColor={(props.rowBorderColor as string) || "border-dead-800"}
-        rowHoverBgColor={(props.rowHoverBgColor as string) || "hover:bg-dead-800"}
-        velocityMultiplier={
-          Number.isFinite(Number(props.velocityMultiplier))
-            ? Number(props.velocityMultiplier)
-            : 1
-        }
-      />
-    </div>
+    <LazyMouseImageDistortion
+      items={DISTORTION_ITEMS}
+      amplitude={amplitude}
+      imageScale={imageScale}
+      textSize={textSize}
+      textColor={textColor}
+      rowPadding={rowPadding}
+      rowBorderColor={rowBorderColor}
+      rowHoverBgColor={rowHoverBgColor}
+      className="h-[360px] w-full"
+    />
   );
 }
 

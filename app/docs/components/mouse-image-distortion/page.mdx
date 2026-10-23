@@ -5,43 +5,37 @@ import { MouseImageDistortionPreview } from "@/components/docs/preview-wrappers"
 export const metadata = {
   title: "Mouse Image Distortion",
   description:
-    "An image that floats and warps with the cursor velocity, driven by Framer Motion springs and useVelocity.",
+    "A list component where hovering reveals an image that follows the cursor and warps using Three.js GLSL shaders based on movement velocity.",
 }
 
 # Mouse Image Distortion
 
-An image floats over a list of text rows and warps smoothly as the cursor moves
-across the list. The distortion (skew and scale) is driven by the cursor's
-velocity via Framer Motion's `useVelocity` and springs, recreating a liquid warp
-feel without WebGL.
+A list of text rows where hovering reveals an image that follows the cursor and
+warps with the cursor's movement velocity, using a custom Three.js GLSL vertex
+shader.
 
 ## Preview
 
 <ComponentCustomizer
   component={MouseImageDistortionPreview}
   defaultProps={{
-    imageSrc:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
-    imageWidth: 200,
-    imageHeight: 270,
-    imageBorderRadius: 16,
+    amplitude: 0.0005,
+    imageScale: 0.225,
+    textSize: "text-[4vw]",
     textColor: "text-white",
-    textSize: 32,
-    rowPadding: 20,
-    rowBorderColor: "border-dead-800",
-    rowHoverBgColor: "hover:bg-dead-800",
-    velocityMultiplier: 1,
+    rowPadding: "p-5",
+    rowBorderColor: "border-white/20",
+    rowHoverBgColor: "bg-white/5",
   }}
   controls={{
-    imageWidth: { type: "slider", min: 120, max: 400, step: 10, unit: "px" },
-    imageHeight: { type: "slider", min: 160, max: 600, step: 10, unit: "px" },
-    imageBorderRadius: { type: "slider", min: 0, max: 64, step: 4, unit: "px" },
-    textSize: { type: "slider", min: 14, max: 64, step: 2, unit: "px" },
-    rowPadding: { type: "slider", min: 4, max: 48, step: 4, unit: "px" },
-    velocityMultiplier: { type: "slider", min: 0.1, max: 3, step: 0.1, unit: "×" },
+    amplitude: { type: "slider", min: 0.0001, max: 0.005, step: 0.0001 },
+    imageScale: { type: "slider", min: 0.05, max: 0.4, step: 0.01 },
   }}
   className="not-prose my-8"
 />
+
+Move the pointer across the rows — the image follows, and the speed of the
+movement warps it.
 
 ## Installation
 
@@ -50,58 +44,77 @@ feel without WebGL.
 ## Usage
 
 ```tsx
-import { MouseImageDistortion } from "@/components/ui/mouse-image-distortion"
+import { MouseImageDistortion } from "@/components/ui/mouse-image-distortion";
 
-export function Distortion() {
-  return (
-    <MouseImageDistortion
-      imageSrc="/images/1.jpg"
-      imageWidth={240}
-      imageHeight={320}
-      imageBorderRadius={24}
-    />
-  )
+const ITEMS = [
+  {
+    id: "1",
+    title: "Richard Gaston",
+    subtitle: "Photographer",
+    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+  },
+  // …more rows
+];
+
+export function Gallery() {
+  return <MouseImageDistortion items={ITEMS} />;
 }
 ```
 
 ## How it works
 
-- The cursor is tracked through Framer Motion motion values
-  (`useMotionValue` + `useVelocity`).
-- `useVelocity` feeds a spring (`useSpring`), whose output drives the image's
-  `scale`, `skewX` and `skewY`.
-- The image is `fixed` and centered on the cursor via `translateX: "-50%"` /
-  `translateY: "-50%"` equivalent offsets.
-- Rows supply the surrounding text context and styling.
+The component layers an HTML list over a full-screen React Three Fiber `<Canvas`:
+
+1. The HTML layer renders the rows and tracks which one the pointer is on
+   (`activeMenu`).
+2. The 3D layer holds a single plane with a `THREE.ShaderMaterial` whose vertex
+   shader reads the `uDelta` uniform.
+3. Each `mousemove` updates the raw mouse position; the next frame compares it
+   against a smoothed value and lerps towards it (factor `0.1`).
+4. The delta (`raw − smoothed`) is written into `uDelta`, and the vertex shader
+   displaces the plane:
+
+```glsl
+newPosition.x += sin(uv.y * PI) * uDelta.x * uAmplitude;
+newPosition.y += sin(uv.x * PI) * uDelta.y * uAmplitude;
+```
+
+5. The displaced position is projected through the normal MVP matrix, so the
+   image ripples like a liquid surface as the cursor moves.
+
+The opacity of the image cross-fades over `0.2s` when the hovered row changes.
 
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `imageSrc` | `string` | Unsplash mountain photo | Image source. |
-| `imageWidth` | `number` | `200` | Floating image width in px. |
-| `imageHeight` | `number` | `270` | Floating image height in px. |
-| `imageBorderRadius` | `number` | `16` | Image border radius in px. |
-| `textColor` | `string` | `"text-white"` | Row text color. |
-| `textSize` | `number` | `32` | Row font size in px. |
-| `rowPadding` | `number` | `20` | Row padding in px. |
-| `rowBorderColor` | `string` | `"border-dead-800"` | Row border color class. |
-| `rowHoverBgColor` | `string` | `"hover:bg-dead-800"` | Row hover background class. |
-| `velocityMultiplier` | `number` | `1` | Velocity → distortion multiplier. |
-| `className` | `string` | — | Merged onto the container. |
+| `items` | `DistortionItem[]` | — | Rows to render. Each row: `id`, `title`, optional `subtitle`, `imageUrl`. |
+| `amplitude` | `number` | `0.0005` | Distortion strength, the `uAmplitude` uniform. |
+| `imageScale` | `number` | `0.225` | Image scale relative to the viewport. |
+| `textSize` | `string` | `"text-[4vw]"` | Tailwind text-size class for row titles. |
+| `textColor` | `string` | `"text-white"` | Tailwind text-color class for row titles. |
+| `rowPadding` | `string` | `"p-5"` | Tailwind padding class for each row. |
+| `rowBorderColor` | `string` | `"border-white/20"` | Tailwind border-color class for row dividers. |
+| `rowHoverBgColor` | `string` | `"bg-white/5"` | Tailwind background class for the hovered row. |
+| `className` | `string` | — | Merged onto the root container. |
 
 ## Dependencies
 
-- `motion` (Framer Motion)
+- `three`
+- `@react-three/fiber`
+- `@react-three/drei`
+- `framer-motion`
+- `framer-motion-3d`
 
 ## Performance
 
-- Motion springs + `useVelocity`; no per-frame React state.
-- One floating image per instance.
+- One `<Canvas>` per component instance, one plane, one shader.
+- The mouse delta is computed in `useFrame`; no React state is touched per frame.
+- Textures are loaded once per item via `useTexture`.
 
 ## Accessibility
 
-- Rows are plain divs; give them meaningful text content.
+- The rows are semantic list items with real text content.
+- The list layer uses `mix-blend-difference` and is not interactive itself;
+  hover state lives on the `<li>` elements.
 
-Note: `ComponentCustomizer`'s control union currently covers `slider`, `select`
-and `color`; text-typed controls are forwarded as strings via the adapter.
