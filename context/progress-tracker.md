@@ -7033,7 +7033,7 @@ commands handed over in the session report.
   `step = 0.1`, `gooeyBlur = 8.6`. Bumped to `0.1.28` / `v0.1.28`.
 
 
-- Feature 51 (feature spec `50-paint-reveal.md`): `PaintReveal` (Free). Created
+- Feature 50 (feature spec `50-paint-reveal.md`): `PaintReveal` (Free). Created
   `registry/paint-reveal/paint-reveal.tsx` + `index.ts`, `app/test-paint-reveal/page.tsx`,
   `app/docs/components/paint-reveal/page.mdx`; modified `registry.json` (entry
   appended, 31 components), `packages/cli/package.json` (`0.1.31` → `0.1.32`).
@@ -7074,16 +7074,16 @@ commands handed over in the session report.
   Registry invariant: 31 components, 0 missing file paths.
 
 
-- Feature 52 (feature spec `51-mouse-image-distortion.md`): `MouseImageDistortion` (Free).
+- Feature 51 (feature spec `51-mouse-image-distortion.md`): `MouseImageDistortion` (Free).
   Created `registry/mouse-image-distortion/mouse-image-distortion.tsx` + `index.ts`,
   `app/test-mouse-image-distortion/page.tsx`, `app/docs/components/mouse-image-distortion/page.mdx`;
   modified `registry.json` (entry appended, 32 components),
   `components/docs/preview-wrappers.tsx` (`MouseImageDistortionPreview`),
-  `packages/cli/package.json` (`0.1.32` → `0.1.33`).
+  `packages/cli/package.json` (`0.1.33` → `0.1.36`).
   Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (12
   pre-existing warnings, none from the new files), `npm run build` clean with both
   new routes `○ (Static)`, `cd packages/cli && npm run build` clean
-  (`deadui@0.1.33`). Branch, commit and tag `v0.1.33` pushed; manual npm publish
+  (`deadui@0.1.36`). Branch, commit and tag `v0.1.36` pushed; manual npm publish
   steps handed to the owner.
 
   **VERSION DEVIATION.** The spec asks for `0.1.28` / `v0.1.28`, but that version
