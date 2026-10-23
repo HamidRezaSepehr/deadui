@@ -60,7 +60,7 @@ function SectionLabel({ index, title }: { index: string; title: string }) {
 
 export default function MouseImageDistortionTestPage() {
   return (
-    <main className="min-h-screen bg-dead-950 px-4 py-16 text-dead-50">
+    <main className="min-h-screen bg-white px-4 py-16 text-black">
       <div className="mx-auto max-w-5xl space-y-20">
         <header className="space-y-3">
           <h1 className="text-3xl font-bold">Mouse Image Distortion — QA</h1>
@@ -73,7 +73,7 @@ export default function MouseImageDistortionTestPage() {
 
         <section>
           <SectionLabel index="01" title="Default" />
-          <div className="overflow-hidden rounded-xl border border-dead-800 bg-dead-900/40 p-6">
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-6">
             <MouseImageDistortion items={ITEMS} />
           </div>
         </section>
