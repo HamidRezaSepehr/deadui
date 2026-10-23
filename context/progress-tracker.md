@@ -7079,11 +7079,11 @@ commands handed over in the session report.
   `app/test-mouse-image-distortion/page.tsx`,
   `app/docs/components/mouse-image-distortion/page.mdx`; modified `registry.json`
   (entry appended, 32 components, `dependencies: ["motion"]`),
-  `packages/cli/package.json` (`0.1.32` → `0.1.33`).
+  `packages/cli/package.json` (`0.1.32` → `0.1.34`).
   Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (12
   pre-existing warnings, none from the new files), `npm run build` clean with both
   new routes `○ (Static)`, `cd packages/cli && npm run build` clean
-  (`deadui@0.1.33`). Branch, commit and tag `v0.1.33` pushed; manual npm publish
+  (`deadui@0.1.34`). Branch, commit and tag `v0.1.34` pushed; manual npm publish
   steps handed to the owner.
 
   **VERSION DEVIATION.** The spec asks for `0.1.28` / `v0.1.28`, but that version

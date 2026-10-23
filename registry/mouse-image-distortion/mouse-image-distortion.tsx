@@ -115,9 +115,10 @@ function Model({ items, activeMenu }: { items: DistortionItem[]; activeMenu: num
 
   const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a;
 
-  useFrame(() => {
+  useFrame((state) => {
     const mesh = plane.current;
     if (!mesh) return;
+
     const { x, y } = mouse;
     const smoothX = smoothMouse.current.x.get();
     const smoothY = smoothMouse.current.y.get();
