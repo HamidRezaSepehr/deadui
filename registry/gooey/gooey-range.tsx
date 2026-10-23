@@ -133,7 +133,7 @@ export function GooeyRange({
             <feColorMatrix
               in="blur"
               type="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
+              values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 20 -9"
               result="goo"
             />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />

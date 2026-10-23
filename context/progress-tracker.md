@@ -6993,6 +6993,14 @@ commands handed over in the session report.
   renders the customizer (1 range), the color select switches the track live, and
   drag still pops. Registry invariant: 30 components, 0 missing file paths.
 
+  **POST-RELEASE FOLLOW-UP #3: BLUE-ONLY MATRIX (MATCHES EXAMPLE) + NO WHITE BLUR.**
+  The color-agnostic matrix let the white bubble contribute white to the goo,
+  producing a white blur on drag that mismatched the track. The matrix is back to
+  the reference example's blue-only form (`0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0
+  20 -9`), stdDeviation 8.6, so the goo and bubble read as blue (no white blur),
+  exactly like the example. The test route's color section uses blue shades so
+  the goo stays coherent. Bumped to `0.1.30` / `v0.1.30`.
+
   **POST-RELEASE FOLLOW-UP #2: COLOR-AGNOSTIC FILTER RESTORED + LABEL SPACING.**
   The blue-only matrix from the reference example made the goo render blue for
   every track color, so custom-color tracks showed a blue goo bridge. The matrix
