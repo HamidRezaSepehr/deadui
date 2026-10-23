@@ -28,6 +28,7 @@ import { GooeyMenu } from "@/registry/gooey";
 import { GooeyInput } from "@/registry/gooey";
 import { GooeyPagination } from "@/registry/gooey";
 import { GooeyRange } from "@/registry/gooey";
+import { MouseImageDistortion } from "@/registry/mouse-image-distortion";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -558,6 +559,46 @@ export function GooeyRangePreview(props: Record<string, unknown>) {
           }
         />
       </div>
+    </div>
+  );
+}
+
+/**
+ * `MouseImageDistortion`'s controls map straight through.
+ */
+export function MouseImageDistortionPreview(props: Record<string, unknown>) {
+  const imageSrc =
+    typeof props.imageSrc === "string" && props.imageSrc
+      ? props.imageSrc
+      : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80";
+  return (
+    <div className="relative h-[420px] w-full overflow-hidden rounded-xl border border-dead-800 bg-dead-900">
+      <MouseImageDistortion
+        imageSrc={imageSrc}
+        imageWidth={
+          Number.isFinite(Number(props.imageWidth)) ? Number(props.imageWidth) : 200
+        }
+        imageHeight={
+          Number.isFinite(Number(props.imageHeight)) ? Number(props.imageHeight) : 270
+        }
+        imageBorderRadius={
+          Number.isFinite(Number(props.imageBorderRadius))
+            ? Number(props.imageBorderRadius)
+            : 16
+        }
+        textColor={(props.textColor as string) || "text-white"}
+        textSize={Number.isFinite(Number(props.textSize)) ? Number(props.textSize) : 32}
+        rowPadding={
+          Number.isFinite(Number(props.rowPadding)) ? Number(props.rowPadding) : 20
+        }
+        rowBorderColor={(props.rowBorderColor as string) || "border-dead-800"}
+        rowHoverBgColor={(props.rowHoverBgColor as string) || "hover:bg-dead-800"}
+        velocityMultiplier={
+          Number.isFinite(Number(props.velocityMultiplier))
+            ? Number(props.velocityMultiplier)
+            : 1
+        }
+      />
     </div>
   );
 }

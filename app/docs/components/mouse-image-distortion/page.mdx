@@ -1,23 +1,47 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
 import { InstallTabs } from "@/components/docs/install-tabs"
+import { MouseImageDistortionPreview } from "@/components/docs/preview-wrappers"
 
 export const metadata = {
   title: "Mouse Image Distortion",
   description:
-    "A list component where hovering reveals an image that displaces through a Three.js vertex shader driven by mouse velocity.",
+    "An image that floats and warps with the cursor velocity, driven by Framer Motion springs and useVelocity.",
 }
 
 # Mouse Image Distortion
 
-A list of text rows. Hover over any row: an image plane fades in behind the
-cursor and warps with a liquid vertex displacement shader based on the speed
-and direction of your mouse movement. The effect uses `@react-three/fiber` and
-a custom GLSL vertex shader.
+An image floats over a list of text rows and warps smoothly as the cursor moves
+across the list. The distortion (skew and scale) is driven by the cursor's
+velocity via Framer Motion's `useVelocity` and springs, recreating a liquid warp
+feel without WebGL.
 
 ## Preview
 
-Open the test page and hover over the items:
-
-- [`/test-mouse-image-distortion`](/test-mouse-image-distortion)
+<ComponentCustomizer
+  component={MouseImageDistortionPreview}
+  defaultProps={{
+    imageSrc:
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+    imageWidth: 200,
+    imageHeight: 270,
+    imageBorderRadius: 16,
+    textColor: "text-white",
+    textSize: 32,
+    rowPadding: 20,
+    rowBorderColor: "border-dead-800",
+    rowHoverBgColor: "hover:bg-dead-800",
+    velocityMultiplier: 1,
+  }}
+  controls={{
+    imageWidth: { type: "slider", min: 120, max: 400, step: 10, unit: "px" },
+    imageHeight: { type: "slider", min: 160, max: 600, step: 10, unit: "px" },
+    imageBorderRadius: { type: "slider", min: 0, max: 64, step: 4, unit: "px" },
+    textSize: { type: "slider", min: 14, max: 64, step: 2, unit: "px" },
+    rowPadding: { type: "slider", min: 4, max: 48, step: 4, unit: "px" },
+    velocityMultiplier: { type: "slider", min: 0.1, max: 3, step: 0.1, unit: "×" },
+  }}
+  className="not-prose my-8"
+/>
 
 ## Installation
 
@@ -28,80 +52,56 @@ Open the test page and hover over the items:
 ```tsx
 import { MouseImageDistortion } from "@/components/ui/mouse-image-distortion"
 
-const items = [
-  {
-    id: "1",
-    title: "Richard Gaston",
-    subtitle: "Landscape photography",
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
-  },
-  // ...
-]
-
-export function Portfolio() {
+export function Distortion() {
   return (
-    <MouseImageDistortion items={items} />
+    <MouseImageDistortion
+      imageSrc="/images/1.jpg"
+      imageWidth={240}
+      imageHeight={320}
+      imageBorderRadius={24}
+    />
   )
 }
 ```
 
 ## How it works
 
-A `<Canvas>` from `@react-three/fiber` is rendered as a `fixed` layer behind
-the text list. Inside it, a subdivided `planeGeometry` (`15×15` segments) is
-animated by a custom vertex shader:
-
-```glsl
-newPosition.x += sin(uv.y * PI) * uDelta.x * uAmplitude;
-newPosition.y += sin(uv.x * PI) * uDelta.y * uAmplitude;
-```
-
-`uDelta` is the difference between the raw cursor position and a smoothed
-(lerped) copy. When you move the mouse quickly, `uDelta` grows, the sine-based
-displacement increases, and the image ripples like a liquid surface. The texture
-fades in/out with a 200 ms Framer Motion animation.
-
-The mouse is tracked via a `mousemove` listener on `window`. Smooth coordinates
-are stored in Framer Motion's `useMotionValue` and interpolated in
-`useFrame`. The mesh position is mapped from pixel space to Three.js viewport
-space via `useTransform`.
+- The cursor is tracked through Framer Motion motion values
+  (`useMotionValue` + `useVelocity`).
+- `useVelocity` feeds a spring (`useSpring`), whose output drives the image's
+  `scale`, `skewX` and `skewY`.
+- The image is `fixed` and centered on the cursor via `translateX: "-50%"` /
+  `translateY: "-50%"` equivalent offsets.
+- Rows supply the surrounding text context and styling.
 
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `items` | `DistortionItem[]` | — (required) | Array of `{ id, title, subtitle?, imageUrl }`. |
-| `className` | `string` | — | Merged onto the wrapper. |
-
-### DistortionItem
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `string` | Unique identifier. |
-| `title` | `string` | Primary row text. |
-| `subtitle` | `string` | Optional secondary text. |
-| `imageUrl` | `string` | Image source shown on hover. |
+| `imageSrc` | `string` | Unsplash mountain photo | Image source. |
+| `imageWidth` | `number` | `200` | Floating image width in px. |
+| `imageHeight` | `number` | `270` | Floating image height in px. |
+| `imageBorderRadius` | `number` | `16` | Image border radius in px. |
+| `textColor` | `string` | `"text-white"` | Row text color. |
+| `textSize` | `number` | `32` | Row font size in px. |
+| `rowPadding` | `number` | `20` | Row padding in px. |
+| `rowBorderColor` | `string` | `"border-dead-800"` | Row border color class. |
+| `rowHoverBgColor` | `string` | `"hover:bg-dead-800"` | Row hover background class. |
+| `velocityMultiplier` | `number` | `1` | Velocity → distortion multiplier. |
+| `className` | `string` | — | Merged onto the container. |
 
 ## Dependencies
 
-- `three` (WebGL renderer)
-- `@react-three/fiber` (React renderer for Three.js)
-- `@react-three/drei` (Three.js helpers)
-- `framer-motion-3d` (Framer Motion for Three.js)
 - `motion` (Framer Motion)
-
-All are already present in the project.
 
 ## Performance
 
-- The shader runs on the GPU; the JavaScript load is limited to `useFrame`
-  (two lerps per frame) and the 200 ms fade animation on hover change.
-- The subdivided plane (`15×15` segments) is a single draw call — 256 vertices.
-- Images are preloaded by `useTexture`.
+- Motion springs + `useVelocity`; no per-frame React state.
+- One floating image per instance.
 
 ## Accessibility
 
-- The text list is a semantic `<ul>` / `<li>`.
-- The canvas is purely decorative and carries no focusable content.
-- Reduced motion is not special-cased; the vertex displacement runs on GPU
-  and cannot be disabled through CSS media queries.
+- Rows are plain divs; give them meaningful text content.
+
+Note: `ComponentCustomizer`'s control union currently covers `slider`, `select`
+and `color`; text-typed controls are forwarded as strings via the adapter.

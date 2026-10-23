@@ -2,64 +2,66 @@
 
 import { MouseImageDistortion } from "@/registry/mouse-image-distortion";
 
-const ITEMS = [
-  {
-    id: "1",
-    title: "Richard Gaston",
-    subtitle: "Landscape photography",
-    imageUrl:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
-  },
-  {
-    id: "2",
-    title: "KangHee Kim",
-    subtitle: "Surreal composites",
-    imageUrl:
-      "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80",
-  },
-  {
-    id: "3",
-    title: "Inka and Niclas",
-    subtitle: "Portrait series",
-    imageUrl:
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80",
-  },
-  {
-    id: "4",
-    title: "Arch McLeish",
-    subtitle: "Architecture minimalism",
-    imageUrl:
-      "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80",
-  },
-  {
-    id: "5",
-    title: "Nadir Bucan",
-    subtitle: "Street photography",
-    imageUrl:
-      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
-  },
-  {
-    id: "6",
-    title: "Chandler Bondurant",
-    subtitle: "Portrait editorials",
-    imageUrl:
-      "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=800&q=80",
-  },
-  {
-    id: "7",
-    title: "Arianna Lago",
-    subtitle: "Fine art photography",
-    imageUrl:
-      "https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=800&q=80",
-  },
-];
+function SectionLabel({ index, title }: { index: string; title: string }) {
+  return (
+    <div className="mb-4 flex items-baseline gap-3">
+      <span className="font-mono text-xs font-semibold tracking-widest text-dead-red">
+        {index}
+      </span>
+      <h2 className="font-mono text-xs uppercase tracking-widest text-dead-400">{title}</h2>
+    </div>
+  );
+}
 
 export default function MouseImageDistortionTestPage() {
   return (
-    <main className="min-h-screen bg-dead-950 text-dead-50">
-      <div className="h-[50vh]" />
-      <MouseImageDistortion items={ITEMS} />
-      <div className="h-[50vh]" />
+    <main className="min-h-screen bg-dead-950 px-4 py-16 text-dead-50">
+      <div className="mx-auto max-w-5xl space-y-20">
+        <header className="space-y-3">
+          <h1 className="text-3xl font-bold">Mouse Image Distortion — QA</h1>
+          <p className="max-w-2xl text-sm text-dead-400">
+            An image floats and warps as you move the mouse over the list — the velocity of the
+            cursor drives the skew and scale of the image, recreating the liquid warp effect. Move
+            the mouse across the rows.
+          </p>
+        </header>
+
+        <section>
+          <SectionLabel index="01" title="Rows + Floating Image" />
+          <div className="rounded-xl border border-dead-800 bg-dead-900">
+            <MouseImageDistortion
+              imageSrc="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80"
+              imageWidth={200}
+              imageHeight={270}
+              imageBorderRadius={16}
+              textColor="text-white"
+              textSize={32}
+              rowPadding={20}
+              rowBorderColor="border-dead-800"
+              rowHoverBgColor="hover:bg-dead-800"
+              velocityMultiplier={1}
+            />
+          </div>
+        </section>
+
+        <section>
+          <SectionLabel index="02" title="Rows + Custom Colors" />
+          <div className="rounded-xl border border-dead-800 bg-dead-900">
+            <MouseImageDistortion
+              imageSrc="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=1200&q=80"
+              imageWidth={180}
+              imageHeight={240}
+              imageBorderRadius={20}
+              textColor="text-dead-50"
+              textSize={24}
+              rowPadding={24}
+              rowBorderColor="border-dead-700"
+              rowHoverBgColor="hover:bg-dead-800"
+              velocityMultiplier={1.5}
+            />
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

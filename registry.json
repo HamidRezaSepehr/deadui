@@ -129,38 +129,38 @@
       "dependencies": [
         "gsap"
       ],
-      "files": [
-        {
-          "path": "registry/cinematic-text/cinematic-text.tsx",
-          "target": "components/ui/cinematic-text.tsx"
-        },
-        {
-          "path": "registry/cinematic-text/cinematic-text.module.css",
-          "target": "components/ui/cinematic-text.module.css"
-        },
-        {
-          "path": "registry/cinematic-text/noise.png",
-          "target": "components/ui/noise.png"
-        }
-      ],
-      "variants": [
-        "blur-in",
-        "fade-up",
-        "slide-stagger",
-        "scale-pop",
-        "rise-color",
-        "slide-left-color",
-        "scale-blur-color",
-        "diagonal-blur-color",
-        "flip-x-color",
-        "heavy-flip-color",
-        "flip-top-color",
-        "mask-reveal",
-        "blur-grain",
-        "blur-grain-bright",
-        "scale-blur-grain",
-        "skew-blur-grain"
-      ]
+"files": [
+    {
+      "path": "registry/cinematic-text/cinematic-text.tsx",
+      "target": "components/ui/cinematic-text.tsx"
+    },
+    {
+      "path": "registry/cinematic-text/cinematic-text.module.css",
+      "target": "components/ui/cinematic-text.module.css"
+    },
+    {
+      "path": "registry/cinematic-text/noise.png",
+      "target": "components/ui/noise.png"
+    }
+  ],
+"variants": [
+    "blur-in",
+    "fade-up",
+    "slide-stagger",
+    "scale-pop",
+    "rise-color",
+    "slide-left-color",
+    "scale-blur-color",
+    "diagonal-blur-color",
+    "flip-x-color",
+    "heavy-flip-color",
+    "flip-top-color",
+    "mask-reveal",
+    "blur-grain",
+    "blur-grain-bright",
+    "scale-blur-grain",
+    "skew-blur-grain"
+  ]
     },
     {
       "name": "marquee",
@@ -661,13 +661,10 @@
     {
       "name": "mouse-image-distortion",
       "title": "Mouse Image Distortion",
-      "description": "A list component where hovering reveals an image that displaces through a Three.js vertex shader driven by mouse velocity.",
+      "description": "An image that floats and warps with the cursor velocity, driven by Framer Motion springs and useVelocity.",
       "tier": "free",
       "dependencies": [
-        "motion",
-        "three",
-        "@react-three/fiber",
-        "@react-three/drei"
+        "motion"
       ],
       "files": [
         {

@@ -7075,34 +7075,30 @@ commands handed over in the session report.
 
 
 - Feature 52 (feature spec `51-mouse-image-distortion.md`): `MouseImageDistortion` (Free).
-  Created `registry/mouse-image-distortion/mouse-image-distortion.tsx`, `image-plane.tsx`,
-  `shader.ts`, `use-mouse.ts`, `use-dimension.ts`, `index.ts`, `app/test-mouse-image-distortion/page.tsx`,
-  `app/docs/components/mouse-image-distortion/page.mdx`; modified `registry.json` (entry appended,
-  32 components), `packages/cli/package.json` (`0.1.32` → `0.1.33`).
-  Full verification: `npx tsc --noEmit` clean, `npm run build` clean (routes dynamic),
-  Playwright/Chromium: 7 list items, 1 canvas, 0 page errors, image loads on hover.
-  Branch, commit and tag `v0.1.33` pushed; manual npm publish steps handed to the owner.
+  Created `registry/mouse-image-distortion/mouse-image-distortion.tsx` + `index.ts`,
+  `app/test-mouse-image-distortion/page.tsx`, `app/docs/components/mouse-image-distortion/page.mdx`;
+  modified `registry.json` (entry appended, 32 components),
+  `components/docs/preview-wrappers.tsx` (`MouseImageDistortionPreview`),
+  `packages/cli/package.json` (`0.1.32` → `0.1.33`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors (12
+  pre-existing warnings, none from the new files), `npm run build` clean with both
+  new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.33`). Branch, commit and tag `v0.1.33` pushed; manual npm publish
+  steps handed to the owner.
 
   **VERSION DEVIATION.** The spec asks for `0.1.28` / `v0.1.28`, but that version
-  and tag already exist. HEAD was already `0.1.32`. The next valid version
-  `0.1.33` / `v0.1.33` was used instead.
+  and tag already exist (Gooey Range was released on them) and HEAD's manifest
+  was already `0.1.32`. Following the documented repo precedent, the next valid
+  version `0.1.33` / `v0.1.33` was used instead of clobbering the prior release.
 
-  **THREE.JS + VERTEX SHADER.** The component uses `@react-three/fiber` (`Canvas`,
-  `useFrame`, `useThree`), `@react-three/drei` (`useAspect`), and `three`
-  (`TextureLoader`). A subdivided `mesh` (`15x15` segments) is animated by a
-  vertex shader that displaces `x += sin(uv.y⋅π) ⋅ uDelta.x ⋅ uAmplitude` and
-  `y += sin(uv.x⋅π) ⋅ uDelta.y ⋅ uAmplitude`. `uDelta` is the difference between
-  raw cursor position and a lerped (smooth) copy. Smooth mouse coordinates are
-  mapped from pixel space to viewport space in `useFrame`. Framer Motion-3d was
-  attempted but had export conflicts with the `motion` package; the mesh
-  position and alpha are updated directly in `useFrame` instead.
+  **VELOCITY-BASED WARP.** The component tracks the cursor with `useMotionValue`s
+  and feeds `useVelocity` into `useSpring`, which drives the floating image's
+  `scale`, `skewX` and `skewY`. The image is `fixed` and centred via offset
+  motion values. Verified: build clean, both new routes `○ Static`, registry
+  invariant 32 components / 0 missing files.
 
-  **TEXTURE LOADING.** `useTexture` (which relies on Suspense) caused uncaught
-  errors when images loaded slowly or failed. `TextureLoader` is used directly
-  with a Promise-based bulk load; on error a fallback canvas texture is created.
-  The hover interaction tracks `activeMenu` index; on hover the corresponding
-  texture is swapped into the shader and `uAlpha` fades to 1 over ~200ms.
-
-  **MIX-BLEND-DIFFERENCE.** The text list is rendered with `mix-blend-difference`
-  and white text so it punches through the dark Three.js overlay, matching the
-  reference exactly.
+  **THE REFERENCE IS WEBGL (THREE.JS), NOT THE FREE TIER.** The spec's free-tier
+  requirement (Framer Motion `useVelocity`/`useSpring` → skew/scale) was
+  implemented instead of the reference's `@react-three/fiber` + custom shader
+  plane (`newPosition.x += sin(uv.y*PI) * uDelta.x * uAmplitude`). The visual
+  equivalent on the free tier is the velocity-driven skew/scale warp.
