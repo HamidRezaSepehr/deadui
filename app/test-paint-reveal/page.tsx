@@ -70,9 +70,10 @@ export default function PaintRevealTestPage() {
           <SectionLabel index="03" title="Image Content" />
           <Stage className="h-[300px]">
             <PaintReveal overlayColor="#1a1a2e" brushSize={80}>
-              <div
-                className="h-[300px] w-full bg-gradient-to-br from-dead-red via-purple-600 to-blue-600"
-                aria-label="color gradient"
+              <img
+                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80"
+                alt="Mountain landscape at sunrise"
+                className="h-[300px] w-full object-cover"
               />
             </PaintReveal>
           </Stage>
