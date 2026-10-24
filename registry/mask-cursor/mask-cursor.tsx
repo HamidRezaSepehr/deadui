@@ -254,7 +254,7 @@ export function MaskCursor({
       {/* Mask overlay layer */}
       <motion.div
         aria-hidden="true"
-        {...({ inert: "" } as any)}
+        inert
         className={cn(
           "pointer-events-none absolute inset-0 z-10 flex w-full items-center justify-center select-none",
           maskClassName,
