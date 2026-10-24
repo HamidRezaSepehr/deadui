@@ -1525,38 +1525,25 @@ both packages, 7 curl cases against the live route, and
      (`files: ["dist/"]`), which this fix does not touch, and the
      component sources are served from `main` at install time.
 
-- Feature 51 (feature spec `51-mouse-image-distortion.md`): `MouseImageDistortion`
-  (Free) — **WebGL / Three.js + GLSL** implementation of the Olivier Larose effect.
-  Created `registry/mouse-image-distortion/mouse-image-distortion.tsx` + `index.ts`,
-  `app/test-mouse-image-distortion/page.tsx`, `app/docs/components/mouse-image-distortion/page.mdx`;
-  modified `registry.json` (entry now declares the 3D dependencies
-  `["three", "@react-three/fiber", "@react-three/drei", "framer-motion", "framer-motion-3d"]`,
-  manifest now **32 components**), `components/docs/preview-wrappers.tsx`
-  (`MouseImageDistortionPreview`, lazy R3F wrapper over the `DistortionItem[]` API).
-  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors, `npm run build`
-  clean with both new routes `○ (Static)`, `cd packages/cli && npm run build` clean
-  (`deadui@0.1.28).
-
-  **THE REFERENCE IS WEBGL — NO FRAMER MOTION FALLBACK.** The task brief mandates the exact
-  Olivier Larose effect: a list whose hovered row reveals an image that follows the cursor and
-  warps through a custom GLSL vertex shader driven by mouse velocity. The shader is verbatim:
-  `newPosition.x += sin(uv.y * PI) * uDelta.x * uAmplitude;` with the y-axis twin
-  `newPosition.y += sin(uv.x * PI) * uDelta.y * uAmplitude;` and
-  `gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);`.
-
-  **VELOCITY.** `useFrame` compares the raw mouse position against the smoothed motion value
-  and writes the difference into the `uDelta` uniform once the delta exceeds a 1px threshold;
-  the smoothed value lerps towards the raw value with a factor of `0.1`.
-
-  **RELEASE.** `packages/cli/package.json` bumped to `0.1.28`, tagged `v0.1.28`, pushed.
-  The owner runs the manual npm publish from `packages/cli` — exact commands handed over in the
-  session report.
-
 ## In Progress
 
-None. Feature 49 (Gooey Pagination) is complete; `v0.1.26` is committed and
-pushed. The owner runs the manual npm publish from `packages/cli` — exact
-commands handed over in the session report.
+**Feature 51: Mouse Image Distortion (Free)** — exact port of `olivierlarose/mouse-image-distortion`. A vertical list of text rows; hovering a row fades in that row's image on a full‑bleed Three.js plane that follows the cursor, and the plane's vertices are warped by a GLSL vertex shader whose displacement magnitude is driven by cursor velocity.
+
+**Non‑negotiable rules enforced:**
+1. EXACT `vertex` and `fragment` GLSL strings — not rewritten, not simplified.
+2. Velocity distortion captures OLD smoothed X/Y; only when `abs(rawX - oldSmoothedX) > 1`, lerps smoothed toward raw by `smoothingFactor`, and sets `uDelta = { x: rawX - oldSmoothedX, y: -1*(rawY - oldSmoothedY) }` using the OLD values.
+3. Mesh position set in `useFrame` with `(smoothedX/windowW - 0.5)*viewport.width` and `(0.5 - smoothedY/windowH)*viewport.height`.
+4. Mouse + window size stored in `useRef`, wired by window listeners in `useEffect` — no re-render on mousemove.
+5. Alpha fade via `animate` + `useMotionValue` from `motion/react`.
+6. Canvas wrapper = `absolute inset-0 z-0 pointer-events-none`; list = `relative z-10` + `mix-blend-difference`; root = `relative isolate` + solid `bgClassName`.
+7. Dependencies = `three`, `@react-three/fiber`, `@react-three/drei`, `motion` ONLY. No `framer-motion`, no `framer-motion-3d`.
+
+**Component code at:** `registry/mouse-image-distortion/mouse-image-distortion.tsx`
+**Test page:** `app/test-mouse-image-distortion/page.tsx`
+**Docs page:** `app/docs/components/mouse-image-distortion/page.mdx`
+**Registry entry:** `registry.json` → `dependencies: ["three", "@react-three/fiber", "@react-three/drei", "motion"]`, `tier: "free"`.
+
+CLI bumped `0.1.32` → `0.1.37`; tag `v0.1.37` created and pushed.
 
 ## Next Up
 

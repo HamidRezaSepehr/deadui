@@ -28,7 +28,6 @@ import { GooeyMenu } from "@/registry/gooey";
 import { GooeyInput } from "@/registry/gooey";
 import { GooeyPagination } from "@/registry/gooey";
 import { GooeyRange } from "@/registry/gooey";
-import type { DistortionItem } from "@/registry/mouse-image-distortion";
 import { Typewriter } from "@/registry/typewriter";
 import {
   TextAnnotation,
@@ -564,84 +563,6 @@ export function GooeyRangePreview(props: Record<string, unknown>) {
 }
 
 /**
- * `MouseImageDistortion`'s controls map straight through.
- */
-const LazyMouseImageDistortion = dynamic(
-  () =>
-    import("@/registry/mouse-image-distortion").then(
-      (module) => module.MouseImageDistortion,
-    ),
-  {
-    ssr: false,
-    loading: () => <div className="h-[360px] w-full rounded-xl bg-dead-900" />,
-  },
-);
-
-/** The demo image rows the playground distorts. */
-const DISTORTION_ITEMS: DistortionItem[] = [
-  {
-    id: "1",
-    title: "Richard Gaston",
-    subtitle: "Photographer",
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
-  },
-  {
-    id: "2",
-    title: "KangHee Kim",
-    subtitle: "Artist",
-    imageUrl: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=1200&q=80",
-  },
-  {
-    id: "3",
-    title: "Inka and Niclas",
-    subtitle: "Design duo",
-    imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&q=80",
-  },
-  {
-    id: "4",
-    title: "Arch McLeish",
-    subtitle: "Architect",
-    imageUrl: "https://images.unsplash.com/photo-1487958449943-8a6c3a1a4f5e?w=1200&q=80",
-  },
-  {
-    id: "5",
-    title: "Nadir Bucan",
-    subtitle: "Creative director",
-    imageUrl: "https://images.unsplash.com/photo-1541698444083-023c97d3f4b6?w=1200&q=80",
-  },
-];
-
-export function MouseImageDistortionPreview(props: Record<string, unknown>) {
-  const amplitude = Number.isFinite(Number(props.amplitude))
-    ? Number(props.amplitude)
-    : 0.0005;
-  const imageScale = Number.isFinite(Number(props.imageScale))
-    ? Number(props.imageScale)
-    : 0.225;
-  const textSize = typeof props.textSize === "string" ? props.textSize : "text-[4vw]";
-  const textColor = typeof props.textColor === "string" ? props.textColor : "text-white";
-  const rowPadding = typeof props.rowPadding === "string" ? props.rowPadding : "p-5";
-  const rowBorderColor =
-    typeof props.rowBorderColor === "string" ? props.rowBorderColor : "border-white/20";
-  const rowHoverBgColor =
-    typeof props.rowHoverBgColor === "string" ? props.rowHoverBgColor : "bg-white/5";
-
-  return (
-    <LazyMouseImageDistortion
-      items={DISTORTION_ITEMS}
-      amplitude={amplitude}
-      imageScale={imageScale}
-      textSize={textSize}
-      textColor={textColor}
-      rowPadding={rowPadding}
-      rowBorderColor={rowBorderColor}
-      rowHoverBgColor={rowHoverBgColor}
-      className="h-[360px] w-full"
-    />
-  );
-}
-
-/**
  * `TextAnnotation`'s defining behaviour is a one-shot reveal — invisible until
  * its SVG is drawn — so an empty `inView` playground would look broken before
  * the user scrolled to it. The customizer's preview box is on screen the moment
@@ -906,6 +827,33 @@ function DocsGlobe() {
       onPointerDown={handlePointerDown}
       className="aspect-square w-full cursor-grab rounded-full"
       style={{ touchAction: "none" }}
-    />
+/>
   )
+}
+
+/**
+ * `ssr: false` because this component mounts an R3F `<Canvas>` that only exists
+ * in the browser. A server render would emit stale placeholder markup, causing
+ * a hydration mismatch on every load.
+ */
+const LazyMouseImageDistortion = dynamic(
+  () =>
+    import("@/registry/mouse-image-distortion").then(
+      (module) => module.MouseImageDistortion,
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="h-[360px] w-full rounded-xl bg-dead-900" />,
+  },
+)
+
+export function MouseImageDistortionPreview(_props: Record<string, unknown>) {
+  const items = [
+    { title: "Richard Gaston", subtitle: "Creative Direction", imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=900&q=80" },
+    { title: "KangHee Kim", subtitle: "Photography", imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&q=80" },
+    { title: "Inka & Niclas", subtitle: "Art Direction", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=900&q=80" },
+    { title: "Arch McLeish", subtitle: "Motion", imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=900&q=80" },
+    { title: "Nadir Bucan", subtitle: "Editing", imageUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=900&q=80" },
+  ]
+  return <LazyMouseImageDistortion items={items} />
 }

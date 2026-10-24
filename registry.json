@@ -661,14 +661,13 @@
     {
       "name": "mouse-image-distortion",
       "title": "Mouse Image Distortion",
-      "description": "A list component where hovering reveals an image that follows the cursor and warps using Three.js GLSL shaders based on movement velocity.",
+      "description": "A hover list where each row reveals a cursor-following image on a Three.js plane that warps via a GLSL vertex shader driven by mouse velocity.",
       "tier": "free",
       "dependencies": [
         "three",
         "@react-three/fiber",
         "@react-three/drei",
-        "framer-motion",
-        "framer-motion-3d"
+        "motion"
       ],
       "files": [
         {

@@ -1,14 +1,14 @@
 "use client"
 
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { useTexture, useAspect } from "@react-three/drei"
+import { useAspect, useTexture } from "@react-three/drei"
+import { animate, useMotionValue } from "motion/react"
 import * as THREE from "three"
-import { animate, useMotionValue, useTransform } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-// --- Exact GLSL Shaders from Olivier Larose ---
-const vertexShader = `
+/* ===== EXACT GLSL from olivierlarose/mouse-image-distortion (do not modify) ===== */
+const vertex = `
 varying vec2 vUv;
 uniform vec2 uDelta;
 uniform float uAmplitude;
@@ -20,10 +20,10 @@ void main() {
     newPosition.x += sin(uv.y * PI) * uDelta.x * uAmplitude;
     newPosition.y += sin(uv.x * PI) * uDelta.y * uAmplitude;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-}
+  }
 `
 
-const fragmentShader = `
+const fragment = `
 varying vec2 vUv;
 uniform sampler2D uTexture;
 uniform float uAlpha;
@@ -33,210 +33,239 @@ void main() {
 }
 `
 
-// --- Hooks ---
-function useMouse() {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 })
+/* ===== Mouse + viewport size via refs (NO re-render on mousemove) ===== */
+function usePointerAndSize() {
+  const mouse = useRef({ x: 0, y: 0 })
+  const size = useRef({ width: 1, height: 1 })
   useEffect(() => {
-    const mouseMove = (e: MouseEvent) => setMouse({ x: e.clientX, y: e.clientY })
-    window.addEventListener("mousemove", mouseMove)
-    return () => window.removeEventListener("mousemove", mouseMove)
+    const onMove = (e: MouseEvent) => {
+      mouse.current.x = e.clientX
+      mouse.current.y = e.clientY
+    }
+    const onResize = () => {
+      size.current.width = window.innerWidth
+      size.current.height = window.innerHeight
+    }
+    onResize()
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("resize", onResize)
+    return () => {
+      window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("resize", onResize)
+    }
   }, [])
-  return mouse
+  return { mouse, size }
 }
 
-function useDimension() {
-  const [dimension, setDimension] = useState({ width: 0, height: 0 })
-  useEffect(() => {
-    const updateDimension = () =>
-      setDimension({ width: window.innerWidth, height: window.innerHeight })
-    updateDimension()
-    window.addEventListener("resize", updateDimension)
-    return () => window.removeEventListener("resize", updateDimension)
-  }, [])
-  return dimension
+const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a
+
+/* ===== The warping image plane ===== */
+interface PlaneProps {
+  activeMenu: number | null
+  imageUrls: string[]
+  amplitude: number
+  smoothingFactor: number
+  imageScale: number
+  fadeDuration: number
+  geometrySegments: number
 }
 
-// --- Types ---
+function DistortionPlane({
+  activeMenu,
+  imageUrls,
+  amplitude,
+  smoothingFactor,
+  imageScale,
+  fadeDuration,
+  geometrySegments,
+}: PlaneProps) {
+  const plane = useRef<THREE.Mesh>(null)
+  const { viewport } = useThree()
+  const { mouse, size } = usePointerAndSize()
+
+  const textures = useTexture(imageUrls) as THREE.Texture[]
+  const first = textures[0]
+  const imgW = (first?.image as HTMLImageElement)?.width ?? 1
+  const imgH = (first?.image as HTMLImageElement)?.height ?? 1
+  const scale = useAspect(imgW, imgH, imageScale)
+
+  const smooth = useRef({ x: 0, y: 0 })
+  const alpha = useMotionValue(0)
+
+  const uniforms = useRef({
+    uDelta: { value: { x: 0, y: 0 } },
+    uAmplitude: { value: amplitude },
+    uTexture: { value: textures[0] },
+    uAlpha: { value: 0 },
+  })
+
+  useEffect(() => {
+    uniforms.current.uAmplitude.value = amplitude
+  }, [amplitude])
+
+  useEffect(() => {
+    const mat = plane.current?.material as THREE.ShaderMaterial | undefined
+    if (!mat) return
+    if (activeMenu != null) {
+      mat.uniforms.uTexture.value = textures[activeMenu]
+      animate(alpha, 1, {
+        duration: fadeDuration,
+        onUpdate: (v) => {
+          const m = plane.current?.material as THREE.ShaderMaterial | undefined
+          if (m) m.uniforms.uAlpha.value = v
+        },
+      })
+    } else {
+      animate(alpha, 0, {
+        duration: fadeDuration,
+        onUpdate: (v) => {
+          const m = plane.current?.material as THREE.ShaderMaterial | undefined
+          if (m) m.uniforms.uAlpha.value = v
+        },
+      })
+    }
+  }, [activeMenu, textures, alpha, fadeDuration])
+
+  useFrame(() => {
+    const mat = plane.current?.material as THREE.ShaderMaterial | undefined
+    if (!plane.current || !mat) return
+
+    const { x, y } = mouse.current
+    const oldX = smooth.current.x
+    const oldY = smooth.current.y
+
+    // EXACT original velocity logic: delta uses the PRE-lerp smoothed values
+    if (Math.abs(x - oldX) > 1) {
+      smooth.current.x = lerp(oldX, x, smoothingFactor)
+      smooth.current.y = lerp(oldY, y, smoothingFactor)
+      mat.uniforms.uDelta.value = {
+        x: x - oldX,
+        y: -1 * (y - oldY),
+      }
+    }
+
+    // EXACT original window -> viewport mapping, applied directly to the mesh
+    const w = size.current.width || 1
+    const h = size.current.height || 1
+    plane.current.position.x = (smooth.current.x / w - 0.5) * viewport.width
+    plane.current.position.y = (0.5 - smooth.current.y / h) * viewport.height
+  })
+
+  return (
+    <mesh ref={plane} scale={scale as unknown as THREE.Vector3}>
+      <planeGeometry args={[1, 1, geometrySegments, geometrySegments]} />
+      <shaderMaterial
+        vertexShader={vertex}
+        fragmentShader={fragment}
+        uniforms={uniforms.current}
+        transparent
+      />
+    </mesh>
+  )
+}
+
+/* ===== Public component ===== */
 export interface DistortionItem {
-  id: string
   title: string
-  subtitle?: string
   imageUrl: string
+  subtitle?: string
 }
 
 export interface MouseImageDistortionProps {
   items: DistortionItem[]
   amplitude?: number
+  smoothingFactor?: number
   imageScale?: number
+  fadeDuration?: number
+  geometrySegments?: number
   textSize?: string
   textColor?: string
+  textFont?: string
   rowPadding?: string
-  rowBorderColor?: string
-  rowHoverBgColor?: string
+  rowBorder?: string
+  blendMode?: string
+  bgClassName?: string
+  subtitleClassName?: string
   className?: string
+  listClassName?: string
+  canvasClassName?: string
 }
 
-// --- Main Component ---
 export function MouseImageDistortion({
   items,
   amplitude = 0.0005,
+  smoothingFactor = 0.1,
   imageScale = 0.225,
+  fadeDuration = 0.2,
+  geometrySegments = 15,
   textSize = "text-[4vw]",
   textColor = "text-white",
+  textFont,
   rowPadding = "p-5",
-  rowBorderColor = "border-white/20",
-  rowHoverBgColor = "bg-white/5",
+  rowBorder = "border-t border-white/20",
+  blendMode = "mix-blend-difference",
+  bgClassName = "bg-black",
+  subtitleClassName = "text-sm opacity-60",
   className,
+  listClassName,
+  canvasClassName,
 }: MouseImageDistortionProps) {
   const [activeMenu, setActiveMenu] = useState<number | null>(null)
+  const imageUrls = useMemo(() => items.map((i) => i.imageUrl), [items])
 
   return (
-    <div className={cn("relative w-full h-screen overflow-hidden bg-black", className)}>
-      {/* HTML List Layer */}
-      <div className="absolute inset-0 z-10 mix-blend-difference pointer-events-none">
-        <ul
-          onMouseLeave={() => setActiveMenu(null)}
-          className="h-full w-full flex flex-col justify-center border-t border-b"
-          style={{ pointerEvents: "auto" }}
-        >
-          {items.map((project, i) => (
-            <li
-              onMouseEnter={() => setActiveMenu(i)}
-              key={project.id}
-              className={cn(
-                "border-t cursor-pointer transition-colors duration-300",
-                rowPadding,
-                rowBorderColor,
-                activeMenu === i ? rowHoverBgColor : "bg-transparent"
-              )}
-            >
-              <p className={cn("font-bold", textSize, textColor)}>{project.title}</p>
-              {project.subtitle && (
-                <p className={cn("text-sm opacity-60", textColor)}>{project.subtitle}</p>
-              )}
-            </li>
-          ))}
-        </ul>
+    <div
+      className={cn(
+        "relative isolate w-full min-h-screen overflow-hidden",
+        bgClassName,
+        className
+      )}
+    >
+      {/* 3D layer: scoped to the component, never intercepts pointer events */}
+      <div className={cn("pointer-events-none absolute inset-0 z-0", canvasClassName)}>
+        <Canvas>
+          <Suspense fallback={null}>
+            <DistortionPlane
+              activeMenu={activeMenu}
+              imageUrls={imageUrls}
+              amplitude={amplitude}
+              smoothingFactor={smoothingFactor}
+              imageScale={imageScale}
+              fadeDuration={fadeDuration}
+              geometrySegments={geometrySegments}
+            />
+          </Suspense>
+        </Canvas>
       </div>
 
-      {/* Three.js Canvas Layer */}
-      <Canvas className="absolute inset-0 z-0">
-        <Model
-          activeMenu={activeMenu}
-          items={items}
-          amplitude={amplitude}
-          imageScale={imageScale}
-        />
-      </Canvas>
+      {/* Text layer: blends against the moving image behind it */}
+      <ul
+        onMouseLeave={() => setActiveMenu(null)}
+        className={cn(
+          "relative z-10 flex flex-col",
+          blendMode,
+          textColor,
+          listClassName
+        )}
+      >
+        {items.map((item, i) => (
+          <li
+            key={`${item.title}-${i}`}
+            onMouseEnter={() => setActiveMenu(i)}
+            className={cn("cursor-pointer", rowPadding, rowBorder)}
+          >
+            <p
+              className={cn("font-bold leading-none", textSize)}
+              style={textFont ? { fontFamily: textFont } : undefined}
+            >
+              {item.title}
+            </p>
+            {item.subtitle && (
+              <p className={subtitleClassName}>{item.subtitle}</p>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
-  )
-}
-
-// --- 3D Model Component ---
-function Model({
-  activeMenu,
-  items,
-  amplitude,
-  imageScale,
-}: {
-  activeMenu: number | null
-  items: DistortionItem[]
-  amplitude: number
-  imageScale: number
-}) {
-  const plane = useRef<THREE.Mesh>(null)
-  const materialRef = useRef<THREE.ShaderMaterial>(null)
-  const { viewport } = useThree()
-  const dimension = useDimension()
-  const mouse = useMouse()
-  const opacity = useMotionValue(0)
-
-  const textures = useTexture(items.map((item) => item.imageUrl))
-  const firstTexture = textures[0]
-  const texImage = firstTexture?.image as HTMLImageElement | undefined
-  const texWidth = texImage?.naturalWidth ?? texImage?.width ?? 1
-  const texHeight = texImage?.naturalHeight ?? texImage?.height ?? 1
-  const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a
-  const [imgW, imgH] = useAspect(texWidth, texHeight, imageScale)
-
-  const smoothMouse = { x: useMotionValue(0), y: useMotionValue(0) }
-
-  const uniforms = useMemo(
-    () => ({
-      uDelta: { value: { x: 0, y: 0 } },
-      uAmplitude: { value: amplitude },
-      uTexture: { value: textures[0] },
-      uAlpha: { value: 0 },
-    }),
-    [amplitude, textures]
-  )
-
-  const x = useTransform(
-    smoothMouse.x,
-    [0, dimension.width],
-    [-1 * viewport.width / 2, viewport.width / 2]
-  )
-  const y = useTransform(
-    smoothMouse.y,
-    [0, dimension.height],
-    [viewport.height / 2, -1 * viewport.height / 2]
-  )
-
-  useEffect(() => {
-    if (activeMenu != null && materialRef.current) {
-      materialRef.current.uniforms.uTexture.value = textures[activeMenu]
-      animate(opacity, 1, {
-        duration: 0.2,
-        onUpdate: (latest) => {
-          if (materialRef.current) materialRef.current.uniforms.uAlpha.value = latest
-        },
-      })
-    } else if (materialRef.current) {
-      animate(opacity, 0, {
-        duration: 0.2,
-        onUpdate: (latest) => {
-          if (materialRef.current) materialRef.current.uniforms.uAlpha.value = latest
-        },
-      })
-    }
-  }, [activeMenu, textures, opacity])
-
-  useEffect(() => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.uAmplitude.value = amplitude
-    }
-  }, [amplitude])
-
-  useFrame(() => {
-    const mesh = plane.current
-    const mat = materialRef.current
-    if (!mesh || !mat) return
-
-    const rawX = mouse.x
-    const rawY = mouse.y
-    const smoothX = smoothMouse.x.get()
-    const smoothY = smoothMouse.y.get()
-
-    if (Math.abs(rawX - smoothX) > 1) {
-      smoothMouse.x.set(lerp(smoothX, rawX, 0.1))
-      smoothMouse.y.set(lerp(smoothY, rawY, 0.1))
-      mat.uniforms.uDelta.value = { x: rawX - smoothX, y: -1 * (rawY - smoothY) }
-    }
-
-    mesh.position.x = x.get()
-    mesh.position.y = y.get()
-  })
-
-  return (
-    <mesh ref={plane} scale={[imgW, imgH, 1]}>
-      <planeGeometry args={[1, 1, 15, 15]} />
-      <shaderMaterial
-        ref={materialRef}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={uniforms}
-        transparent={true}
-      />
-    </mesh>
   )
 }

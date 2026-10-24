@@ -5,116 +5,102 @@ import { MouseImageDistortionPreview } from "@/components/docs/preview-wrappers"
 export const metadata = {
   title: "Mouse Image Distortion",
   description:
-    "A list component where hovering reveals an image that follows the cursor and warps using Three.js GLSL shaders based on movement velocity.",
+    "A 3D component where hovering a row reveals its cursor-following image on a Three.js plane warped by a GLSL vertex shader driven by mouse velocity.",
 }
 
 # Mouse Image Distortion
 
-A list of text rows where hovering reveals an image that follows the cursor and
-warps with the cursor's movement velocity, using a custom Three.js GLSL vertex
-shader.
+A 3D component using Three.js + GLSL. Hover any row in the list — that row's image
+appears on a full-bleed plane that follows the cursor. Move the mouse quickly and
+the image bends via a GLSL vertex shader; move slowly and it stays flat.
 
 ## Preview
 
 <ComponentCustomizer
   component={MouseImageDistortionPreview}
-  defaultProps={{
-    amplitude: 0.0005,
-    imageScale: 0.225,
-    textSize: "text-[4vw]",
-    textColor: "text-white",
-    rowPadding: "p-5",
-    rowBorderColor: "border-white/20",
-    rowHoverBgColor: "bg-white/5",
-  }}
-  controls={{
-    amplitude: { type: "slider", min: 0.0001, max: 0.005, step: 0.0001 },
-    imageScale: { type: "slider", min: 0.05, max: 0.4, step: 0.01 },
-  }}
+  defaultProps={{}}
+  controls={{}}
   className="not-prose my-8"
 />
-
-Move the pointer across the rows — the image follows, and the speed of the
-movement warps it.
 
 ## Installation
 
 <InstallTabs componentName="mouse-image-distortion" tier="free" />
 
+```bash
+npm install three @react-three/fiber @react-three/drei
+```
+
 ## Usage
 
 ```tsx
-import { MouseImageDistortion } from "@/components/ui/mouse-image-distortion";
+import { MouseImageDistortion } from "@/components/ui/mouse-image-distortion"
 
-const ITEMS = [
-  {
-    id: "1",
-    title: "Richard Gaston",
-    subtitle: "Photographer",
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
-  },
-  // …more rows
-];
+const items = [
+  { title: "Richard Gaston", subtitle: "Creative Direction", imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=900&q=80" },
+  // … more rows
+]
 
 export function Gallery() {
-  return <MouseImageDistortion items={ITEMS} />;
+  return <MouseImageDistortion items={items} />
 }
 ```
 
-## How it works
+## Props
 
-The component layers an HTML list over a full-screen React Three Fiber `<Canvas`:
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `items` | `DistortionItem[]` | — | Rows: `title`, `imageUrl`, optional `subtitle`. |
+| `amplitude` | `number` | `0.0005` | Distortion strength — the `uAmplitude` uniform. |
+| `smoothingFactor` | `number` | `0.1` | Lerp factor; lower = more lag/warp. |
+| `imageScale` | `number` | `0.225` | Image size relative to the viewport. |
+| `fadeDuration` | `number` | `0.2` | Alpha in/out transition seconds. |
+| `geometrySegments` | `number` | `15` | Plane geometry subdivisions (warp resolution). |
+| `textSize` | `string` | `"text-[4vw]"` | Row title text size class. |
+| `textColor` | `string` | `"text-white"` | Row text color (drives blend). |
+| `textFont` | `string?` | `undefined` | Inline `fontFamily` on titles. |
+| `rowPadding` | `string` | `"p-5"` | Row padding class. |
+| `rowBorder` | `string` | `"border-t border-white/20"` | Row separator class. |
+| `blendMode` | `string` | `"mix-blend-difference"` | CSS blend on the list. |
+| `bgClassName` | `string` | `"bg-black"` | Root background (needed for blend). |
+| `subtitleClassName` | `string` | `"text-sm opacity-60"` | Subtitle styling. |
+| `className` | `string` | — | Overrides on the root div. |
+| `listClassName` | `string` | — | Overrides on the `<ul>`. |
+| `canvasClassName` | `string` | — | Overrides on the canvas wrapper. |
 
-1. The HTML layer renders the rows and tracks which one the pointer is on
-   (`activeMenu`).
-2. The 3D layer holds a single plane with a `THREE.ShaderMaterial` whose vertex
-   shader reads the `uDelta` uniform.
-3. Each `mousemove` updates the raw mouse position; the next frame compares it
-   against a smoothed value and lerps towards it (factor `0.1`).
-4. The delta (`raw − smoothed`) is written into `uDelta`, and the vertex shader
-   displaces the plane:
+## How the velocity warp works
+
+The vertex shader receives a `uDelta` uniform that is the gap between the raw cursor
+position and the lagged (smoothed) cursor position. Faster movement produces a larger
+delta, which displaces the plane vertices more — so the image warps more when you
+move quickly and flattens when you slow down.
 
 ```glsl
 newPosition.x += sin(uv.y * PI) * uDelta.x * uAmplitude;
 newPosition.y += sin(uv.x * PI) * uDelta.y * uAmplitude;
 ```
 
-5. The displaced position is projected through the normal MVP matrix, so the
-   image ripples like a liquid surface as the cursor moves.
+## Blend note
 
-The opacity of the image cross-fades over `0.2s` when the hovered row changes.
-
-## Props
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `items` | `DistortionItem[]` | — | Rows to render. Each row: `id`, `title`, optional `subtitle`, `imageUrl`. |
-| `amplitude` | `number` | `0.0005` | Distortion strength, the `uAmplitude` uniform. |
-| `imageScale` | `number` | `0.225` | Image scale relative to the viewport. |
-| `textSize` | `string` | `"text-[4vw]"` | Tailwind text-size class for row titles. |
-| `textColor` | `string` | `"text-white"` | Tailwind text-color class for row titles. |
-| `rowPadding` | `string` | `"p-5"` | Tailwind padding class for each row. |
-| `rowBorderColor` | `string` | `"border-white/20"` | Tailwind border-color class for row dividers. |
-| `rowHoverBgColor` | `string` | `"bg-white/5"` | Tailwind background class for the hovered row. |
-| `className` | `string` | — | Merged onto the root container. |
+`mix-blend-difference` requires a solid `bgClassName` (default `bg-black`) to look
+correct. Pairing with smooth-scroll (Lenis) is optional and not bundled.
 
 ## Dependencies
 
 - `three`
 - `@react-three/fiber`
 - `@react-three/drei`
-- `framer-motion`
-- `framer-motion-3d`
 
 ## Performance
 
 - One `<Canvas>` per component instance, one plane, one shader.
-- The mouse delta is computed in `useFrame`; no React state is touched per frame.
-- Textures are loaded once per item via `useTexture`.
+- Mouse position is stored in a `useRef`, **not** `useState` — no React re-render on
+  `mousemove`.
+- `useFrame` updates the shader uniforms and mesh position directly.
+- Textures loaded once per item via `useTexture`.
 
 ## Accessibility
 
-- The rows are semantic list items with real text content.
-- The list layer uses `mix-blend-difference` and is not interactive itself;
-  hover state lives on the `<li>` elements.
-
+- Semantic list items with real text content.
+- The 3D canvas layer is `pointer-events-none` — it never intercepts focus or clicks.
+- The component is purely visual; no critical information is conveyed through the warp.
