@@ -24,10 +24,14 @@ the image bends via a GLSL vertex shader; move slowly and it stays flat.
     imageScale: 0.225,
     fadeDuration: 0.2,
     geometrySegments: 15,
-    textSize: "text-[4vw]",
     textColor: "text-white",
-    rowPadding: "p-5",
-    rowBorder: "border-t border-white/20",
+    rowPaddingTop: "pt-5",
+    rowPaddingBottom: "pb-5",
+    rowPaddingLeft: "pl-5",
+    rowPaddingRight: "pr-5",
+    rowBorderSide: "t",
+    rowBorderColor: "border-white/20",
+    rowBorderStyle: "solid",
     bgClassName: "bg-black",
     subtitleClassName: "text-sm opacity-60",
   }}
@@ -37,9 +41,39 @@ the image bends via a GLSL vertex shader; move slowly and it stays flat.
     imageScale: { type: "slider", min: 0.05, max: 0.5, step: 0.01 },
     fadeDuration: { type: "slider", min: 0.05, max: 1, step: 0.05 },
     geometrySegments: { type: "select", options: ["5", "10", "15", "20", "30"] },
-    textSize: {
+    rowPaddingTop: {
       type: "select",
-      options: ["text-[2vw]", "text-[3vw]", "text-[4vw]", "text-[5vw]", "text-[6vw]"],
+      options: ["pt-3", "pt-4", "pt-5", "pt-6", "pt-8"],
+    },
+    rowPaddingBottom: {
+      type: "select",
+      options: ["pb-3", "pb-4", "pb-5", "pb-6", "pb-8"],
+    },
+    rowPaddingLeft: {
+      type: "select",
+      options: ["pl-3", "pl-4", "pl-5", "pl-6", "pl-8"],
+    },
+    rowPaddingRight: {
+      type: "select",
+      options: ["pr-3", "pr-4", "pr-5", "pr-6", "pr-8"],
+    },
+    rowBorderSide: {
+      type: "select",
+      options: ["t", "b", "l", "r", "y", "x", ""],
+    },
+    rowBorderColor: {
+      type: "select",
+      options: [
+        "border-white/20",
+        "border-dead-800",
+        "border-dead-red/30",
+        "border-dead-400",
+        "border-0",
+      ],
+    },
+    rowBorderStyle: {
+      type: "select",
+      options: ["solid", "dashed", "dotted", "double", "none"],
     },
     textColor: {
       type: "select",
@@ -107,11 +141,15 @@ export function Gallery() {
 | `imageScale` | `number` | `0.225` | Image size relative to the viewport. |
 | `fadeDuration` | `number` | `0.2` | Alpha in/out transition seconds. |
 | `geometrySegments` | `number` | `15` | Plane geometry subdivisions (warp resolution). |
-| `textSize` | `string` | `"text-[4vw]"` | Row title text size class. |
 | `textColor` | `string` | `"text-white"` | Row text color (drives blend). |
 | `textFont` | `string?` | `undefined` | Inline `fontFamily` on titles. |
-| `rowPadding` | `string` | `"p-5"` | Row padding class. |
-| `rowBorder` | `string` | `"border-t border-white/20"` | Row separator class. |
+| `rowPaddingTop` | `string` | `"pt-5"` | Top padding class for rows. |
+| `rowPaddingBottom` | `string` | `"pb-5"` | Bottom padding class for rows. |
+| `rowPaddingLeft` | `string` | `"pl-5"` | Left padding class for rows. |
+| `rowPaddingRight` | `string` | `"pr-5"` | Right padding class for rows. |
+| `rowBorderSide` | `string` | `"t"` | Border side direction (`t`, `b`, `l`, `r`, `y`, `x`). |
+| `rowBorderColor` | `string` | `"border-white/20"` | Border color Tailwind class. |
+| `rowBorderStyle` | `string` | `"solid"` | Border style (`solid`, `dashed`, `dotted`, `double`, `none`). |
 | `blendMode` | `string` | `"mix-blend-difference"` | CSS blend on the list. |
 | `bgClassName` | `string` | `"bg-black"` | Root background (needed for blend). |
 | `subtitleClassName` | `string` | `"text-sm opacity-60"` | Subtitle styling. |

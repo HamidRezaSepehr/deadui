@@ -183,11 +183,15 @@ export interface MouseImageDistortionProps {
   imageScale?: number
   fadeDuration?: number
   geometrySegments?: number
-  textSize?: string
   textColor?: string
   textFont?: string
-  rowPadding?: string
-  rowBorder?: string
+  rowPaddingTop?: string
+  rowPaddingRight?: string
+  rowPaddingBottom?: string
+  rowPaddingLeft?: string
+  rowBorderSide?: string
+  rowBorderColor?: string
+  rowBorderStyle?: string
   blendMode?: string
   bgClassName?: string
   subtitleClassName?: string
@@ -203,11 +207,15 @@ export function MouseImageDistortion({
   imageScale = 0.225,
   fadeDuration = 0.2,
   geometrySegments = 15,
-  textSize = "text-[4vw]",
   textColor = "text-white",
   textFont,
-  rowPadding = "p-5",
-  rowBorder = "border-t border-white/20",
+  rowPaddingTop = "pt-5",
+  rowPaddingRight = "pr-5",
+  rowPaddingBottom = "pb-5",
+  rowPaddingLeft = "pl-5",
+  rowBorderSide = "t",
+  rowBorderColor = "border-white/20",
+  rowBorderStyle = "solid",
   blendMode = "mix-blend-difference",
   bgClassName = "bg-black",
   subtitleClassName = "text-sm opacity-60",
@@ -255,12 +263,21 @@ export function MouseImageDistortion({
       >
         {items.map((item, i) => (
           <li
-            key={`${item.title}-${i}`}
+            key={`${String(item.title)}-${i}`}
             onMouseEnter={() => setActiveMenu(i)}
-            className={cn("cursor-pointer", rowPadding, rowBorder)}
+            className={cn(
+              "cursor-pointer",
+              `border-${rowBorderSide}`,
+              rowBorderColor,
+              rowBorderStyle && `border-${rowBorderStyle}`,
+              rowPaddingTop,
+              rowPaddingRight,
+              rowPaddingBottom,
+              rowPaddingLeft
+            )}
           >
             <p
-              className={cn("font-bold leading-none", textSize)}
+              className={cn("font-bold leading-none")}
               style={textFont ? { fontFamily: textFont } : undefined}
             >
               {item.title}

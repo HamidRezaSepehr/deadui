@@ -47,7 +47,8 @@ export default function Page() {
             amplitude={0.002}
             smoothingFactor={0.3}
             textColor="text-dead-100"
-            rowBorder="border-t border-dead-800"
+            rowBorderSide="t"
+            rowBorderColor="border-dead-800"
           />
         </div>
       </section>
@@ -64,8 +65,12 @@ export default function Page() {
             imageScale={0.12}
             fadeDuration={0.8}
             smoothingFactor={0.05}
-            rowPadding="p-4"
-            rowBorder="border-t border-dead-red/30"
+            rowPaddingTop="p-4"
+            rowPaddingBottom="p-4"
+            rowPaddingLeft="p-4"
+            rowPaddingRight="p-4"
+            rowBorderSide="t"
+            rowBorderColor="border-dead-red/30"
           />
         </div>
       </section>
@@ -80,9 +85,12 @@ export default function Page() {
             items={ITEMS}
             geometrySegments={30}
             imageScale={0.35}
-            textSize="text-[3vw]"
-            rowPadding="p-6"
-            rowBorder="border-t border-white/10"
+            rowPaddingTop="p-6"
+            rowPaddingBottom="p-6"
+            rowPaddingLeft="p-6"
+            rowPaddingRight="p-6"
+            rowBorderSide="t"
+            rowBorderColor="border-white/10"
           />
         </div>
       </section>
@@ -95,10 +103,12 @@ export default function Page() {
         <div className="rounded-xl border border-dead-800 bg-dead-950 p-6">
           <MouseImageDistortion
             items={ITEMS}
-            textSize="text-[5vw]"
             textColor="text-dead-100"
             textFont="serif"
-            rowPadding="p-5"
+            rowPaddingTop="p-5"
+            rowPaddingBottom="p-5"
+            rowPaddingLeft="p-5"
+            rowPaddingRight="p-5"
             subtitleClassName="text-xs text-dead-500 tracking-wider"
             bgClassName="bg-dead-950"
           />
