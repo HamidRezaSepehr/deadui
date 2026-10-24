@@ -18,8 +18,58 @@ the image bends via a GLSL vertex shader; move slowly and it stays flat.
 
 <ComponentCustomizer
   component={MouseImageDistortionPreview}
-  defaultProps={{}}
-  controls={{}}
+  defaultProps={{
+    amplitude: 0.0005,
+    smoothingFactor: 0.1,
+    imageScale: 0.225,
+    fadeDuration: 0.2,
+    geometrySegments: 15,
+    textSize: "text-[4vw]",
+    textColor: "text-white",
+    rowPadding: "p-5",
+    rowBorder: "border-t border-white/20",
+    bgClassName: "bg-black",
+    subtitleClassName: "text-sm opacity-60",
+  }}
+  controls={{
+    amplitude: { type: "slider", min: 0.0001, max: 0.003, step: 0.0001 },
+    smoothingFactor: { type: "slider", min: 0.02, max: 0.5, step: 0.02 },
+    imageScale: { type: "slider", min: 0.05, max: 0.5, step: 0.01 },
+    fadeDuration: { type: "slider", min: 0.05, max: 1, step: 0.05 },
+    geometrySegments: { type: "select", options: ["5", "10", "15", "20", "30"] },
+    textSize: {
+      type: "select",
+      options: ["text-[2vw]", "text-[3vw]", "text-[4vw]", "text-[5vw]", "text-[6vw]"],
+    },
+    textColor: {
+      type: "select",
+      options: [
+        "text-white",
+        "text-dead-red",
+        "text-dead-400",
+        "text-dead-100",
+        "text-dead-50",
+      ],
+    },
+    rowPadding: {
+      type: "select",
+      options: ["p-3", "p-4", "p-5", "p-6", "p-8"],
+    },
+    rowBorder: {
+      type: "select",
+      options: [
+        "border-t border-white/20",
+        "border-t border-dead-800",
+        "border-t border-dead-red/30",
+        "border-y border-white/10",
+        "border-0",
+      ],
+    },
+    bgClassName: {
+      type: "select",
+      options: ["bg-black", "bg-dead-950", "bg-dead-900", "bg-dead-800"],
+    },
+  }}
   className="not-prose my-8"
 />
 
