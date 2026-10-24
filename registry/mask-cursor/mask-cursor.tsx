@@ -215,14 +215,15 @@ export function MaskCursor({
     return (
       <div
         ref={containerRef}
-        className={cn("relative isolate w-full overflow-hidden", containerClassName)}
+        className={cn("relative isolate w-full overflow-hidden grid", containerClassName)}
+        style={{ gridTemplateAreas: '"layer"', gridTemplateRows: '1fr', gridTemplateColumns: '1fr' }}
       >
         <div
           className={cn(
             "relative z-0 flex w-full items-center justify-center",
             baseClassName,
           )}
-          style={{ color: baseColor }}
+          style={{ color: baseColor, gridArea: 'layer' }}
         >
           <div className={contentClassName}>{children}</div>
         </div>
@@ -233,7 +234,8 @@ export function MaskCursor({
   return (
     <div
       ref={containerRef}
-      className={cn("relative isolate w-full overflow-hidden", containerClassName)}
+      className={cn("relative isolate w-full overflow-hidden grid", containerClassName)}
+      style={{ gridTemplateAreas: '"layer"', gridTemplateRows: '1fr', gridTemplateColumns: '1fr' }}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -246,7 +248,7 @@ export function MaskCursor({
           "relative z-0 flex w-full items-center justify-center",
           baseClassName,
         )}
-        style={{ color: baseColor }}
+        style={{ color: baseColor, gridArea: 'layer' }}
       >
         <div className={contentClassName}>{children}</div>
       </div>
@@ -256,11 +258,12 @@ export function MaskCursor({
         aria-hidden="true"
         inert
         className={cn(
-          "pointer-events-none absolute inset-0 z-10 flex w-full items-center justify-center select-none",
+          "pointer-events-none z-10 flex w-full items-center justify-center select-none",
           maskClassName,
         )}
         style={
           {
+            gridArea: 'layer',
             color: maskColor,
             background: maskBackground,
             maskImage: resolvedMaskImage,
