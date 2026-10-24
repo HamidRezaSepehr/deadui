@@ -659,6 +659,22 @@
       "variants": []
     },
     {
+      "name": "mask-cursor",
+      "title": "Mask Cursor",
+      "description": "A cursor-following circular mask that swaps text color inside the circle, with adjustable lag, size, edge softness, and hover growth.",
+      "tier": "free",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/mask-cursor/mask-cursor.tsx",
+          "target": "components/ui/mask-cursor.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "mouse-image-distortion",
       "title": "Mouse Image Distortion",
       "description": "A hover list where each row reveals a cursor-following image on a Three.js plane that warps via a GLSL vertex shader driven by mouse velocity.",

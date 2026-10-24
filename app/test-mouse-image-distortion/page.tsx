@@ -1,7 +1,7 @@
 import { MouseImageDistortion } from "@/registry/mouse-image-distortion"
 
 const ITEMS = [
-  { title: <h1>Richard Gaston</h1>, subtitle: "Creative Direction", imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=900&q=80" },
+  { title: <h1 className="text-4xl text-red-500">Richard Gaston</h1>, subtitle: "Creative Direction", imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=900&q=80" },
   { title: <strong>KangHee Kim</strong>, subtitle: <em>Photography</em>, imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&q=80" },
   { title: <span>Inka & Niclas</span>, subtitle: "Art Direction", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=900&q=80" },
   { title: "Arch McLeish", subtitle: <span className="font-mono text-xs tracking-widest">MOTION</span>, imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=900&q=80" },
