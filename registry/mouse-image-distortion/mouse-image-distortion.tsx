@@ -80,7 +80,7 @@ function DistortionPlane({
   geometrySegments,
 }: PlaneProps) {
   const plane = useRef<THREE.Mesh>(null)
-  const { viewport } = useThree()
+  const { viewport, size: r3fSize } = useThree()
   const { mouse, size } = usePointerAndSize()
 
   const textures = useTexture(imageUrls) as THREE.Texture[]
@@ -145,8 +145,9 @@ function DistortionPlane({
     }
 
     // EXACT original window -> viewport mapping, applied directly to the mesh
-    const w = size.current.width || 1
-    const h = size.current.height || 1
+    // Use the R3F canvas pixel size for correct coordinate mapping
+    const w = r3fSize.width || size.current.width || 1
+    const h = r3fSize.height || size.current.height || 1
     plane.current.position.x = (smooth.current.x / w - 0.5) * viewport.width
     plane.current.position.y = (0.5 - smooth.current.y / h) * viewport.height
   })
