@@ -1,164 +1,282 @@
 "use client"
 
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { motion, useMotionValue, useSpring, useTransform } from "motion/react"
 import { cn } from "@/lib/utils"
 
+const DEFAULT_MASK_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="black"/></svg>'
+
+const DEFAULT_MASK_IMAGE = `url("data:image/svg+xml,${encodeURIComponent(
+  DEFAULT_MASK_SVG,
+)}")`
+
 export interface MaskCursorProps {
   children: React.ReactNode
-  baseTextClassName?: string
-  maskTextClassName?: string
-  bgClassName?: string
-  textClassName?: string
+
   containerClassName?: string
-  baseLayerClassName?: string
-  maskLayerClassName?: string
+  baseClassName?: string
+  maskClassName?: string
   contentClassName?: string
+
+  baseColor?: string
+  maskColor?: string
+  maskBackground?: string
+  maskImage?: string
+
   circleSize?: number
   hoverCircleSize?: number
+
+  expandOnHotspot?: boolean
+  hotspotSelector?: string
+
   positionStiffness?: number
   positionDamping?: number
   positionMass?: number
+
   sizeStiffness?: number
   sizeDamping?: number
   sizeMass?: number
-  maskEdge?: number
-  maskFeather?: number
-  maskImage?: string
-  maskBackgroundColor?: string
-  transition?: { type: string; ease: string; duration: number }
+
   disabled?: boolean
 }
 
-const defaultMaskSvg =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="white"/></svg>`
-  )
-
-const defaultMaskImage = `url("${defaultMaskSvg}")`
-
-const defaultTransition = {
-  type: "tween",
-  ease: "backOut",
-  duration: 0.5,
-} satisfies { type: string; ease: string; duration: number }
-
 export function MaskCursor({
   children,
-  baseTextClassName = "text-white",
-  maskTextClassName = "text-black",
-  bgClassName = "bg-zinc-500",
-  textClassName = "text-4xl md:text-6xl font-bold leading-tight",
-  containerClassName = "",
-  baseLayerClassName = "relative z-0 flex min-h-[50vh] w-full items-center justify-center",
-  maskLayerClassName = "pointer-events-none absolute inset-0 z-10 flex min-h-[50vh] w-full items-center justify-center select-none",
-  contentClassName = "w-full max-w-[1000px] p-10 text-center text-[64px] leading-[66px] cursor-default",
+  containerClassName,
+  baseClassName,
+  maskClassName,
+  contentClassName =
+    "w-full max-w-[1000px] p-10 text-center text-[32px] leading-[1.1] md:text-[56px] md:leading-[1.05]",
+  baseColor = "#ffffff",
+  maskColor = "#000000",
+  maskBackground = "transparent",
+  maskImage,
   circleSize = 40,
   hoverCircleSize = 400,
+  expandOnHotspot = true,
+  hotspotSelector = "[data-mask-hotspot]",
   positionStiffness = 120,
   positionDamping = 20,
   positionMass = 0.4,
   sizeStiffness = 120,
   sizeDamping = 14,
   sizeMass = 1,
-  maskEdge = 50,
-  maskFeather = 0,
-  maskImage: maskImageProp = defaultMaskImage,
-  maskBackgroundColor = "transparent",
-  transition = defaultTransition,
   disabled = false,
 }: MaskCursorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rectRef = useRef({ left: 0, top: 0 })
-  const mx = useMotionValue(0)
-  const my = useMotionValue(0)
-  const sizeMV = useMotionValue(circleSize)
-  const [isHovered, setIsHovered] = useState(false)
-  const [ready, setReady] = useState(false)
+  const clientRef = useRef({ x: 0, y: 0 })
 
-  // Measure container offset; refresh on scroll/resize.
-  useEffect(() => {
-    if (disabled) return
-    const measure = () => {
-      const r = containerRef.current?.getBoundingClientRect()
-      if (r) rectRef.current = { left: r.left, top: r.top }
-    }
-    const onMove = (e: MouseEvent) => {
-      measure()
-      mx.set(e.clientX - rectRef.current.left)
-      my.set(e.clientY - rectRef.current.top)
-      setReady((prev) => (prev ? prev : true))
-    }
-    measure()
-    window.addEventListener("mousemove", onMove)
-    window.addEventListener("scroll", measure, { passive: true })
-    window.addEventListener("resize", measure)
-    return () => {
-      window.removeEventListener("mousemove", onMove)
-      window.removeEventListener("scroll", measure)
-      window.removeEventListener("resize", measure)
-    }
-  }, [disabled, mx, my, isHovered, circleSize, hoverCircleSize])
+  const [isActive, setIsActive] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  // Drive size from hover state using the original backOut transition.
-  useEffect(() => {
-    sizeMV.set(isHovered ? hoverCircleSize : circleSize)
-  }, [isHovered, circleSize, hoverCircleSize, sizeMV])
+  const rawX = useMotionValue(0)
+  const rawY = useMotionValue(0)
+  const rawSize = useMotionValue(0)
 
-  // Springed cursor position (adjustable lag) + springed size (overshoot).
-  const sx = useSpring(mx, { stiffness: positionStiffness, damping: positionDamping, mass: positionMass })
-  const sy = useSpring(my, { stiffness: positionStiffness, damping: positionDamping, mass: positionMass })
-  const ss = useSpring(sizeMV, { stiffness: sizeStiffness, damping: sizeDamping, mass: sizeMass })
-
-  const maskPosition = useTransform([sx, sy, ss], (latest) => {
-    const [x, y, s] = latest as number[]
-    return `${x - s / 2}px ${y - s / 2}px`
+  const springX = useSpring(rawX, {
+    stiffness: positionStiffness,
+    damping: positionDamping,
+    mass: positionMass,
   })
-  const maskSize = useTransform(ss, (s) => `${s}px ${s}px`)
 
-  const maskImage = useMemo(
-    () => maskImageProp,
-    [maskImageProp],
+  const springY = useSpring(rawY, {
+    stiffness: positionStiffness,
+    damping: positionDamping,
+    mass: positionMass,
+  })
+
+  const springSize = useSpring(rawSize, {
+    stiffness: sizeStiffness,
+    damping: sizeDamping,
+    mass: sizeMass,
+  })
+
+  const maskPosition = useTransform(
+    [springX, springY, springSize],
+    (latest) => {
+      const [x, y, size] = latest as number[]
+      return `${x - size / 2}px ${y - size / 2}px`
+    },
   )
 
-  const maskStyle = {
-    backgroundColor: maskBackgroundColor,
-    maskImage,
-    WebkitMaskImage: maskImage,
-    maskRepeat: "no-repeat",
-    WebkitMaskRepeat: "no-repeat",
-    maskPosition,
-    WebkitMaskPosition: maskPosition,
-    maskSize,
-    WebkitMaskSize: maskSize,
-    willChange: "mask-position, mask-size",
-  } as any
+  const maskSize = useTransform(springSize, (size) => `${size}px ${size}px`)
 
-  const showMask = !disabled && ready
+  const targetSize = isActive
+    ? expandOnHotspot && isExpanded
+      ? hoverCircleSize
+      : circleSize
+    : 0
+
+  const syncPointer = useCallback(() => {
+    rawX.set(clientRef.current.x - rectRef.current.left)
+    rawY.set(clientRef.current.y - rectRef.current.top)
+  }, [rawX, rawY])
+
+  const measure = useCallback(() => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    rectRef.current = {
+      left: rect.left,
+      top: rect.top,
+    }
+
+    syncPointer()
+  }, [syncPointer])
+
+  useEffect(() => {
+    measure()
+
+    const handleResize = () => measure()
+    const handleScroll = () => measure()
+
+    window.addEventListener("resize", handleResize)
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+      capture: true,
+    })
+
+    return () => {
+      window.removeEventListener("resize", handleResize)
+      window.removeEventListener("scroll", handleScroll, {
+        passive: true,
+        capture: true,
+      } as EventListenerOptions)
+    }
+  }, [measure])
+
+  useEffect(() => {
+    rawSize.set(targetSize)
+  }, [targetSize, rawSize])
+
+  const handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled) return
+
+    clientRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+    }
+
+    measure()
+    setIsActive(true)
+  }
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled || !isActive) return
+
+    clientRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+    }
+
+    syncPointer()
+  }
+
+  const handleMouseLeave = () => {
+    if (disabled) return
+
+    setIsActive(false)
+    setIsExpanded(false)
+  }
+
+  const isHotspotTarget = useCallback(
+    (node: EventTarget | null) => {
+      if (!(node instanceof HTMLElement)) return false
+      return Boolean(node.closest(hotspotSelector))
+    },
+    [hotspotSelector],
+  )
+
+  const handleMouseOver = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled || !expandOnHotspot) return
+
+    if (isHotspotTarget(event.target)) {
+      setIsExpanded(true)
+    }
+  }
+
+  const handleMouseOut = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled || !expandOnHotspot) return
+
+    const target = event.target as HTMLElement
+    const hotspot = target.closest(hotspotSelector)
+    const related = event.relatedTarget as HTMLElement | null
+
+    if (hotspot && (!related || !hotspot.contains(related))) {
+      setIsExpanded(false)
+    }
+  }
+
+  const resolvedMaskImage = maskImage ?? DEFAULT_MASK_IMAGE
+
+  if (disabled) {
+    return (
+      <div
+        ref={containerRef}
+        className={cn("relative isolate w-full overflow-hidden", containerClassName)}
+      >
+        <div
+          className={cn(
+            "relative z-0 flex w-full items-center justify-center",
+            baseClassName,
+          )}
+          style={{ color: baseColor }}
+        >
+          <div className={contentClassName}>{children}</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
       ref={containerRef}
-      onMouseEnter={() => !disabled && setIsHovered(true)}
-      onMouseLeave={() => !disabled && setIsHovered(false)}
-      className={cn("relative isolate w-full overflow-hidden", bgClassName, containerClassName)}
+      className={cn("relative isolate w-full overflow-hidden", containerClassName)}
+      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onMouseOver={handleMouseOver}
+      onMouseOut={handleMouseOut}
     >
-      {/* Base layer: in normal flow, defines size */}
-      <div className={cn(baseLayerClassName, baseTextClassName)}>
+      {/* Base layer */}
+      <div
+        className={cn(
+          "relative z-0 flex w-full items-center justify-center",
+          baseClassName,
+        )}
+        style={{ color: baseColor }}
+      >
         <div className={contentClassName}>{children}</div>
       </div>
 
-      {/* Mask overlay layer: identical text, different color, clipped to cursor circle */}
-      {showMask && (
-        <motion.div
-          aria-hidden
-          className={cn(maskLayerClassName, maskTextClassName)}
-          style={maskStyle}
-        >
-          <div className={contentClassName}>{children}</div>
-        </motion.div>
-      )}
+      {/* Mask overlay layer */}
+      <motion.div
+        aria-hidden="true"
+        {...({ inert: "" } as any)}
+        className={cn(
+          "pointer-events-none absolute inset-0 z-10 flex w-full items-center justify-center select-none",
+          maskClassName,
+        )}
+        style={
+          {
+            color: maskColor,
+            background: maskBackground,
+            maskImage: resolvedMaskImage,
+            WebkitMaskImage: resolvedMaskImage,
+            maskRepeat: "no-repeat",
+            WebkitMaskRepeat: "no-repeat",
+            maskPosition,
+            WebkitMaskPosition: maskPosition,
+            maskSize,
+            WebkitMaskSize: maskSize,
+            willChange: "mask-position, mask-size",
+          } as any
+        }
+      >
+        <div className={contentClassName}>{children}</div>
+      </motion.div>
     </div>
   )
 }

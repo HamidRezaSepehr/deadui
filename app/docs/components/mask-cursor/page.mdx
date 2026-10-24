@@ -1,167 +1,207 @@
-import { ComponentCustomizer } from "@/components/docs/component-customizer"
-import { InstallTabs } from "@/components/docs/install-tabs"
-import { MaskCursorPreview } from "@/components/docs/preview-wrappers"
-
-export const metadata = {
-  title: "Mask Cursor",
-  description:
-    "A cursor-following circular mask overlay using an SVG mask image, with adjustable lag, size, edge softness, and hover growth. No blend-mode, no Three.js.",
-}
-
 # Mask Cursor
 
-A wrapper that renders its `children` TWICE: a base layer in normal flow (visible everywhere) and a masked overlay layer clipped by a circular SVG `mask-image` that follows the cursor. Move the pointer: the circle grows; the text inside the circle flips to `maskTextClassName`. The mask layer renders only after the first pointer move (`ready` flag) to avoid a corner flash at mount.
+The `MaskCursor` component creates a cursor-following circular mask effect.
 
-The mechanism is pure CSS masking — not `mix-blend-mode`. The base layer shows `baseTextClassName` (default white); the masked overlay shows `maskTextClassName` (default black) and has its own `maskBackgroundColor`. A transparent background (`"transparent"`) produces a pure text-color swap; a solid color (e.g. `"#ec4e39"`) produces the original Olivier-style spotlight overlay.
+It renders your content twice:
 
-## Preview
+1. A base layer.
+2. A masked overlay layer.
 
-<ComponentCustomizer
-  component={MaskCursorPreview}
-  defaultProps={{
-    baseTextClassName: "text-white",
-    maskTextClassName: "text-black",
-    bgClassName: "bg-zinc-500",
-    maskBackgroundColor: "transparent",
-    circleSize: 40,
-    hoverCircleSize: 400,
-    textClassName: "text-4xl md:text-6xl font-bold leading-tight",
-    contentClassName: "w-full max-w-[1000px] p-10 text-center text-[64px] leading-[66px] cursor-default",
-  }}
-  controls={{
-    baseTextClassName: {
-      type: "select",
-      options: ["text-white", "text-dead-400", "text-dead-100", "text-dead-red", "text-dead-950"],
-    },
-    maskTextClassName: {
-      type: "select",
-      options: ["text-black", "text-dead-red", "text-emerald-400", "text-purple-400", "text-zinc-100"],
-    },
-    bgClassName: {
-      type: "select",
-      options: ["bg-zinc-500", "bg-dead-950", "bg-dead-900", "bg-dead-800", "bg-white"],
-    },
-    maskBackgroundColor: {
-      type: "select",
-      options: ["transparent", "#ec4e39", "#34d399", "#f59e0b", "#6366f1"],
-    },
-    circleSize: { type: "slider", min: 20, max: 120, step: 10 },
-    hoverCircleSize: { type: "slider", min: 100, max: 600, step: 50 },
-    positionStiffness: { type: "slider", min: 30, max: 250, step: 30 },
-    positionDamping: { type: "slider", min: 5, max: 30, step: 5 },
-    maskEdge: { type: "slider", min: 20, max: 80, step: 5 },
-    maskFeather: { type: "slider", min: 0, max: 20, step: 2 },
-  }}
-  className="not-prose my-8"
-/>
+The overlay layer is clipped by a circular CSS mask that follows the cursor.
 
 ## Installation
 
-<InstallTabs componentName="mask-cursor" tier="free" />
+```bash
+npx deadui@latest add mask-cursor
+```
+
+## Dependencies
 
 ```bash
 npm install motion
 ```
 
-## Usage
-
-### Mode A — pure text-color swap (`transparent` background)
+## Basic Usage
 
 ```tsx
 import { MaskCursor } from "@/components/ui/mask-cursor"
 
-export function Hero() {
+export default function Example() {
   return (
     <MaskCursor
-      bgClassName="bg-zinc-500"
-      baseTextClassName="text-white"
-      maskTextClassName="text-black"
-      maskBackgroundColor="transparent"
+      containerClassName="min-h-[360px] rounded-3xl bg-zinc-500 p-6"
+      baseColor="#ffffff"
+      maskColor="#000000"
+      maskBackground="transparent"
     >
-      <p>A visual designer.</p>
+      <p>
+        Hover this{" "}
+        <a href="#" data-mask-hotspot className="underline">
+          hotspot
+        </a>
+        .
+      </p>
     </MaskCursor>
   )
 }
 ```
 
-### Mode B — original spotlight overlay (solid mask background)
+## How It Works
+
+The component uses CSS masking:
+
+```css
+mask-image: url(...);
+mask-repeat: no-repeat;
+mask-position: follows cursor;
+mask-size: animated circle size;
+```
+
+The top layer is duplicated content with different colors and optional background.
+
+It does not use:
+
+- `mix-blend-mode`
+- Three.js
+- WebGL
+
+## Hotspots
+
+Mark any element inside the component as a hotspot:
+
+```tsx
+<a href="#" data-mask-hotspot>
+  Hover me
+</a>
+
+<button data-mask-hotspot>
+  Hover me
+</button>
+```
+
+The circle expands only when hovering a hotspot.
+
+## Card Activation
+
+The cursor circle is only active while the mouse is inside the `MaskCursor` container.
+
+This makes it suitable for:
+
+- cards,
+- sections,
+- page-wide wrappers,
+- navigation areas.
+
+## Colors
 
 ```tsx
 <MaskCursor
-  bgClassName="bg-black"
-  baseTextClassName="text-[#afa18f]"
-  maskTextClassName="text-black"
-  maskBackgroundColor="#ec4e39"
-  textClassName="text-5xl md:text-7xl font-black leading-none tracking-tight"
-  contentClassName="w-full max-w-[1000px] p-10 text-center"
+  baseColor="#ffffff"
+  maskColor="#000000"
+  maskBackground="transparent"
 >
-  <p>
-    I&apos;m a <span className="text-[#ec4e39]">selectively skilled</span> product designer.
-  </p>
+  ...
 </MaskCursor>
 ```
 
-## Props
+For the original spotlight style:
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `ReactNode` | — | The content, duplicated in both layers. |
-| `baseTextClassName` | `string` | `"text-white"` | Text color outside the circle (base layer). |
-| `maskTextClassName` | `string` | `"text-black"` | Text color inside the circle (mask layer). |
-| `bgClassName` | `string` | `"bg-zinc-500"` | Container background; must contrast both colors. |
-| `textClassName` | `string` | `"text-4xl md:text-6xl font-bold leading-tight"` | Shared typography applied to both layers. |
-| `containerClassName` | `string` | `""` | Extra classes on the wrapper. |
-| `baseLayerClassName` | `string` | `"relative z-0 flex min-h-[50vh] w-full items-center justify-center"` | Base layer layout. |
-| `maskLayerClassName` | `string` | `"pointer-events-none absolute inset-0 z-10 flex min-h-[50vh] w-full items-center justify-center select-none"` | Mask layer layout. |
-| `contentClassName` | `string` | `"w-full max-w-[1000px] p-10 text-center text-[64px] leading-[66px] cursor-default"` | Inner content layout for both layers. |
-| `circleSize` | `number` | `40` | Resting circle diameter (px). |
-| `hoverCircleSize` | `number` | `400` | Expanded circle on hover (px). |
-| `positionStiffness` | `number` | `120` | Cursor-follow spring stiffness (lower = more lag). |
-| `positionDamping` | `number` | `20` | Cursor-follow spring damping. |
-| `positionMass` | `number` | `0.4` | Cursor-follow spring mass. |
-| `sizeStiffness` | `number` | `120` | Size-change spring stiffness. |
-| `sizeDamping` | `number` | `14` | Size-change spring damping (lower = more overshoot). |
-| `sizeMass` | `number` | `1` | Size-change spring mass. |
-| `maskEdge` | `number` | `50` | Opaque stop % of the radial gradient (`50` = half the mask box). |
-| `maskFeather` | `number` | `0` | Soft-edge width in % (`0` = hard circle). |
-| `maskImage` | `string` | default SVG data URI | Custom mask image URL (default is an inline white circle). |
-| `maskBackgroundColor` | `string` | `"transparent"` | Background of the masked overlay. Use `"transparent"` for pure text swap; `"#ec4e39"` for spotlight. |
-| `transition` | `{ type: string, ease: string, duration: number }` | `{ type: "tween", ease: "backOut", duration: 0.5 }` | Framer Motion transition config. |
-| `disabled` | `boolean` | `false` | Render base layer only, no listeners. |
+```tsx
+<MaskCursor
+  baseColor="#afa18f"
+  maskColor="#000000"
+  maskBackground="#ec4e39"
+>
+  ...
+</MaskCursor>
+```
 
-## How it works
+`maskBackground` accepts any CSS background value:
 
-Two identical text layers are stacked inside the container:
-1. **Base layer** (`baseLayerClassName`, `z-0`) — flows normally, defines the container size.
-2. **Mask overlay layer** (`maskLayerClassName`, `z-10`, `pointer-events-none`, `aria-hidden`) — clipped by a circular `mask-image` that tracks the cursor. The mask uses an inline SVG circle (`fill="white"`) as the `maskImage`, with `maskRepeat: no-repeat`.
+```tsx
+maskBackground="rgba(236, 78, 57, 0.9)"
+maskBackground="linear-gradient(135deg, #ec4e39, #f59e0b)"
+```
 
-The mask position and size are driven by `useMotionValue` + `useSpring` (not `useState`), so the circle follows with configurable lag and overshoot. The cursor position is measured **relative to the container** (`getBoundingClientRect` offset subtracted), and the rect is refreshed on scroll, resize, and the first mouse move. Without relative tracking, a component lower on the page would drift.
+## Sizes
 
-The mask layer renders only after the first pointer move (`ready` flag) to prevent a corner flash at mount. When `disabled`, the base layer renders alone with no listener overhead.
+```tsx
+<MaskCursor
+  circleSize={40}
+  hoverCircleSize={400}
+>
+  ...
+</MaskCursor>
+```
 
-## Contrast rule
+## Custom Mask Image
 
-The container background (`bgClassName`) must contrast with both `baseTextClassName` and `maskTextClassName`. The default (`bg-zinc-500`, white ↔ black) reads clearly; a dark-theme pairing uses `bg-black` with `text-white` ↔ `text-emerald-400`. With `maskBackgroundColor="transparent"`, the swap is pure color; with `maskBackgroundColor="#ec4e39"`, the mask layer shows the background through the circle (the original spotlight style).
+Default mask is an inline black circle SVG.
 
-## Caveats
+You can override it:
 
-- The effect requires pointer movement; there is no touch equivalent by default. Wrap with `disabled` for coarse-pointer contexts.
-- The mask layer duplicates `children`, so assistive technology sees the content twice; the mask layer carries `aria-hidden` and `pointer-events-none`.
-- The component is visual-only; the accessible experience is the base layer.
-- No `mix-blend-mode`, no `framer-motion` animation props, no WebGL, no `three` — pure CSS masking.
+```tsx
+<MaskCursor
+  maskImage="radial-gradient(circle at center, black 45%, transparent 52%)"
+>
+  ...
+</MaskCursor>
+```
 
-## Dependencies
+Or use a local asset:
 
-- `motion`
+```tsx
+<MaskCursor maskImage="url('/mask.svg')">
+  ...
+</MaskCursor>
+```
 
-## Performance
+## Spring Controls
 
-- Mouse position is `useMotionValue` updated by `window.mousemove`; zero React re-renders per mouse move.
-- The spring transforms (`useSpring` + `useTransform`) compute `maskPosition` and `maskSize` entirely in the compositor thread.
-- The mask layer mounts once (`ready` flag) and unmounts when `disabled`.
+Cursor lag:
+
+```tsx
+<MaskCursor
+  positionStiffness={120}
+  positionDamping={20}
+  positionMass={0.4}
+>
+  ...
+</MaskCursor>
+```
+
+Expansion feel:
+
+```tsx
+<MaskCursor
+  sizeStiffness={120}
+  sizeDamping={14}
+  sizeMass={1}
+>
+  ...
+</MaskCursor>
+```
+
+Lower stiffness and damping create more lag and overshoot.
 
 ## Accessibility
 
-- Base layer renders real text content for assistive technology.
-- Mask layer is hidden (`aria-hidden`) and non-interactive (`pointer-events-none`).
-- The component is purely visual; the accessible experience is the base layer text.
+The masked layer is duplicated for visual effect only.
+
+It is marked:
+
+```tsx
+aria-hidden="true"
+inert
+pointer-events-none
+```
+
+Do not rely on the masked layer for interaction.
+
+## Important Notes
+
+- The effect is container-relative.
+- It works inside cards and mid-page.
+- The container rect is refreshed on scroll and resize.
+- Mouse position is stored in Motion values, not React state.
+- `mask-repeat: no-repeat` is required and included internally.
