@@ -115,12 +115,19 @@ export function MaskCursor({
   }, [rawX, rawY])
 
   const measure = useCallback(() => {
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return
+    const el = containerRef.current
+    if (!el) return
+
+    const rect = el.getBoundingClientRect()
+    const style = window.getComputedStyle(el)
+    const paddingLeft = parseFloat(style.paddingLeft) || 0
+    const paddingTop = parseFloat(style.paddingTop) || 0
+    const borderLeft = el.clientLeft || 0
+    const borderTop = el.clientTop || 0
 
     rectRef.current = {
-      left: rect.left,
-      top: rect.top,
+      left: rect.left + borderLeft + paddingLeft,
+      top: rect.top + borderTop + paddingTop,
     }
 
     syncPointer()
