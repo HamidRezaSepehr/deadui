@@ -5,7 +5,15 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 49 (Gooey Pagination)
+Phase 1: Component Implementation — Feature 52 (Mask Cursor)
+
+## Current Goal
+
+**Feature 52: Mask Cursor (Free)** — exact port of `olivierlarose/cursor-hover-mask`. A wrapper that renders its children TWICE: base layer + masked layer clipped by a circular CSS `mask-image` following the cursor via `motion/react` (`useMotionValue` + `useSpring` + `useTransform`), with adjustable lag, size growth, edge softness, and hover overshoot. Mouse position stored in `useMotionValue` (never `useState`). Zero `Three.js`, zero `framer-motion`, zero `mix-blend-mode`. Dependencies: `motion` ONLY.
+
+Component at `registry/mask-cursor/mask-cursor.tsx`. Registry entry added (`tier: "free"`, `dependencies: ["motion"]`). Test page at `app/test-mask-cursor/page.tsx` (two sections: default white↔black on gray; dark-theme with customized size/lag). Docs page at `app/docs/components/mask-cursor/page.mdx` (ComponentCustomizer with 10 live sliders/selects: base/mask color, bg, circle/hover size, stiffness/damping, maskEdge/maskFeather). Preview adapter added (`MaskCursorPreview` with `LazyMaskCursor`, `ssr: false`).
+
+`packages/cli/package.json`: `0.1.37` → `0.1.38`. Tag `v0.1.38` created and pushed. Full verification: `npm run build` clean (74/74 routes static), `npm run lint` clean, CLI build (`deadui@0.1.38`) clean. `textColor` kept; `textSize` removed; `rowPadding` split into 4 granular props (`Top/Bottom/Left/Right`); `rowBorder` split into `Side/Color/Style`; `DistortionItem.title/subtitle` expanded to `React.ReactNode`; title wrapper changed from `<p>` to `<div>` for JSX compatibility. All verified via automated Playwright/Chromium assertions (see Session Notes).
 
 ## Current Goal
 
