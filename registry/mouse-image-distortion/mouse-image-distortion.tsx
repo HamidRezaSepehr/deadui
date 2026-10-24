@@ -276,12 +276,12 @@ export function MouseImageDistortion({
               rowPaddingLeft
             )}
           >
-            <p
+            <div
               className={cn("font-bold leading-none")}
               style={textFont ? { fontFamily: textFont } : undefined}
             >
               {item.title}
-            </p>
+            </div>
             {item.subtitle && (
               <p className={subtitleClassName}>{item.subtitle}</p>
             )}
