@@ -171,9 +171,9 @@ function DistortionPlane({
 
 /* ===== Public component ===== */
 export interface DistortionItem {
-  title: string
+  title: React.ReactNode
   imageUrl: string
-  subtitle?: string
+  subtitle?: React.ReactNode
 }
 
 export interface MouseImageDistortionProps {
