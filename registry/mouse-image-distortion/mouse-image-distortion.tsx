@@ -145,11 +145,15 @@ function DistortionPlane({
     }
 
     // EXACT original window -> viewport mapping, applied directly to the mesh
-    // Use the R3F canvas pixel size for correct coordinate mapping
+    // Convert viewport-relative mouse coords to canvas-relative using R3F's canvas offset
+    const canvasLeft = r3fSize.left || 0
+    const canvasTop = r3fSize.top || 0
+    const canvasX = smooth.current.x - canvasLeft
+    const canvasY = smooth.current.y - canvasTop
     const w = r3fSize.width || size.current.width || 1
     const h = r3fSize.height || size.current.height || 1
-    plane.current.position.x = (smooth.current.x / w - 0.5) * viewport.width
-    plane.current.position.y = (0.5 - smooth.current.y / h) * viewport.height
+    plane.current.position.x = (canvasX / w - 0.5) * viewport.width
+    plane.current.position.y = (0.5 - canvasY / h) * viewport.height
   })
 
   return (
