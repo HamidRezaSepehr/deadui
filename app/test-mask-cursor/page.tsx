@@ -6,8 +6,9 @@ export default function Page() {
       {/* Example 1: faithful to the original demo (white <-> black on mid-gray) */}
       <MaskCursor
         bgClassName="bg-zinc-500"
-        baseColorClass="text-white"
-        maskColorClass="text-black"
+        baseTextClassName="text-white"
+        maskTextClassName="text-black"
+        maskBackgroundColor="transparent"
         containerClassName="px-8 py-12"
       >
         <p>A visual designer — with skills that haven&apos;t been replaced by A.I (yet).</p>
@@ -16,8 +17,9 @@ export default function Page() {
       {/* Example 2: dark-theme friendly + customized sizing/lag/softness to prove configurability */}
       <MaskCursor
         bgClassName="bg-black"
-        baseColorClass="text-white"
-        maskColorClass="text-emerald-400"
+        baseTextClassName="text-white"
+        maskTextClassName="text-emerald-400"
+        maskBackgroundColor="#ec4e39"
         circleSize={24}
         hoverCircleSize={520}
         positionStiffness={90}

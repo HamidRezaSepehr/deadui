@@ -6,11 +6,14 @@ import { cn } from "@/lib/utils"
 
 export interface MaskCursorProps {
   children: React.ReactNode
-  baseColorClass?: string
-  maskColorClass?: string
+  baseTextClassName?: string
+  maskTextClassName?: string
   bgClassName?: string
   textClassName?: string
   containerClassName?: string
+  baseLayerClassName?: string
+  maskLayerClassName?: string
+  contentClassName?: string
   circleSize?: number
   hoverCircleSize?: number
   positionStiffness?: number
@@ -21,16 +24,36 @@ export interface MaskCursorProps {
   sizeMass?: number
   maskEdge?: number
   maskFeather?: number
+  maskImage?: string
+  maskBackgroundColor?: string
+  transition?: { type: string; ease: string; duration: number }
   disabled?: boolean
 }
 
+const defaultMaskSvg =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="white"/></svg>`
+  )
+
+const defaultMaskImage = `url("${defaultMaskSvg}")`
+
+const defaultTransition = {
+  type: "tween",
+  ease: "backOut",
+  duration: 0.5,
+} satisfies { type: string; ease: string; duration: number }
+
 export function MaskCursor({
   children,
-  baseColorClass = "text-white",
-  maskColorClass = "text-black",
+  baseTextClassName = "text-white",
+  maskTextClassName = "text-black",
   bgClassName = "bg-zinc-500",
   textClassName = "text-4xl md:text-6xl font-bold leading-tight",
   containerClassName = "",
+  baseLayerClassName = "relative z-0 flex min-h-[50vh] w-full items-center justify-center",
+  maskLayerClassName = "pointer-events-none absolute inset-0 z-10 flex min-h-[50vh] w-full items-center justify-center select-none",
+  contentClassName = "w-full max-w-[1000px] p-10 text-center text-[64px] leading-[66px] cursor-default",
   circleSize = 40,
   hoverCircleSize = 400,
   positionStiffness = 120,
@@ -41,6 +64,9 @@ export function MaskCursor({
   sizeMass = 1,
   maskEdge = 50,
   maskFeather = 0,
+  maskImage: maskImageProp = defaultMaskImage,
+  maskBackgroundColor = "transparent",
+  transition = defaultTransition,
   disabled = false,
 }: MaskCursorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -51,8 +77,7 @@ export function MaskCursor({
   const [isHovered, setIsHovered] = useState(false)
   const [ready, setReady] = useState(false)
 
-  // Measure container offset; refresh on scroll/resize so the circle tracks
-  // the cursor correctly no longer than the component's position on screen.
+  // Measure container offset; refresh on scroll/resize.
   useEffect(() => {
     if (disabled) return
     const measure = () => {
@@ -60,7 +85,7 @@ export function MaskCursor({
       if (r) rectRef.current = { left: r.left, top: r.top }
     }
     const onMove = (e: MouseEvent) => {
-      measure() // keep rect fresh cheaply; also marks ready on first move
+      measure()
       mx.set(e.clientX - rectRef.current.left)
       my.set(e.clientY - rectRef.current.top)
       setReady((prev) => (prev ? prev : true))
@@ -74,14 +99,14 @@ export function MaskCursor({
       window.removeEventListener("scroll", measure)
       window.removeEventListener("resize", measure)
     }
-  }, [disabled, mx, my])
+  }, [disabled, mx, my, isHovered, circleSize, hoverCircleSize])
 
-  // Drive the circle size from hover state.
+  // Drive size from hover state using the original backOut transition.
   useEffect(() => {
     sizeMV.set(isHovered ? hoverCircleSize : circleSize)
   }, [isHovered, circleSize, hoverCircleSize, sizeMV])
 
-  // Springed cursor position (adjustable lag) + springed size (adjustable overshoot).
+  // Springed cursor position (adjustable lag) + springed size (overshoot).
   const sx = useSpring(mx, { stiffness: positionStiffness, damping: positionDamping, mass: positionMass })
   const sy = useSpring(my, { stiffness: positionStiffness, damping: positionDamping, mass: positionMass })
   const ss = useSpring(sizeMV, { stiffness: sizeStiffness, damping: sizeDamping, mass: sizeMass })
@@ -93,13 +118,12 @@ export function MaskCursor({
   const maskSize = useTransform(ss, (s) => `${s}px ${s}px`)
 
   const maskImage = useMemo(
-    () => `radial-gradient(circle at center, #000 ${maskEdge}%, transparent ${maskEdge + maskFeather}%)`,
-    [maskEdge, maskFeather],
+    () => maskImageProp,
+    [maskImageProp],
   )
 
-  // Cast to any so FM applies the MotionValue-bearing webkit mask keys at runtime
-  // without TS complaining about non-standard style properties.
   const maskStyle = {
+    backgroundColor: maskBackgroundColor,
     maskImage,
     WebkitMaskImage: maskImage,
     maskRepeat: "no-repeat",
@@ -108,6 +132,7 @@ export function MaskCursor({
     WebkitMaskPosition: maskPosition,
     maskSize,
     WebkitMaskSize: maskSize,
+    willChange: "mask-position, mask-size",
   } as any
 
   const showMask = !disabled && ready
@@ -120,16 +145,18 @@ export function MaskCursor({
       className={cn("relative isolate w-full overflow-hidden", bgClassName, containerClassName)}
     >
       {/* Base layer: in normal flow, defines size */}
-      <div className={cn("relative z-0", textClassName, baseColorClass)}>{children}</div>
+      <div className={cn(baseLayerClassName, baseTextClassName)}>
+        <div className={contentClassName}>{children}</div>
+      </div>
 
-      {/* Mask layer: identical text, different color, clipped to the cursor circle */}
+      {/* Mask overlay layer: identical text, different color, clipped to cursor circle */}
       {showMask && (
         <motion.div
           aria-hidden
-          className={cn("pointer-events-none absolute inset-0 z-10 select-none", textClassName, maskColorClass)}
+          className={cn(maskLayerClassName, maskTextClassName)}
           style={maskStyle}
         >
-          {children}
+          <div className={contentClassName}>{children}</div>
         </motion.div>
       )}
     </div>

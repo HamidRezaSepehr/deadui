@@ -888,11 +888,14 @@ const LazyMaskCursor = dynamic(
 export function MaskCursorPreview(props: Record<string, unknown>) {
   return (
     <LazyMaskCursor
-      baseColorClass={(props.baseColorClass as string) || "text-white"}
-      maskColorClass={(props.maskColorClass as string) || "text-black"}
+      baseTextClassName={(props.baseTextClassName as string) || "text-white"}
+      maskTextClassName={(props.maskTextClassName as string) || "text-black"}
       bgClassName={(props.bgClassName as string) || "bg-zinc-500"}
       textClassName={(props.textClassName as string) || "text-4xl md:text-6xl font-bold leading-tight"}
       containerClassName={(props.containerClassName as string) || ""}
+      baseLayerClassName={(props.baseLayerClassName as string) || undefined}
+      maskLayerClassName={(props.maskLayerClassName as string) || undefined}
+      contentClassName={(props.contentClassName as string) || undefined}
       circleSize={Number(props.circleSize) || 40}
       hoverCircleSize={Number(props.hoverCircleSize) || 400}
       positionStiffness={Number(props.positionStiffness) || 120}
@@ -903,6 +906,9 @@ export function MaskCursorPreview(props: Record<string, unknown>) {
       sizeMass={Number(props.sizeMass) || 1}
       maskEdge={Number(props.maskEdge) || 50}
       maskFeather={Number(props.maskFeather) || 0}
+      maskImage={(props.maskImage as string) || undefined}
+      maskBackgroundColor={(props.maskBackgroundColor as string) || undefined}
+      transition={props.transition ? (props.transition as { type: string; ease: string; duration: number }) : undefined}
       disabled={props.disabled === true}
     >
       <p>A visual designer — with skills that haven&apos;t been replaced by A.I (yet).</p>

@@ -5,37 +5,45 @@ import { MaskCursorPreview } from "@/components/docs/preview-wrappers"
 export const metadata = {
   title: "Mask Cursor",
   description:
-    "A cursor-following circular mask that swaps text color inside the circle, with adjustable lag, size, edge softness, and hover growth.",
+    "A cursor-following circular mask overlay using an SVG mask image, with adjustable lag, size, edge softness, and hover growth. No blend-mode, no Three.js.",
 }
 
 # Mask Cursor
 
-A wrapper that renders its `children` TWICE: a base layer in normal flow and a mask layer clipped by a circular CSS `mask-image` following the cursor. Move the pointer over the container: the circle grows, the text inside the circle flips to `maskColorClass`, and the rest stays at `baseColorClass`. The mask layer renders only after the first pointer move to avoid a corner flash.
+A wrapper that renders its `children` TWICE: a base layer in normal flow (visible everywhere) and a masked overlay layer clipped by a circular SVG `mask-image` that follows the cursor. Move the pointer: the circle grows; the text inside the circle flips to `maskTextClassName`. The mask layer renders only after the first pointer move (`ready` flag) to avoid a corner flash at mount.
+
+The mechanism is pure CSS masking — not `mix-blend-mode`. The base layer shows `baseTextClassName` (default white); the masked overlay shows `maskTextClassName` (default black) and has its own `maskBackgroundColor`. A transparent background (`"transparent"`) produces a pure text-color swap; a solid color (e.g. `"#ec4e39"`) produces the original Olivier-style spotlight overlay.
 
 ## Preview
 
 <ComponentCustomizer
   component={MaskCursorPreview}
   defaultProps={{
-    baseColorClass: "text-white",
-    maskColorClass: "text-black",
+    baseTextClassName: "text-white",
+    maskTextClassName: "text-black",
     bgClassName: "bg-zinc-500",
+    maskBackgroundColor: "transparent",
     circleSize: 40,
     hoverCircleSize: 400,
     textClassName: "text-4xl md:text-6xl font-bold leading-tight",
+    contentClassName: "w-full max-w-[1000px] p-10 text-center text-[64px] leading-[66px] cursor-default",
   }}
   controls={{
-    baseColorClass: {
+    baseTextClassName: {
       type: "select",
       options: ["text-white", "text-dead-400", "text-dead-100", "text-dead-red", "text-dead-950"],
     },
-    maskColorClass: {
+    maskTextClassName: {
       type: "select",
       options: ["text-black", "text-dead-red", "text-emerald-400", "text-purple-400", "text-zinc-100"],
     },
     bgClassName: {
       type: "select",
       options: ["bg-zinc-500", "bg-dead-950", "bg-dead-900", "bg-dead-800", "bg-white"],
+    },
+    maskBackgroundColor: {
+      type: "select",
+      options: ["transparent", "#ec4e39", "#34d399", "#f59e0b", "#6366f1"],
     },
     circleSize: { type: "slider", min: 20, max: 120, step: 10 },
     hoverCircleSize: { type: "slider", min: 100, max: 600, step: 50 },
@@ -57,6 +65,8 @@ npm install motion
 
 ## Usage
 
+### Mode A — pure text-color swap (`transparent` background)
+
 ```tsx
 import { MaskCursor } from "@/components/ui/mask-cursor"
 
@@ -64,9 +74,9 @@ export function Hero() {
   return (
     <MaskCursor
       bgClassName="bg-zinc-500"
-      baseColorClass="text-white"
-      maskColorClass="text-black"
-      textClassName="text-6xl md:text-8xl font-black leading-none"
+      baseTextClassName="text-white"
+      maskTextClassName="text-black"
+      maskBackgroundColor="transparent"
     >
       <p>A visual designer.</p>
     </MaskCursor>
@@ -74,16 +84,36 @@ export function Hero() {
 }
 ```
 
+### Mode B — original spotlight overlay (solid mask background)
+
+```tsx
+<MaskCursor
+  bgClassName="bg-black"
+  baseTextClassName="text-[#afa18f]"
+  maskTextClassName="text-black"
+  maskBackgroundColor="#ec4e39"
+  textClassName="text-5xl md:text-7xl font-black leading-none tracking-tight"
+  contentClassName="w-full max-w-[1000px] p-10 text-center"
+>
+  <p>
+    I&apos;m a <span className="text-[#ec4e39]">selectively skilled</span> product designer.
+  </p>
+</MaskCursor>
+```
+
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `children` | `ReactNode` | — | The content, rendered twice (base + masked). |
-| `baseColorClass` | `string` | `"text-white"` | Text color outside the circle. |
-| `maskColorClass` | `string` | `"text-black"` | Text color inside the circle. |
-| `bgClassName` | `string` | `"bg-zinc-500"` | Container background (must contrast both colors). |
-| `textClassName` | `string` | `"text-4xl md:text-6xl font-bold leading-tight"` | Shared typography for both layers. |
+| `children` | `ReactNode` | — | The content, duplicated in both layers. |
+| `baseTextClassName` | `string` | `"text-white"` | Text color outside the circle (base layer). |
+| `maskTextClassName` | `string` | `"text-black"` | Text color inside the circle (mask layer). |
+| `bgClassName` | `string` | `"bg-zinc-500"` | Container background; must contrast both colors. |
+| `textClassName` | `string` | `"text-4xl md:text-6xl font-bold leading-tight"` | Shared typography applied to both layers. |
 | `containerClassName` | `string` | `""` | Extra classes on the wrapper. |
+| `baseLayerClassName` | `string` | `"relative z-0 flex min-h-[50vh] w-full items-center justify-center"` | Base layer layout. |
+| `maskLayerClassName` | `string` | `"pointer-events-none absolute inset-0 z-10 flex min-h-[50vh] w-full items-center justify-center select-none"` | Mask layer layout. |
+| `contentClassName` | `string` | `"w-full max-w-[1000px] p-10 text-center text-[64px] leading-[66px] cursor-default"` | Inner content layout for both layers. |
 | `circleSize` | `number` | `40` | Resting circle diameter (px). |
 | `hoverCircleSize` | `number` | `400` | Expanded circle on hover (px). |
 | `positionStiffness` | `number` | `120` | Cursor-follow spring stiffness (lower = more lag). |
@@ -92,29 +122,33 @@ export function Hero() {
 | `sizeStiffness` | `number` | `120` | Size-change spring stiffness. |
 | `sizeDamping` | `number` | `14` | Size-change spring damping (lower = more overshoot). |
 | `sizeMass` | `number` | `1` | Size-change spring mass. |
-| `maskEdge` | `number` | `50` | Opaque stop % of the radial gradient. |
+| `maskEdge` | `number` | `50` | Opaque stop % of the radial gradient (`50` = half the mask box). |
 | `maskFeather` | `number` | `0` | Soft-edge width in % (`0` = hard circle). |
-| `disabled` | `boolean` | `false` | Render base layer only with no listeners. |
+| `maskImage` | `string` | default SVG data URI | Custom mask image URL (default is an inline white circle). |
+| `maskBackgroundColor` | `string` | `"transparent"` | Background of the masked overlay. Use `"transparent"` for pure text swap; `"#ec4e39"` for spotlight. |
+| `transition` | `{ type: string, ease: string, duration: number }` | `{ type: "tween", ease: "backOut", duration: 0.5 }` | Framer Motion transition config. |
+| `disabled` | `boolean` | `false` | Render base layer only, no listeners. |
 
 ## How it works
 
-Two identical text layers are stacked:
-1. The base layer (`baseColorClass`, `z-0`) defines the container size and provides the default text.
-2. The mask layer (`maskColorClass`, `z-10`, `pointer-events-none`, `aria-hidden`) is clipped by a circular `mask-image`: `radial-gradient(circle at center, #000 50%, transparent 50%)`. Only the area inside the circle shows the mask layer; everything outside shows the base layer.
+Two identical text layers are stacked inside the container:
+1. **Base layer** (`baseLayerClassName`, `z-0`) — flows normally, defines the container size.
+2. **Mask overlay layer** (`maskLayerClassName`, `z-10`, `pointer-events-none`, `aria-hidden`) — clipped by a circular `mask-image` that tracks the cursor. The mask uses an inline SVG circle (`fill="white"`) as the `maskImage`, with `maskRepeat: no-repeat`.
 
-The circle follows the cursor via `useMotionValue` + `useSpring` (not `useState`, so zero React re-renders per mousemove). The cursor position is measured relative to the container (`getBoundingClientRect` offset subtracted), and the rect is refreshed on scroll, resize, and the first mouse move. The size grows between `circleSize` and `hoverCircleSize` via an underdamped spring (overshoot visible at `sizeDamping` below ~14).
+The mask position and size are driven by `useMotionValue` + `useSpring` (not `useState`), so the circle follows with configurable lag and overshoot. The cursor position is measured **relative to the container** (`getBoundingClientRect` offset subtracted), and the rect is refreshed on scroll, resize, and the first mouse move. Without relative tracking, a component lower on the page would drift.
 
 The mask layer renders only after the first pointer move (`ready` flag) to prevent a corner flash at mount. When `disabled`, the base layer renders alone with no listener overhead.
 
 ## Contrast rule
 
-The container background (`bgClassName`) must contrast with both `baseColorClass` and `maskColorClass`. The default (`bg-zinc-500`, white ↔ black) reads clearly; a dark-theme pairing uses `bg-black` with `text-white` ↔ `text-emerald-400`.
+The container background (`bgClassName`) must contrast with both `baseTextClassName` and `maskTextClassName`. The default (`bg-zinc-500`, white ↔ black) reads clearly; a dark-theme pairing uses `bg-black` with `text-white` ↔ `text-emerald-400`. With `maskBackgroundColor="transparent"`, the swap is pure color; with `maskBackgroundColor="#ec4e39"`, the mask layer shows the background through the circle (the original spotlight style).
 
 ## Caveats
 
-- The mask is CSS-only (`radial-gradient`) — no WebGL, no canvas, no `framer-motion`.
-- The mask layer duplicates `children`, so assistive tech sees the content twice; the mask layer carries `aria-hidden` and `pointer-events-none`.
-- No touch equivalent by default: the circle responds to pointer movement, not touch. Wrap with `disabled` for coarse-pointer contexts.
+- The effect requires pointer movement; there is no touch equivalent by default. Wrap with `disabled` for coarse-pointer contexts.
+- The mask layer duplicates `children`, so assistive technology sees the content twice; the mask layer carries `aria-hidden` and `pointer-events-none`.
+- The component is visual-only; the accessible experience is the base layer.
+- No `mix-blend-mode`, no `framer-motion` animation props, no WebGL, no `three` — pure CSS masking.
 
 ## Dependencies
 
@@ -122,9 +156,9 @@ The container background (`bgClassName`) must contrast with both `baseColorClass
 
 ## Performance
 
-- Mouse and size are `useMotionValue` objects updated by `window.mousemove`; no React re-render per move.
-- The spring transforms (`useSpring` + `useTransform`) compute `maskPosition` and `maskSize` entirely in the compositor.
-- The mask layer mounts only once (`ready` flag) and unmounts only when `disabled`.
+- Mouse position is `useMotionValue` updated by `window.mousemove`; zero React re-renders per mouse move.
+- The spring transforms (`useSpring` + `useTransform`) compute `maskPosition` and `maskSize` entirely in the compositor thread.
+- The mask layer mounts once (`ready` flag) and unmounts when `disabled`.
 
 ## Accessibility
 
