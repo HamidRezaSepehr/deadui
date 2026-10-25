@@ -718,6 +718,32 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "fluid-simulation",
+      "title": "Fluid Simulation",
+      "description": "A real-time WebGL fluid dynamics simulation with mouse interaction, velocity advection, and density rendering. Features splatting, blurring, and display shaders for live fluid visualisation.",
+      "tier": "pro",
+      "dependencies": [
+        "three",
+        "@react-three/fiber",
+        "@react-three/drei"
+      ],
+      "files": [
+        {
+          "path": "registry/fluid-simulation/fluid-simulation.tsx",
+          "target": "components/ui/fluid-simulation.tsx"
+        },
+        {
+          "path": "registry/fluid-simulation/index.ts",
+          "target": "components/ui/fluid-simulation/index.ts"
+        }
+      ],
+      "variants": [
+        "default",
+        "particle",
+        "border"
+      ]
     }
   ]
 }
