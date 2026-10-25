@@ -1,0 +1,150 @@
+# Drawing Cursor
+
+The `DrawingCursor` component creates a canvas-based trailing cursor that follows the pointer with spring and friction physics. The trail is drawn as a tapering quadratic-Bézier polyline — thick at the head, thin at the tail — with an optional head-to-tail color gradient and an idle Lissajous intro motion.
+
+## Installation
+
+```bash
+npx deadui@latest add drawing-cursor
+```
+
+No external dependencies — pure React + Canvas 2D.
+
+## Basic Usage
+
+```tsx
+import { DrawingCursor } from "@/components/ui/drawing-cursor"
+
+export default function Example() {
+  return (
+    <div className="relative h-[400px] bg-neutral-900">
+      <DrawingCursor fit="parent" color="#ffffff" />
+      <p className="absolute inset-0 flex items-center justify-center text-white">
+        Hover me
+      </p>
+    </div>
+  )
+}
+```
+
+## How It Works
+
+The component maintains a chain of points (`trail`). Each frame:
+
+1. **Physics** — each point accelerates toward its predecessor with spring stiffness, then damped by friction:
+   ```js
+   p.dx += (prev.x - p.x) * k
+   p.dy += (prev.y - p.y) * k
+   p.dx *= friction
+   p.dy *= friction
+   p.x  += p.dx
+   p.y  += p.dy
+   ```
+   The first point uses `headSpringFactor * spring` for extra lag.
+
+2. **Drawing** — segments are drawn as individual quadratic Bézier curves (`beginPath` per segment) from the previous midpoint to the current midpoint, with `lineWidth = widthFactor * (n - i)`. This per-segment `beginPath` is what produces the thick-head/thin-tail taper.
+
+3. **Idle motion** — before any pointer move (or after `resumeIdleAfterMs` of rest), the head follows a Lissajous curve:
+   ```
+   x = (0.5 + radiusX * cos(freqA*t) * sin(freqB*t)) * width
+   y = (0.5 + radiusY * cos(freqB*t) + radiusZ * cos(freqC*t)) * height
+   ```
+
+## Fit Modes
+
+| Mode | Behavior |
+|------|----------|
+| `fit="viewport"` (default) | Canvas is `fixed inset-0`, listens on `window`. Global custom cursor. |
+| `fit="parent"` | Canvas is `absolute inset-0` inside a **positioned** ancestor (`relative`, `absolute`, etc.). Trail only draws while pointer is inside that parent; clears on leave, keeps simulating so it "flies" back on re-entry. |
+
+In both modes the canvas is `pointer-events-none` + `aria-hidden="true"` — purely decorative, never blocks clicks or scroll.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `fit` | `"viewport" \| "parent"` | `"viewport"` | Global vs contained trail. |
+| `color` | `string` | `"#ffffff"` | Head/solid stroke color. Must contrast background. |
+| `colorTail` | `string?` | — | If set, interpolates head→tail gradient along trail. |
+| `pointsNumber` | `number` | `40` | Trail length (segments = points - 1). |
+| `spring` | `number` | `0.4` | Catch-up stiffness (lower = laggier). |
+| `friction` | `number` | `0.5` | Delta damping (higher = bouncier/longer trail). |
+| `widthFactor` | `number` | `0.3` | Per-segment width multiplier (thickness). |
+| `headSpringFactor` | `number` | `0.4` | Extra lag multiplier for first point (replaces unused `mouseThreshold`). |
+| `lineCap` | `CanvasLineCap` | `"round"` | Stroke cap style. |
+| `idleMotion` | `boolean` | `true` | Enable Lissajous intro motion. |
+| `idleParams` | `object?` | — | Override Lissajous radii/frequencies. |
+| `resumeIdleAfterMs` | `number?` | — | Resume idle Lissajous after N ms of rest (`undefined` = never). |
+| `respectDevicePixelRatio` | `boolean` | `true` | Scale backing store by DPR for crisp retina rendering. |
+| `zIndex` | `number` | `9999` | Canvas stacking order. |
+| `className` | `string?` | — | Extra classes on the canvas. |
+
+Structural changes (`pointsNumber`, `fit`, etc.) reinitialize the trail (brief visual reset).
+
+## Color & Gradient
+
+```tsx
+<DrawingCursor color="#34d399" colorTail="#6366f1" widthFactor={0.4} />
+```
+
+`colorTail` enables a smooth head→tail RGBA interpolation along the trail. Without it, the stroke is solid `color`.
+
+## Idle & Resume
+
+```tsx
+<DrawingCursor idleMotion={true} resumeIdleAfterMs={1500} />
+```
+
+- `idleMotion` (default `true`): Lissajous plays before first move.
+- `resumeIdleAfterMs`: after pointer rests this many ms, idle resumes.
+
+## Fit Modes in Practice
+
+**Viewport (global):**
+```tsx
+<DrawingCursor fit="viewport" color="#ffffff" />
+```
+
+**Parent (card/section):**
+```tsx
+<div className="relative h-[400px] overflow-hidden">
+  <DrawingCursor fit="parent" color="#ffffff" />
+  <p className="absolute inset-0 flex items-center justify-center">Hover me</p>
+</div>
+```
+The parent must be `relative`/`absolute`/`fixed` so the `absolute inset-0` canvas fills it.
+
+## Corrections vs Original CodePen
+
+This implementation fixes four issues from the original:
+
+1. **Taper fix** — Each segment is its own `beginPath() → moveTo → quadraticCurveTo → stroke()` so `lineWidth` tapers correctly. The original re-stroked the whole path per frame, flattening the taper.
+
+2. **`clientX/clientY` for `fixed` canvas** — The original used `pageX/pageY` which offsets by scroll. This component uses `clientX/clientY` for `fit="viewport"`.
+
+3. **DPR handling** — Backing store scaled by `devicePixelRatio` with `ctx.setTransform(dpr,0,0,dpr,0,0)` so drawing stays in crisp CSS pixels. Toggle with `respectDevicePixelRatio`.
+
+4. **`headSpringFactor` replaces `mouseThreshold`** — The original declared `mouseThreshold` but never used it; the real first-point lag was a hardcoded `.4 * spring`. This component exposes it honestly as `headSpringFactor` (default `0.4`).
+
+## Touch Support
+
+`touchmove` (passive) is handled for mobile. The trail follows the first touch point.
+
+## Performance
+
+- Single `requestAnimationFrame` loop.
+- All pointer/trail/state lives in refs — **no React state per move**.
+- Structural prop changes (`pointsNumber`, `fit`, etc.) reinitialize the trail (brief visual reset).
+- Cleanup: rAF canceled, all listeners removed, `ResizeObserver` disconnected.
+
+## Accessibility
+
+Canvas is `pointer-events-none` + `aria-hidden="true"` — purely decorative, never blocks clicks, focus, or scroll. The button inside each demo card proves this.
+
+## Important Notes
+
+- `color` defaults to white — ensure it contrasts your background.
+- `colorTail` enables gradient; without it, stroke is solid `color`.
+- Canvas is always `pointer-events-none` + `aria-hidden="true"`.
+- No Three.js, WebGL, SVG, or external dependencies.
+- No `useState` for pointer position (all refs + Motion-free rAF loop).

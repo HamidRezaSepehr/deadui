@@ -690,6 +690,20 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "drawing-cursor",
+      "title": "Drawing Cursor",
+      "description": "A canvas-based trailing cursor with spring/friction physics, a tapering Bézier stroke, optional head-to-tail gradient, idle intro motion, and viewport or contained (parent) fit modes.",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/drawing-cursor/drawing-cursor.tsx",
+          "target": "components/ui/drawing-cursor.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }
