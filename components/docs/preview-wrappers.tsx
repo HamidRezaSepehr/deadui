@@ -988,29 +988,41 @@ const LazyCursorTrail = dynamic(
 )
 
 export function CursorTrailPreview(props: Record<string, unknown>) {
-  const trails = props.trails
-    ? (props.trails as any[])
-    : [
-        { color: "cyan", length: 30 },
-        { color: "yellow", length: 20 },
-        { color: "orange", length: 10 },
-      ]
+  // Default trails - each can have its own color
+  const defaultTrails = [
+    { color: "cyan", length: 30 },
+    { color: "yellow", length: 20 },
+    { color: "orange", length: 10 },
+  ]
 
-  // If a custom color is provided via props, use it for a single trail
-  // Otherwise use the default multi-color trails
-  const customColor = (props.color as string) || "white"
-  const useCustomColor = props.color !== undefined
-  const effectiveTrails = useCustomColor
-    ? [{ color: customColor, length: Number(props.length) || 20 }]
-    : trails
+  // Determine trails based on props
+  let trails: any[]
+  if (props.trails) {
+    trails = props.trails as any[]
+  } else if (props.color1 !== undefined || props.color2 !== undefined || props.color3 !== undefined) {
+    // Individual color controls for each default trail
+    trails = [
+      { color: (props.color1 as string) || "cyan", length: Number(props.length1) || 30 },
+      { color: (props.color2 as string) || "yellow", length: Number(props.length2) || 20 },
+      { color: (props.color3 as string) || "orange", length: Number(props.length3) || 10 },
+    ]
+  } else if (props.color !== undefined) {
+    // Single custom color - use as single trail
+    trails = [{ color: (props.color as string) || "white", length: Number(props.length) || 20 }]
+  } else {
+    // Default preset
+    trails = [
+      { color: "cyan", length: 30 },
+      { color: "yellow", length: 20 },
+      { color: "orange", length: 10 },
+    ]
+  }
 
   return (
     <div className="relative h-[360px] w-full rounded-xl bg-dead-900 overflow-hidden">
       <LazyCursorTrail
         fit="parent"
-        trails={effectiveTrails}
-        color={(props.color as string) || "white"}
-        length={Number(props.length) || 20}
+        trails={trails}
         ease={Number(props.ease) || 0.7}
         strokeWidth={Number(props.strokeWidth) || 60}
         linecap={(props.linecap as any) || "round"}

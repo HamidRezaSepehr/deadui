@@ -13,8 +13,12 @@ It recreates the popular CodePen cursor trail using pure React, SVG, and `reques
 <ComponentCustomizer
   component={CursorTrailPreview}
   defaultProps={{
-    color: "white",
-    length: 20,
+    color1: "cyan",
+    length1: 30,
+    color2: "yellow",
+    length2: 20,
+    color3: "orange",
+    length3: 10,
     ease: 0.7,
     strokeWidth: 60,
     linecap: "round",
@@ -22,8 +26,12 @@ It recreates the popular CodePen cursor trail using pure React, SVG, and `reques
     blendMode: undefined,
   }}
   controls={{
-    color: { type: "color" },
-    length: { type: "slider", min: 5, max: 80, step: 1 },
+    color1: { type: "color", label: "Trail 1 (Cyan) Color" },
+    length1: { type: "slider", min: 5, max: 80, step: 1, label: "Trail 1 Length" },
+    color2: { type: "color", label: "Trail 2 (Yellow) Color" },
+    length2: { type: "slider", min: 5, max: 80, step: 1, label: "Trail 2 Length" },
+    color3: { type: "color", label: "Trail 3 (Orange) Color" },
+    length3: { type: "slider", min: 5, max: 80, step: 1, label: "Trail 3 Length" },
     ease: { type: "slider", min: 0.1, max: 1, step: 0.05 },
     strokeWidth: { type: "slider", min: 1, max: 100, step: 1 },
     linecap: {
