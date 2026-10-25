@@ -996,10 +996,19 @@ export function CursorTrailPreview(props: Record<string, unknown>) {
         { color: "orange", length: 10 },
       ]
 
+  // If a custom color is provided via props, use it for a single trail
+  // Otherwise use the default multi-color trails
+  const customColor = (props.color as string) || "white"
+  const useCustomColor = props.color !== undefined
+  const effectiveTrails = useCustomColor
+    ? [{ color: customColor, length: Number(props.length) || 20 }]
+    : trails
+
   return (
     <div className="relative h-[360px] w-full rounded-xl bg-dead-900 overflow-hidden">
       <LazyCursorTrail
-        trails={trails}
+        fit="parent"
+        trails={effectiveTrails}
         color={(props.color as string) || "white"}
         length={Number(props.length) || 20}
         ease={Number(props.ease) || 0.7}

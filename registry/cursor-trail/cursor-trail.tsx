@@ -18,6 +18,7 @@ export interface CursorTrailConfig {
 }
 
 export interface CursorTrailProps {
+  fit?: "viewport" | "parent"
   trails?: CursorTrailConfig[]
   color?: string
   length?: number
