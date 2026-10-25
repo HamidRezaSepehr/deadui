@@ -7134,3 +7134,29 @@ CLI bumped `0.1.32` → `0.1.37`; tag `v0.1.37` created and pushed.
   **ACCESSIBILITY.** Canvas is `pointer-events-none` + `aria-hidden="true"` — purely decorative, never blocks clicks/focus/scroll. Button under each parent card proves non-interference.
 
   **DOCS PREVIEW PANEL ADDED.** Added `DrawingCursorPreview` to `components/docs/preview-wrappers.tsx` with full `ComponentCustomizer` controls (color, colorTail, pointsNumber, spring, friction, widthFactor, headSpringFactor, idleMotion, resumeIdleAfterMs, respectDevicePixelRatio) and a clickable button proving `pointer-events-none`.
+
+- Feature 54 (feature spec `54-cursor-trail.md`): `CursorTrail` (Free). Created
+  `registry/cursor-trail/cursor-trail.tsx` + `index.ts`, `app/test-cursor-trail/page.tsx`,
+  `app/docs/components/cursor-trail/page.mdx`; modified `registry.json` (entry
+  appended, 34 components), `packages/cli/package.json` (`0.1.40` → `0.1.41`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors, `npm run build`
+  clean with both new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.41`). Branch, commit and tag `v0.1.41` pushed; manual npm publish
+  steps handed to the owner.
+
+  **NO GSAP, NO CANVAS, NO WEBGL.** Pure React + SVG + `requestAnimationFrame`.
+  Pointer position lives in refs, single rAF loop, SVG attributes updated via refs.
+
+  **DEFAULT PRESET.** Three trails matching the original CodePen: cyan(30), yellow(20), orange(10) segments.
+
+  **CHAINED SEGMENTS.** Each segment follows its leader with easing: `pos += (leader - pos) * ease`. First segment follows pointer; each subsequent segment follows the previous segment's position.
+
+  **PER-SEGMENT RENDERING.** Each SVG `<line>` drawn from its own position to its leader's position (`x1,y1 = pos`, `x2,y2 = leader`), producing the characteristic taper effect.
+
+  **CONFIGURABLE TRAILS.** Each trail configurable: color, length, strokeWidth, ease, opacity, linecap, blendMode. Defaults: `ease=0.7`, `strokeWidth=60`, `linecap="round"`, `opacity=1`.
+
+  **FULL CLEANUP.** On unmount: cancel rAF, remove `pointermove`/`pointerdown` listeners, clear all SVG children.
+
+  **ACCESSIBILITY.** SVG is `pointer-events-none` + `aria-hidden="true"` — purely decorative, never blocks clicks/taps/scroll.
+
+  **DOCS PREVIEW PANEL ADDED.** Added `CursorTrailPreview` to `components/docs/preview-wrappers.tsx` with full `ComponentCustomizer` controls (color, length, ease, strokeWidth, linecap, opacity, blendMode) and instructional text.
