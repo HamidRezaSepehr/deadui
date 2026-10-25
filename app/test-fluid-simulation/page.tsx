@@ -1,4 +1,4 @@
-import { FluidSimulation } from "@/components/ui/fluid-simulation"
+import { FluidSimulation } from "@/registry/fluid-simulation"
 
 export default function TestFluidPage() {
   return (
@@ -30,7 +30,7 @@ export default function TestFluidPage() {
             SIM_RESOLUTION: 64,
             DYE_RESOLUTION: 512,
             DENSITY_DISSIPATION: 2.5,
-            VELOCITY_DISSIPATION: 1.0,
+            VELOCITY_DISSIPATION: 1.0
           }}
         />
       </section>

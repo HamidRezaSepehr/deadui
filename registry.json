@@ -706,6 +706,20 @@
       "variants": []
     },
     {
+      "name": "fluid-simulation",
+      "title": "Fluid Simulation",
+      "description": "An interactive WebGL fluid dynamics effect where users can stir colourful ink trails with their cursor.",
+      "tier": "free",
+      "dependencies": [],
+      "variants": [],
+      "files": [
+        {
+          "path": "registry/fluid-simulation/fluid-simulation.tsx",
+          "target": "components/ui/fluid-simulation.tsx"
+        }
+      ]
+    },
+    {
       "name": "cursor-trail",
       "title": "Cursor Trail",
       "description": "A colorful SVG cursor trail effect with configurable trails, lengths, colors, easing, stroke width, opacity, and blend modes.",
@@ -715,20 +729,6 @@
         {
           "path": "registry/cursor-trail/cursor-trail.tsx",
           "target": "components/ui/cursor-trail.tsx"
-        }
-      ],
-      "variants": []
-    },
-    {
-      "name": "fluid-simulation",
-      "title": "Fluid Simulation",
-      "description": "An interactive WebGL fluid dynamics effect where users can stir colorful ink trails with their cursor.",
-      "tier": "free",
-      "dependencies": [],
-      "files": [
-        {
-          "path": "registry/fluid-simulation/fluid-simulation.tsx",
-          "target": "components/ui/fluid-simulation.tsx"
         }
       ],
       "variants": []

@@ -5,38 +5,19 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 49 (Gooey Pagination)
+Phase 1: Component Implementation — Feature 55 (Fluid Simulation)
 
 ## Current Goal
 
-**Feature 49: Gooey Pagination (Free) — a liquid, morphing pagination where the active state travels across pages** — complete.
-`registry/gooey/gooey-pagination.tsx` exposes `totalPages`, `currentPage`, `onPageChange` and `className` as props.
-`registry.json` updated with the new entry (`tier: "free"`, `dependencies: ["motion"]`) — manifest now **29 components**.
-Test page at `app/test-gooey-pagination/page.tsx` (3 stages: 7 pages, 5 pages, jump controls).
-Docs page at `app/docs/components/gooey-pagination/page.mdx` with live `ComponentCustomizer` and the
-`GooeyPaginationPreview` adapter in `components/docs/preview-wrappers.tsx`.
+**Feature 55: Fluid Simulation (Free) — an interactive WebGL fluid dynamics effect where users can stir colourful ink trails with their cursor** — complete.
+`registry/fluid-simulation/fluid-simulation.tsx` exposes a zero-dep WebGL fluid simulation with full GLSL shaders embedded, configurable physics parameters, and touch/mouse support.
+`registry.json` updated with the new entry (`tier: "free"`, `dependencies: []`).
+Test page at `app/test-fluid-simulation/page.tsx` (3 variations: default, high turbulence, soft smoke).
+Docs page at `app/docs/components/fluid-simulation/page.mdx` with live `ComponentCustomizer` and `InstallTabs`.
 
-**LAYOUTGROUP + LAYOUTID DRIVE THE TRAVEL.** The active background is a single
-`motion.div` with `layoutId="gooey-pagination-active"` wrapped in a `LayoutGroup`, so when
-`currentPage` changes Framer Motion animates it from one button to the next, stretching across
-the intermediate dots. The whole row sits behind an SVG gooey filter (per-instance id via
-`useId()`) that merges the stretching background with the dots.
+Full verification: `npx tsc --noEmit` clean, `npm run build` clean with all new routes.
 
-**FIXED BUTTON SIZE.** The `<button>` containers are fixed at `h-12 w-12`; only the inner
-visual changes size (`h-4 w-4` dot for inactive, `h-12 w-12` circle for active), so the
-layout never shifts while the active state travels.
-
-**COLORS ADAPTED TO THE DEAD THEME.** The spec uses `bg-primary`/`text-primary-foreground`,
-which do not exist in this codebase; the active circle uses `bg-dead-red`/`text-white` and
-inactive dots `bg-dead-red/50`.
-
-Full verification: `npx tsc --noEmit` clean, `npm run build` clean with both new routes
-`○ (Static)`, `cd packages/cli && npm run build` clean (`deadui@0.1.26`).
-
-`packages/cli` `0.1.25` → **`0.1.26`** (the spec said 0.1.25, but that tag was already
-released for Gooey Input, so 0.1.26 was used to avoid clobbering). Tag `v0.1.26` created
-and pushed. The owner runs the manual npm publish from `packages/cli` — exact commands
-handed over in the session report.
+`packages/cli` `0.1.41` → **`0.1.42`**. Tag `v0.1.42` created and pushed. The owner runs the manual npm publish from `packages/cli` — exact commands handed over below.
 
 ## Completed
 

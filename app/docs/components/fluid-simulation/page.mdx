@@ -1,42 +1,82 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { FluidSimulation } from "@/registry/fluid-simulation"
+import { InstallTabs } from "@/components/docs/install-tabs"
+
 # Fluid Simulation
 
-An interactive WebGL fluid dynamics effect where users can stir colorful ink trails with their cursor.
-
-This component is heavy and should ideally be used as a background element.
+An interactive WebGL fluid dynamics effect where users can stir colourful ink trails with their cursor. Click to burst, move to swirl — a seamless, GPU-driven particle-free simulation.
 
 ## Installation
 
-```bash
-npx deadui add fluid-simulation
-```
+<InstallTabs componentName="fluid-simulation" />
 
 ## Usage
 
 ```tsx
 import { FluidSimulation } from "@/components/ui/fluid-simulation"
 
-export default function Page() {
-  return (
-    <FluidSimulation
-      className="h-full w-full"
-      config={{ CURL: 30, SPLAT_FORCE: 6000 }}
-    />
-  )
-}
+<FluidSimulation className="h-screen w-full" />
 ```
 
-## Config
+## Live Customizer
 
-- `SIM_RESOLUTION`: Simulation grid resolution (default: 128)
-- `DYE_RESOLUTION`: Dye texture resolution (default: 1024)
-- `CAPTURE_RESOLUTION`: Capture resolution (default: 512)
-- `DENSITY_DISSIPATION`: How quickly dye fades (default: 1)
-- `VELOCITY_DISSIPATION`: Velocity decay rate (default: 0.2)
-- `PRESSURE`: Pressure strength (default: 0.8)
-- `PRESSURE_ITERATIONS`: Pressure solver iterations (default: 20)
-- `CURL`: Vorticity/swirl strength (default: 30)
-- `SPLAT_RADIUS`: Splat radius as fraction (default: 0.25)
-- `SPLAT_FORCE`: Force applied on splat (default: 6000)
-- `SHADING`: Enable shading (default: true)
-- `COLOR_UPDATE_SPEED`: Color cycle speed (default: 10)
-- `BACK_COLOR`: Background RGB color (default: `{ r: 0, g: 0, b: 0 }`)
+<ComponentCustomizer
+  component={FluidSimulation}
+  defaultProps={{
+    className: "h-[500px] w-full rounded-xl",
+    config: {
+      DENSITY_DISSIPATION: 1,
+      VELOCITY_DISSIPATION: 0.2,
+      CURL: 30,
+      SPLAT_FORCE: 6000,
+      SPLAT_RADIUS: 0.25,
+      PRESSURE: 0.8,
+      COLOR_UPDATE_SPEED: 10,
+    },
+  }}
+  controls={{
+    CURL: { type: "slider", min: 0, max: 100, step: 1, path: "config.CURL" },
+    SPLAT_FORCE: { type: "slider", min: 1000, max: 15000, step: 500, path: "config.SPLAT_FORCE" },
+    DENSITY_DISSIPATION: { type: "slider", min: 0, max: 5, step: 0.1, path: "config.DENSITY_DISSIPATION" },
+    VELOCITY_DISSIPATION: { type: "slider", min: 0, max: 2, step: 0.1, path: "config.VELOCITY_DISSIPATION" },
+    SIM_RESOLUTION: { type: "slider", min: 32, max: 256, step: 16, path: "config.SIM_RESOLUTION" },
+    DYE_RESOLUTION: { type: "slider", min: 256, max: 2048, step: 128, path: "config.DYE_RESOLUTION" },
+  }}
+/>
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `config` | `FluidConfig` | `{}` | Partial configuration object. Omitted keys use defaults. |
+| `className` | `string` | `""` | Tailwind classes forwarded to the canvas element. |
+
+### FluidConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `SIM_RESOLUTION` | `number` | `128` | Simulation grid resolution (lower = faster). |
+| `DYE_RESOLUTION` | `number` | `1024` | Output dye resolution (higher = sharper). |
+| `DENSITY_DISSIPATION` | `number` | `1` | How quickly the ink fades. Higher = faster fade. |
+| `VELOCITY_DISSIPATION` | `number` | `0.2` | How quickly the fluid slows down. |
+| `PRESSURE` | `number` | `0.8` | Pressure value used in the pressure solver. |
+| `PRESSURE_ITERATIONS` | `number` | `20` | Solver iterations. Higher = more accurate, slower. |
+| `CURL` | `number` | `30` | Vorticity / swirl strength. Higher = more swirls. |
+| `SPLAT_RADIUS` | `number` | `0.25` | Radius of each pointer splat (normalised). |
+| `SPLAT_FORCE` | `number` | `6000` | Force applied per pointer movement. |
+| `SHADING` | `boolean` | `true` | Enable/disable lighting shading. |
+| `COLOR_UPDATE_SPEED` | `number` | `10` | How often the colour palette rotates. |
+| `BACK_COLOR` | `{ r, g, b }` | `{0,0,0}` | Background colour (not used when transparent). |
+
+## Dependencies
+
+- None (pure WebGL, zero external packages)
+
+## Performance
+
+This is a heavy WebGL component that runs a full fluid simulation at 60fps. Use it as a background element (fixed position, full viewport). On low-end devices, reduce `SIM_RESOLUTION` (e.g., 64) and `DYE_RESOLUTION` (e.g., 512).
+
+## Accessibility
+
+- The component renders a `<canvas>` element. Provide an `aria-label` via props for screen readers.
+- Respects `prefers-reduced-motion`: the canvas is still rendered, but no animation occurs.
