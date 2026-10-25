@@ -1,3 +1,7 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { MaskCursorPreview } from "@/components/docs/preview-wrappers"
+
 # Mask Cursor
 
 The `MaskCursor` component creates a cursor-following circular mask effect.
@@ -8,6 +12,53 @@ It renders your content twice:
 2. A masked overlay layer.
 
 The overlay layer is clipped by a circular CSS mask that follows the cursor.
+
+## Preview
+
+<ComponentCustomizer
+  component={MaskCursorPreview}
+  defaultProps={{
+    baseColor: "#ffffff",
+    maskColor: "#000000",
+    maskBackground: "transparent",
+    circleSize: 40,
+    hoverCircleSize: 360,
+    positionStiffness: 120,
+    positionDamping: 20,
+    positionMass: 0.4,
+    sizeStiffness: 120,
+    sizeDamping: 14,
+    sizeMass: 1,
+    expandOnHotspot: true,
+  }}
+  controls={{
+    baseColor: { type: "color" },
+    maskColor: { type: "color" },
+    maskBackground: {
+      type: "select",
+      options: [
+        "transparent",
+        "#ec4e39",
+        "rgba(236, 78, 57, 0.9)",
+        "linear-gradient(135deg, #ec4e39, #f59e0b)",
+        "rgba(56, 189, 248, 0.92)",
+        "#4f46e5",
+      ],
+    },
+    circleSize: { type: "slider", min: 10, max: 100, step: 2 },
+    hoverCircleSize: { type: "slider", min: 200, max: 500, step: 20 },
+    positionStiffness: { type: "slider", min: 50, max: 200, step: 10 },
+    positionDamping: { type: "slider", min: 10, max: 30, step: 2 },
+    positionMass: { type: "slider", min: 0.2, max: 1, step: 0.1 },
+    sizeStiffness: { type: "slider", min: 50, max: 200, step: 10 },
+    sizeDamping: { type: "slider", min: 8, max: 25, step: 1 },
+    sizeMass: { type: "slider", min: 0.5, max: 2, step: 0.1 },
+    expandOnHotspot: { type: "boolean" },
+  }}
+  className="not-prose my-8"
+/>
+
+Hover inside the panel to activate the circle. Hover the hotspot link to expand it.
 
 ## Installation
 

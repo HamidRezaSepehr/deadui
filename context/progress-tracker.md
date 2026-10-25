@@ -7057,32 +7057,46 @@ CLI bumped `0.1.32` → `0.1.37`; tag `v0.1.37` created and pushed.
   (`deadui@0.1.32`). Branch, commit and tag `v0.1.32` pushed; manual npm publish
   steps handed to the owner.
 
-  **VERSION DEVIATION.** The spec asks for `0.1.27` / `v0.1.27`, but that version
-  and tag already exist (Gooey Range was released on them) and HEAD's manifest
-  was already `0.1.31`. Following the documented repo precedent (Features 38/39/40/
-  49), the next valid version `0.1.32` / `v0.1.32` was used instead of clobbering
-  the prior release.
-
-  **CANVAS LOGIC.** The canvas is sized to the container's bounding box with
-  `devicePixelRatio` scaling (crisp on retina), re-filled whenever `overlayColor`
-  changes or the window resizes, and uses `ctx.setTransform(dpr,0,0,dpr,0,0)`
-  instead of `ctx.scale` so repeated resizes don't compound. The overlay is drawn
-  with `globalCompositeOperation = "source-over"`; erasing uses
-  `destination-out` with a circular arc of diameter `brushSize`.
-
-  **TOUCH SUPPORT.** The canvas carries `touch-none` so dragging paints instead
-  of scrolling on mobile; `touchmove` is registered with `{ passive: true }`.
-
-  **CONTINUOUS STROKE ON FAST DRAG.** The original implementation drew a
-  single circle per `mousemove`, which left gaps when the pointer moved faster
-  than the event rate. It now connects consecutive points with a thick rounded
-  stroke (`lineCap`/`lineJoin = "round"`, `lineWidth = brushSize`) and resets
-  the last point on `mouseleave`/`touchend`/`touchcancel`, so fast drags paint a
-  solid line. Verified: a 20-step rapid drag erased the mid-path pixel to alpha 0.
-
   **NO REACT STATE DURING PAINTING.** `mousemove`/`touchmove` write directly to
   the canvas context; `isReady` is the only state, toggled once after the first
   fill. Verified: overlay pixel `[0,0,0,255]`, erased pixel alpha `0`, canvas
   dimensions match container (1022×260 at dpr 1), `touch-none` present, zero
   console/page errors on `/test-paint-reveal` and `/docs/components/paint-reveal`.
   Registry invariant: 31 components, 0 missing file paths.
+
+- Feature 52 (feature spec `52-mask-cursor.md`): `MaskCursor` (Free). Created
+  `registry/mask-cursor/mask-cursor.tsx` + `index.ts`, `app/test-mask-cursor/page.tsx`,
+  `app/docs/components/mask-cursor/page.mdx`; modified `registry.json` (entry
+  appended, 32 components), `packages/cli/package.json` (`0.1.38` → `0.1.39`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors, `npm run build`
+  clean with both new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.39`). Branch, commit and tag `v0.1.39` pushed; manual npm publish
+  steps handed to the owner.
+
+  **VERSION DEVIATION.** The spec asks for `0.1.38` / `v0.1.38`, but that version
+  and tag already exist (Mouse Image Distortion was released on them) and HEAD's
+  manifest was already `0.1.38`. Following the documented repo precedent
+  (Features 38/39/40/49/51), the next valid version `0.1.39` / `v0.1.39` was used
+  instead of clobbering the prior release.
+
+  **MASK OVERLAY NOT BLEND MODE.** The effect uses two stacked layers with a
+  circular CSS mask on the top layer, exactly matching the original Olivier Larose
+  SCSS. The mask is an inline black-circle SVG with `mask-repeat: no-repeat`
+  (both standard and `-webkit-` prefixed). The overlay layer supports `maskColor`,
+  `maskBackground`, and custom `maskImage` (radial gradients or external SVGs).
+
+  **CONTAINER-RELATIVE COORDINATES.** Mouse position is converted to container-
+  relative coordinates via `getBoundingClientRect()`. The rect is refreshed on
+  mouse enter, window resize, and scroll (capture-phase listener), so the circle
+  tracks correctly inside cards and after scrolling.
+
+  **HOTSPOT EXPANSION.** Elements with `data-mask-hotspot` expand the circle to
+  `hoverCircleSize` on hover, returning to `circleSize` on leave. `expandOnHotspot`
+  and `hotspotSelector` are configurable.
+
+  **MOTION VALUES, NO REACT STATE.** Mouse position uses `useMotionValue`,
+  `useSpring`, `useTransform` from `motion/react`. Only `isActive` and
+  `isExpanded` are React state; no React re-render on mousemove.
+
+  **ACCESSIBILITY.** The mask layer is `aria-hidden="true"`, `inert`, and
+  `pointer-events-none`; duplicated children are visual only.

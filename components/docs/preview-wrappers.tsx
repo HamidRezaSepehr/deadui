@@ -878,3 +878,49 @@ export function MouseImageDistortionPreview(props: Record<string, unknown>) {
     />
   )
 }
+
+/**
+ * `ssr: false` because this component mounts a `motion.div` that uses
+ * `useMotionValue`/`useSpring` which are client-only. A server render would
+ * emit stale placeholder markup, causing a hydration mismatch on every load.
+ */
+const LazyMaskCursor = dynamic(
+  () =>
+    import("@/registry/mask-cursor").then(
+      (module) => module.MaskCursor,
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="h-[360px] w-full rounded-xl bg-dead-900" />,
+  },
+)
+
+export function MaskCursorPreview(props: Record<string, unknown>) {
+  return (
+    <LazyMaskCursor
+      containerClassName="min-h-[360px] rounded-3xl border border-white/10 bg-zinc-500 p-6"
+      contentClassName="max-w-[520px] p-8 text-center text-3xl leading-tight md:text-5xl"
+      baseColor={(props.baseColor as string) || "#ffffff"}
+      maskColor={(props.maskColor as string) || "#000000"}
+      maskBackground={(props.maskBackground as string) || "transparent"}
+      circleSize={Number(props.circleSize) || 40}
+      hoverCircleSize={Number(props.hoverCircleSize) || 360}
+      positionStiffness={Number(props.positionStiffness) || 120}
+      positionDamping={Number(props.positionDamping) || 20}
+      positionMass={Number(props.positionMass) || 0.4}
+      sizeStiffness={Number(props.sizeStiffness) || 120}
+      sizeDamping={Number(props.sizeDamping) || 14}
+      sizeMass={Number(props.sizeMass) || 1}
+      expandOnHotspot={props.expandOnHotspot !== "false"}
+      maskImage={(props.maskImage as string) || undefined}
+    >
+      <p>
+        Hover inside to activate the circle. Hover the{" "}
+        <a href="#" data-mask-hotspot className="underline decoration-2 underline-offset-4">
+          hotspot link
+        </a>
+        .
+      </p>
+    </LazyMaskCursor>
+  )
+}
