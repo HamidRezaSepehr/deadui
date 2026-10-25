@@ -924,3 +924,49 @@ export function MaskCursorPreview(props: Record<string, unknown>) {
     </LazyMaskCursor>
   )
 }
+
+/**
+ * `ssr: false` because this component mounts a `<canvas>` that uses
+ * `requestAnimationFrame` and window listeners which are client-only.
+ * A server render would emit stale placeholder markup, causing
+ * a hydration mismatch on every load.
+ */
+const LazyDrawingCursor = dynamic(
+  () =>
+    import("@/registry/drawing-cursor").then(
+      (module) => module.DrawingCursor,
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="h-[360px] w-full rounded-xl bg-dead-900" />,
+  },
+)
+
+export function DrawingCursorPreview(props: Record<string, unknown>) {
+  return (
+    <div className="relative h-[360px] w-full rounded-xl bg-dead-900 overflow-hidden">
+      <LazyDrawingCursor
+        fit="parent"
+        color={(props.color as string) || "#ffffff"}
+        colorTail={(props.colorTail as string) || undefined}
+        pointsNumber={Number(props.pointsNumber) || 40}
+        spring={Number(props.spring) || 0.4}
+        friction={Number(props.friction) || 0.5}
+        widthFactor={Number(props.widthFactor) || 0.3}
+        headSpringFactor={Number(props.headSpringFactor) || 0.4}
+        idleMotion={props.idleMotion !== "false"}
+        resumeIdleAfterMs={props.resumeIdleAfterMs ? Number(props.resumeIdleAfterMs) : undefined}
+        respectDevicePixelRatio={props.respectDevicePixelRatio !== "false"}
+      />
+      <div className="absolute inset-0 flex items-center justify-center text-neutral-400 text-sm">
+        Hover inside — click the button to prove it never blocks clicks
+      </div>
+      <button
+        type="button"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-neutral-200"
+      >
+        Click me (cursor never blocks me)
+      </button>
+    </div>
+  )
+}
