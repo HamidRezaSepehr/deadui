@@ -1,0 +1,131 @@
+# Cursor Trail
+
+The `CursorTrail` component creates a colorful SVG cursor trail effect.
+
+It recreates the popular CodePen cursor trail using pure React, SVG, and `requestAnimationFrame`.
+
+## Installation
+
+```bash
+npx deadui@latest add cursor-trail
+```
+
+## Dependencies
+
+None.
+
+## Basic Usage
+
+```tsx
+import { CursorTrail } from "@/components/ui/cursor-trail"
+
+export default function Example() {
+  return <CursorTrail />
+}
+```
+
+## Default Preset
+
+With no props, the component uses the original CodePen-style preset:
+
+```ts
+[
+  { color: "cyan", length: 30 },
+  { color: "yellow", length: 20 },
+  { color: "orange", length: 10 },
+]
+```
+
+## Custom Trails
+
+```tsx
+<CursorTrail
+  trails={[
+    { color: "#22d3ee", length: 40, strokeWidth: 45 },
+    { color: "#f472b6", length: 25, strokeWidth: 30 },
+  ]}
+>
+```
+
+## Single Trail
+
+```tsx
+<CursorTrail
+  trails={[
+    {
+      color: "white",
+      length: 60,
+      strokeWidth: 10,
+      ease: 0.35,
+    },
+  ]}
+>
+```
+
+## Blend Mode
+
+```tsx
+<CursorTrail
+  trails={[
+    {
+      color: "#22d3ee",
+      length: 35,
+      strokeWidth: 55,
+      blendMode: "screen",
+    },
+  ]}
+>
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `trails` | `CursorTrailConfig[]` | default preset | Array of trail configurations |
+| `color` | `string` | `"white"` | Default trail color |
+| `length` | `number` | `20` | Default trail length |
+| `ease` | `number` | `0.7` | Default easing factor |
+| `strokeWidth` | `number \| string` | `60` | Default stroke width |
+| `linecap` | `"butt" \| "round" \| "square"` | `"round"` | Default stroke linecap |
+| `opacity` | `number \| string` | `1` | Default trail opacity |
+| `blendMode` | `string` | `undefined` | Default CSS mix-blend-mode |
+| `zIndex` | `number \| string` | `9999` | SVG layer z-index |
+| `className` | `string` | `undefined` | Extra SVG classes |
+| `style` | `CSSProperties` | `undefined` | Extra SVG styles |
+| `disabled` | `boolean` | `false` | Disable the effect |
+
+## Trail Config
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `color` | `string` | Stroke color |
+| `length` | `number` | Number of segments |
+| `strokeWidth` | `number \| string` | Stroke width |
+| `opacity` | `number \| string` | Opacity |
+| `ease` | `number` | Follow speed |
+| `linecap` | `"butt" \| "round" \| "square"` | Stroke linecap |
+| `blendMode` | `string` | CSS mix-blend-mode |
+
+## Performance Notes
+
+- Pointer position is stored outside React state.
+- The animation runs in a single `requestAnimationFrame` loop.
+- SVG attributes are updated directly through refs.
+- The component cleans up all listeners and SVG nodes on unmount.
+
+## Accessibility
+
+The SVG layer is decorative:
+
+```tsx
+aria-hidden="true"
+pointer-events-none
+```
+
+It never blocks clicks, taps, or scrolling.
+
+## Important Notes
+
+- Do not pass an inline `trails` array without memoization if the parent re-renders often.
+- The component is viewport-fixed by design.
+- It does not use GSAP.

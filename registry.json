@@ -704,6 +704,20 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "cursor-trail",
+      "title": "Cursor Trail",
+      "description": "A colorful SVG cursor trail effect with configurable trails, lengths, colors, easing, stroke width, opacity, and blend modes.",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/cursor-trail/cursor-trail.tsx",
+          "target": "components/ui/cursor-trail.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }
