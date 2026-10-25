@@ -1,20 +1,13 @@
----
-title: Fluid Simulation
-description: A real-time WebGL fluid dynamics simulation with mouse interaction, velocity advection, and density rendering
----
-
-import { FluidSimulation } from "@/registry/fluid-simulation"
-
 # Fluid Simulation
 
-A real-time WebGL fluid dynamics simulation with mouse interaction, velocity advection,
-and density rendering. Features splatting, blurring, and display shaders for live fluid
-visualisation. Tier: Pro.
+An interactive WebGL fluid dynamics effect where users can stir colorful ink trails with their cursor.
+
+This component is heavy and should ideally be used as a background element.
 
 ## Installation
 
 ```bash
-npx deadui@latest add fluid-simulation
+npx deadui add fluid-simulation
 ```
 
 ## Usage
@@ -22,33 +15,28 @@ npx deadui@latest add fluid-simulation
 ```tsx
 import { FluidSimulation } from "@/components/ui/fluid-simulation"
 
-<FluidSimulation variant="default" />
+export default function Page() {
+  return (
+    <FluidSimulation
+      className="h-full w-full"
+      config={{ CURL: 30, SPLAT_FORCE: 6000 }}
+    />
+  )
+}
 ```
 
-## Props
+## Config
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `variant` | `"default" \| "particle" \| "border"` | `"default"` | Visualisation mode |
-
-### Variants
-
-- **default**: Base fluid simulation with mouse interaction and velocity advection
-- **particle**: Renders particles advected by the fluid flow with trailing effect
-- **border**: Displays only the fluid boundary/edge detection
-
-## Dependencies
-
-- `three`
-- `@react-three/fiber`
-- `@react-three/drei`
-
-## Performance
-
-- Bundle size: ~45KB (Three.js + @react-three/fiber + @react-three/dři)
-- 60fps on mid-range hardware with GPU-accelerated GLSL shaders
-- Respects `prefers-reduced-motion`
-
-## Accessibility
-
-- Respects `prefers-reduced-motion`: reduces shader complexity and disables mouse forces
+- `SIM_RESOLUTION`: Simulation grid resolution (default: 128)
+- `DYE_RESOLUTION`: Dye texture resolution (default: 1024)
+- `CAPTURE_RESOLUTION`: Capture resolution (default: 512)
+- `DENSITY_DISSIPATION`: How quickly dye fades (default: 1)
+- `VELOCITY_DISSIPATION`: Velocity decay rate (default: 0.2)
+- `PRESSURE`: Pressure strength (default: 0.8)
+- `PRESSURE_ITERATIONS`: Pressure solver iterations (default: 20)
+- `CURL`: Vorticity/swirl strength (default: 30)
+- `SPLAT_RADIUS`: Splat radius as fraction (default: 0.25)
+- `SPLAT_FORCE`: Force applied on splat (default: 6000)
+- `SHADING`: Enable shading (default: true)
+- `COLOR_UPDATE_SPEED`: Color cycle speed (default: 10)
+- `BACK_COLOR`: Background RGB color (default: `{ r: 0, g: 0, b: 0 }`)

@@ -1,58 +1,39 @@
-import { FluidSimulation } from "@/registry/fluid-simulation"
+import { FluidSimulation } from "@/components/ui/fluid-simulation"
 
-export default function Page() {
+export default function TestFluidPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center bg-dead-950 text-dead-50">
-      <header className="flex w-full max-w-4xl flex-col items-center gap-6 px-8 pt-24 text-center">
-        <p className="font-mono text-sm uppercase tracking-[0.35em] text-dead-400">
-          Feature 55 — Pro Component
-        </p>
-        <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
-          Fluid Simulation
-        </h1>
-        <p className="max-w-2xl font-mono text-sm leading-relaxed text-dead-400">
-          A real-time WebGL fluid dynamics simulation with mouse interaction, velocity advection,
-          and density rendering. Move your mouse to interact with the fluid, scroll to adjust
-          parameters, and toggle between different visualization modes.
-        </p>
-      </header>
-
-      <section className="mt-16 w-full max-w-4xl px-8">
-        <p className="mb-6 font-mono text-sm leading-relaxed text-dead-400">
-          01. DEFAULT — the base fluid simulation with mouse interaction, velocity advection,
-          and density rendering via GLSL shaders.
-        </p>
-        <div className="rounded-xl border border-dead-800 bg-dead-900 p-6">
-          <FluidSimulation variant="default" />
+    <main className="min-h-screen bg-black text-white">
+      <section className="relative h-[50vh] border-b border-white/10">
+        <div className="absolute left-4 top-4 z-10 rounded bg-black/50 px-3 py-1 text-xs font-mono backdrop-blur">
+          Standard Config
         </div>
+        <FluidSimulation className="h-full w-full" />
       </section>
 
-      <section className="mt-20 w-full max-w-4xl px-8">
-        <p className="mb-6 font-mono text-sm leading-relaxed text-dead-400">
-          02. PARTICLE — renders particles advected by the fluid flow with a trailing
-          effect, visualising the velocity field.
-        </p>
-        <div className="rounded-xl border border-dead-800 bg-dead-900 p-6">
-          <FluidSimulation variant="particle" />
+      <section className="relative h-[50vh] border-b border-white/10">
+        <div className="absolute left-4 top-4 z-10 rounded bg-black/50 px-3 py-1 text-xs font-mono backdrop-blur">
+          High Turbulence (Curl: 50, Force: 8000)
         </div>
+        <FluidSimulation
+          className="h-full w-full"
+          config={{ CURL: 50, SPLAT_FORCE: 8000 }}
+        />
       </section>
 
-      <section className="mt-20 w-full max-w-4xl px-8">
-        <p className="mb-6 font-mono text-sm leading-relaxed text-dead-400">
-          03. BORDER — displays only the fluid boundary/edge detection, highlighting the
-          contour of the active simulation domain.
-        </p>
-        <div className="rounded-xl border border-dead-800 bg-dead-900 p-6">
-          <FluidSimulation variant="border" />
+      <section className="relative h-[50vh]">
+        <div className="absolute left-4 top-4 z-10 rounded bg-black/50 px-3 py-1 text-xs font-mono backdrop-blur">
+          Soft Smoke (Low Res, High Dissipation)
         </div>
+        <FluidSimulation
+          className="h-full w-full"
+          config={{
+            SIM_RESOLUTION: 64,
+            DYE_RESOLUTION: 512,
+            DENSITY_DISSIPATION: 2.5,
+            VELOCITY_DISSIPATION: 1.0,
+          }}
+        />
       </section>
-
-      <section className="mt-24 w-full max-w-4xl px-8">
-        <p className="mb-6 font-mono text-sm leading-relaxed text-dead-400">
-          Controls: Move mouse to apply force, scroll up/down to increase/decrease
-          viscosity, press space to reset the simulation.
-        </p>
-      </section>
-    </div>
+    </main>
   )
 }
