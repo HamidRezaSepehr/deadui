@@ -7100,3 +7100,37 @@ CLI bumped `0.1.32` → `0.1.37`; tag `v0.1.37` created and pushed.
 
   **ACCESSIBILITY.** The mask layer is `aria-hidden="true"`, `inert`, and
   `pointer-events-none`; duplicated children are visual only.
+
+- Feature 53 (feature spec `53-drawing-cursor.md`): `DrawingCursor` (Free). Created
+  `registry/drawing-cursor/drawing-cursor.tsx` + `index.ts`, `app/test-drawing-cursor/page.tsx`,
+  `app/docs/components/drawing-cursor/page.mdx`; modified `registry.json` (entry
+  appended, 33 components), `packages/cli/package.json` (`0.1.39` → `0.1.40`).
+  Full verification: `npx tsc --noEmit` clean, `npm run lint` 0 errors, `npm run build`
+  clean with both new routes `○ (Static)`, `cd packages/cli && npm run build` clean
+  (`deadui@0.1.40`). Branch, commit and tag `v0.1.40` pushed; manual npm publish
+  steps handed to the owner.
+
+  **VERSION DEVIATION.** The spec asks for `0.1.31` / `v0.1.31`, but HEAD's manifest
+  was already `0.1.39`. Following the documented repo precedent
+  (Features 38/39/40/49/51/52), the next valid version `0.1.40` / `v0.1.40` was used
+  instead of clobbering the prior release.
+
+  **TAPER FIX (CRITICAL).** Each segment is its own `beginPath() → moveTo → quadraticCurveTo → stroke()` so `lineWidth` tapers correctly from thick head to thin tail. The original re-stroked the accumulated path per frame, flattening the taper.
+
+  **CLIENT X/Y FOR FIXED CANVAS.** The original used `pageX/pageY` which offsets by scroll. This component uses `clientX/clientY` for `fit="viewport"`.
+
+  **DPR HANDLING.** Backing store scaled by `devicePixelRatio` with `ctx.setTransform(dpr,0,0,dpr,0,0)` so drawing stays in crisp CSS pixels. Toggle with `respectDevicePixelRatio`.
+
+  **HEAD SPRING FACTOR REPLACES MOUSE THRESHOLD.** The original declared `mouseThreshold` but never used it; the real first-point lag was a hardcoded `.4 * spring`. This component exposes it honestly as `headSpringFactor` (default `0.4`).
+
+  **TWO FIT MODES.** `fit="viewport"` (global, `fixed inset-0`) and `fit="parent"` (contained, `absolute inset-0` in a positioned ancestor). Parent mode only draws while pointer is inside; clears on leave, keeps simulating so it "flies" back on re-entry. Rect refreshed on scroll/resize/ResizeObserver.
+
+  **IDLE LISSAJOUS.** Head follows a Lissajous curve before first move (or after `resumeIdleAfterMs` of rest). Configurable radii/frequencies.
+
+  **COLOR GRADIENT.** Optional `colorTail` enables smooth head→tail RGBA interpolation along the trail.
+
+  **NO REACT STATE ON MOVE.** All pointer/trail/state in refs; single rAF loop; cleanup cancels rAF, removes all listeners, disconnects ResizeObserver.
+
+  **ACCESSIBILITY.** Canvas is `pointer-events-none` + `aria-hidden="true"` — purely decorative, never blocks clicks/focus/scroll. Button under each parent card proves non-interference.
+
+  **DOCS PREVIEW PANEL ADDED.** Added `DrawingCursorPreview` to `components/docs/preview-wrappers.tsx` with full `ComponentCustomizer` controls (color, colorTail, pointsNumber, spring, friction, widthFactor, headSpringFactor, idleMotion, resumeIdleAfterMs, respectDevicePixelRatio) and a clickable button proving `pointer-events-none`.
