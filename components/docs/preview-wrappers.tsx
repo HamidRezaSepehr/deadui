@@ -970,3 +970,48 @@ export function DrawingCursorPreview(props: Record<string, unknown>) {
     </div>
   )
 }
+/**
+ * `ssr: false` because this component mounts an `<svg>` that uses
+ * `requestAnimationFrame` and window listeners which are client-only.
+ * A server render would emit stale placeholder markup, causing
+ * a hydration mismatch on every load.
+ */
+const LazyCursorTrail = dynamic(
+  () =>
+    import("@/registry/cursor-trail").then(
+      (module) => module.CursorTrail,
+    ),
+  {
+    ssr: false,
+    loading: () => <div className="h-[360px] w-full rounded-xl bg-dead-900" />,
+  },
+)
+
+export function CursorTrailPreview(props: Record<string, unknown>) {
+  const trails = props.trails
+    ? (props.trails as any[])
+    : [
+        { color: "cyan", length: 30 },
+        { color: "yellow", length: 20 },
+        { color: "orange", length: 10 },
+      ]
+
+  return (
+    <div className="relative h-[360px] w-full rounded-xl bg-dead-900 overflow-hidden">
+      <LazyCursorTrail
+        trails={trails}
+        color={(props.color as string) || "white"}
+        length={Number(props.length) || 20}
+        ease={Number(props.ease) || 0.7}
+        strokeWidth={Number(props.strokeWidth) || 60}
+        linecap={(props.linecap as any) || "round"}
+        opacity={Number(props.opacity) || 1}
+        blendMode={(props.blendMode as string) || undefined}
+        disabled={props.disabled === "true"}
+      />
+      <div className="absolute inset-0 flex items-center justify-center text-neutral-400 text-sm pointer-events-none">
+        Move pointer to see the trail
+      </div>
+    </div>
+  )
+}
