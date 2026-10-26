@@ -720,6 +720,20 @@
       ]
     },
     {
+      "name": "needle-field",
+      "title": "Needle Field",
+      "description": "An interactive canvas grid of needles that align to the cursor like iron filings in a magnetic field.",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/needle-field/needle-field.tsx",
+          "target": "components/ui/needle-field.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "cursor-trail",
       "title": "Cursor Trail",
       "description": "A colorful SVG cursor trail effect with configurable trails, lengths, colors, easing, stroke width, opacity, and blend modes.",

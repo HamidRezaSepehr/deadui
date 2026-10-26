@@ -16,7 +16,19 @@ export interface FluidConfig {
   SPLAT_FORCE?: number
   SHADING?: boolean
   COLOR_UPDATE_SPEED?: number
+  COLORFUL?: boolean
+  PAUSED?: boolean
+  TRANSPARENT?: boolean
   BACK_COLOR?: { r: number; g: number; b: number }
+  BLOOM?: boolean
+  BLOOM_ITERATIONS?: number
+  BLOOM_RESOLUTION?: number
+  BLOOM_INTENSITY?: number
+  BLOOM_THRESHOLD?: number
+  BLOOM_SOFT_KNEE?: number
+  SUNRAYS?: boolean
+  SUNRAYS_RESOLUTION?: number
+  SUNRAYS_WEIGHT?: number
 }
 
 export interface FluidSimulationProps extends React.HTMLAttributes<HTMLCanvasElement> {
@@ -28,16 +40,28 @@ const DEFAULT_CONFIG: Required<FluidConfig> = {
   SIM_RESOLUTION: 128,
   DYE_RESOLUTION: 1024,
   CAPTURE_RESOLUTION: 512,
-  DENSITY_DISSIPATION: 1,
-  VELOCITY_DISSIPATION: 0.2,
-  PRESSURE: 0.8,
+  DENSITY_DISSIPATION: 3.5,
+  VELOCITY_DISSIPATION: 1.5,
+  PRESSURE: 0.4,
   PRESSURE_ITERATIONS: 20,
-  CURL: 30,
+  CURL: 15,
   SPLAT_RADIUS: 0.25,
   SPLAT_FORCE: 6000,
   SHADING: true,
   COLOR_UPDATE_SPEED: 10,
+  COLORFUL: true,
+  PAUSED: false,
+  TRANSPARENT: false,
   BACK_COLOR: { r: 0, g: 0, b: 0 },
+  BLOOM: false,
+  BLOOM_ITERATIONS: 8,
+  BLOOM_RESOLUTION: 256,
+  BLOOM_INTENSITY: 0.8,
+  BLOOM_THRESHOLD: 0.6,
+  BLOOM_SOFT_KNEE: 0.7,
+  SUNRAYS: false,
+  SUNRAYS_RESOLUTION: 196,
+  SUNRAYS_WEIGHT: 1.0,
 }
 
 function getGLContext(canvas: HTMLCanvasElement): WebGLRenderingContext | WebGL2RenderingContext | null {
@@ -56,6 +80,8 @@ export function FluidSimulation({
 }: FluidSimulationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mergedConfig = { ...DEFAULT_CONFIG, ...config }
+  const configRef = useRef(mergedConfig)
+  configRef.current = mergedConfig
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -77,8 +103,8 @@ export function FluidSimulation({
 
     const ext = getExtensions(g)
     if (!ext.supportLinearFiltering) {
-      mergedConfig.DYE_RESOLUTION = 512
-      mergedConfig.SHADING = false
+      configRef.current.DYE_RESOLUTION = 512
+      configRef.current.SHADING = false
     }
 
     function pointerPrototype(this: any) {
@@ -444,8 +470,8 @@ export function FluidSimulation({
     let dye: any, velocity: any, divergence: any, curl: any, pressure: any
 
     function initFramebuffers() {
-      const simRes = getResolution(mergedConfig.SIM_RESOLUTION)
-      const dyeRes = getResolution(mergedConfig.DYE_RESOLUTION)
+      const simRes = getResolution(configRef.current.SIM_RESOLUTION)
+      const dyeRes = getResolution(configRef.current.DYE_RESOLUTION)
       const texType = ext.halfFloatTexType
       const rgba = ext.formatRGBA!
       const rg = ext.formatRG!
@@ -607,17 +633,19 @@ export function FluidSimulation({
 
     function updateKeywords() {
       let displayKeywords: string[] = []
-      if (mergedConfig.SHADING) displayKeywords.push("SHADING")
+      if (String(configRef.current.SHADING) !== "false") displayKeywords.push("SHADING")
       displayMaterial.setKeywords(displayKeywords)
     }
 
     function update() {
       const dt = calcDeltaTime()
       if (resizeCanvas()) initFramebuffers()
-      updateColors(dt)
-      applyInputs()
-      step(dt)
-      render(null)
+      if (String(configRef.current.PAUSED) !== "true") {
+        updateColors(dt)
+        applyInputs()
+        step(dt)
+        render(null)
+      }
       animationFrameId = requestAnimationFrame(update)
     }
 
@@ -641,7 +669,7 @@ export function FluidSimulation({
     }
 
     function updateColors(dt: number) {
-      colorUpdateTimer += dt * mergedConfig.COLOR_UPDATE_SPEED
+      colorUpdateTimer += dt * configRef.current.COLOR_UPDATE_SPEED
       if (colorUpdateTimer >= 1) {
         colorUpdateTimer = wrap(colorUpdateTimer, 0, 1)
         pointers.forEach((p: any) => {
@@ -671,7 +699,7 @@ export function FluidSimulation({
       g.uniform2f(programs.vorticity.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY)
       g.uniform1i(programs.vorticity.uniforms.uVelocity, velocity.read.attach(0))
       g.uniform1i(programs.vorticity.uniforms.uCurl, curl.attach(1))
-      g.uniform1f(programs.vorticity.uniforms.curl, mergedConfig.CURL)
+      g.uniform1f(programs.vorticity.uniforms.curl, configRef.current.CURL)
       g.uniform1f(programs.vorticity.uniforms.dt, dt)
       blit(velocity.write)
       velocity.swap()
@@ -683,14 +711,14 @@ export function FluidSimulation({
 
       programs.clear.bind()
       g.uniform1i(programs.clear.uniforms.uTexture, pressure.read.attach(0))
-      g.uniform1f(programs.clear.uniforms.value, mergedConfig.PRESSURE)
+      g.uniform1f(programs.clear.uniforms.value, configRef.current.PRESSURE)
       blit(pressure.write)
       pressure.swap()
 
       programs.pressure.bind()
       g.uniform2f(programs.pressure.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY)
       g.uniform1i(programs.pressure.uniforms.uDivergence, divergence.attach(0))
-      for (let i = 0; i < mergedConfig.PRESSURE_ITERATIONS; i++) {
+      for (let i = 0; i < configRef.current.PRESSURE_ITERATIONS; i++) {
         g.uniform1i(programs.pressure.uniforms.uPressure, pressure.read.attach(1))
         blit(pressure.write)
         pressure.swap()
@@ -711,7 +739,7 @@ export function FluidSimulation({
       g.uniform1i(programs.advection.uniforms.uVelocity, velocityId)
       g.uniform1i(programs.advection.uniforms.uSource, velocityId)
       g.uniform1f(programs.advection.uniforms.dt, dt)
-      g.uniform1f(programs.advection.uniforms.dissipation, mergedConfig.VELOCITY_DISSIPATION)
+      g.uniform1f(programs.advection.uniforms.dissipation, configRef.current.VELOCITY_DISSIPATION)
       blit(velocity.write)
       velocity.swap()
 
@@ -719,7 +747,7 @@ export function FluidSimulation({
         g.uniform2f(programs.advection.uniforms.dyeTexelSize, dye.texelSizeX, dye.texelSizeY)
       g.uniform1i(programs.advection.uniforms.uVelocity, velocity.read.attach(0))
       g.uniform1i(programs.advection.uniforms.uSource, dye.read.attach(1))
-      g.uniform1f(programs.advection.uniforms.dissipation, mergedConfig.DENSITY_DISSIPATION)
+      g.uniform1f(programs.advection.uniforms.dissipation, configRef.current.DENSITY_DISSIPATION)
       blit(dye.write)
       dye.swap()
     }
@@ -735,15 +763,15 @@ export function FluidSimulation({
       let height = target == null ? g.drawingBufferHeight : target.height
 
       displayMaterial.bind()
-      if (mergedConfig.SHADING)
+      if (String(configRef.current.SHADING) !== "false")
         g.uniform2f(displayMaterial.uniforms.texelSize, 1.0 / width, 1.0 / height)
       g.uniform1i(displayMaterial.uniforms.uTexture, dye.read.attach(0))
       blit(target)
     }
 
     function splatPointer(pointer: any) {
-      let dx = pointer.deltaX * mergedConfig.SPLAT_FORCE
-      let dy = pointer.deltaY * mergedConfig.SPLAT_FORCE
+      let dx = pointer.deltaX * configRef.current.SPLAT_FORCE
+      let dy = pointer.deltaY * configRef.current.SPLAT_FORCE
       splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color)
     }
 
@@ -763,7 +791,7 @@ export function FluidSimulation({
       g.uniform1f(programs.splat.uniforms.aspectRatio, c.width / c.height)
       g.uniform2f(programs.splat.uniforms.point, x, y)
       g.uniform3f(programs.splat.uniforms.color, dx, dy, 0.0)
-      g.uniform1f(programs.splat.uniforms.radius, correctRadius(mergedConfig.SPLAT_RADIUS / 100.0))
+      g.uniform1f(programs.splat.uniforms.radius, correctRadius(configRef.current.SPLAT_RADIUS / 100.0))
       blit(velocity.write)
       velocity.swap()
 
@@ -821,9 +849,15 @@ export function FluidSimulation({
 
     function generateColor() {
       let c = HSVtoRGB(Math.random(), 1.0, 1.0)
-      c.r *= 0.15
-      c.g *= 0.15
-      c.b *= 0.15
+      if (String(configRef.current.COLORFUL) !== "false") {
+        c.r *= 0.15
+        c.g *= 0.15
+        c.b *= 0.15
+      } else {
+        c.r *= 0.05
+        c.g *= 0.05
+        c.b *= 0.05
+      }
       return c
     }
 
@@ -950,57 +984,51 @@ export function FluidSimulation({
 
     let started = false
 
+    function canvasPos(clientX: number, clientY: number) {
+      const rect = c.getBoundingClientRect()
+      return {
+        x: scaleByPixelRatio(clientX - rect.left),
+        y: scaleByPixelRatio(clientY - rect.top),
+      }
+    }
+
     const handleMouseDown = (e: MouseEvent) => {
+      const p = canvasPos(e.clientX, e.clientY)
       let pointer = pointers[0]
-      let posX = scaleByPixelRatio(e.clientX)
-      let posY = scaleByPixelRatio(e.clientY)
-      updatePointerDownData(pointer, -1, posX, posY)
+      updatePointerDownData(pointer, -1, p.x, p.y)
       clickSplat(pointer)
     }
 
     const handleMouseMove = (e: MouseEvent) => {
+      const p = canvasPos(e.clientX, e.clientY)
       if (!started) {
         started = true
         let pointer = pointers[0]
-        let posX = scaleByPixelRatio(e.clientX)
-        let posY = scaleByPixelRatio(e.clientY)
         let color = generateColor()
         update()
-        updatePointerMoveData(pointer, posX, posY, color)
+        updatePointerMoveData(pointer, p.x, p.y, color)
         return
       }
       let pointer = pointers[0]
-      let posX = scaleByPixelRatio(e.clientX)
-      let posY = scaleByPixelRatio(e.clientY)
       let color = pointer.color
-      updatePointerMoveData(pointer, posX, posY, color)
+      updatePointerMoveData(pointer, p.x, p.y, color)
     }
 
     const handleTouchStart = (e: TouchEvent) => {
-      if (!started) {
-        started = true
-        let touch = e.targetTouches[0]
-        let pointer = pointers[0]
-        for (let i = 0; i < e.targetTouches.length; i++) {
-          let posX = scaleByPixelRatio(e.targetTouches[i].clientX)
-          let posY = scaleByPixelRatio(e.targetTouches[i].clientY)
-          update()
-          updatePointerDownData(pointer, e.targetTouches[i].identifier, posX, posY)
-        }
-        return
-      }
       for (let i = 0; i < e.targetTouches.length; i++) {
-        let posX = scaleByPixelRatio(e.targetTouches[i].clientX)
-        let posY = scaleByPixelRatio(e.targetTouches[i].clientY)
-        updatePointerDownData(pointers[0], e.targetTouches[i].identifier, posX, posY)
+        const p = canvasPos(e.targetTouches[i].clientX, e.targetTouches[i].clientY)
+        if (!started) {
+          started = true
+          update()
+        }
+        updatePointerDownData(pointers[0], e.targetTouches[i].identifier, p.x, p.y)
       }
     }
 
     const handleTouchMove = (e: TouchEvent) => {
       for (let i = 0; i < e.targetTouches.length; i++) {
-        let posX = scaleByPixelRatio(e.targetTouches[i].clientX)
-        let posY = scaleByPixelRatio(e.targetTouches[i].clientY)
-        updatePointerMoveData(pointers[0], posX, posY, pointers[0].color)
+        const p = canvasPos(e.targetTouches[i].clientX, e.targetTouches[i].clientY)
+        updatePointerMoveData(pointers[0], p.x, p.y, pointers[0].color)
       }
     }
 

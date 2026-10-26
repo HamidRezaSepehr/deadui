@@ -19,15 +19,19 @@ export type SliderControl = {
   step: number;
   /** Shown next to the label so the current number is always readable. */
   unit?: string;
+  /** Dot-separated nested path, e.g. "config.CURL". Defaults to the control key. */
+  path?: string;
 };
 
 export type SelectControl = {
   type: "select";
   options: string[];
+  path?: string;
 };
 
 export type ColorControl = {
   type: "color";
+  path?: string;
 };
 
 export type ControlConfig = Record<
@@ -69,14 +73,40 @@ export function ComponentCustomizer({
   });
 
   // Functional update: two controls touched in the same tick both survive.
-  const updateProp = useCallback((key: string, value: unknown) => {
-    setProps((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const updateProp = useCallback((key: string, value: unknown, path?: string) => {
+    if (path) {
+      const keys = path.split(".")
+      setProps((prev) => {
+        const copy = structuredClone(prev)
+        let obj: any = copy
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (obj[keys[i]] == null || typeof obj[keys[i]] !== "object") {
+            obj[keys[i]] = {}
+          }
+          obj = obj[keys[i]]
+        }
+        obj[keys[keys.length - 1]] = value
+        return copy
+      })
+    } else {
+      setProps((prev) => ({ ...prev, [key]: value }))
+    }
+  }, [])
 
   // `React.ElementType` erases the component's own props type, which is the
   // whole point — the customizer must accept any registry component — so the
   // spread is confined to this one cast.
   const Preview = Component as React.ComponentType<Record<string, unknown>>;
+
+  function getValue(pathOrKey: string, propsObj: Record<string, unknown>): unknown {
+    const keys = pathOrKey.includes(".") ? pathOrKey.split(".") : [pathOrKey]
+    let val: any = propsObj
+    for (const k of keys) {
+      if (val == null || typeof val !== "object") return undefined
+      val = val[k]
+    }
+    return val
+  }
 
   return (
     <div className={cn("grid grid-cols-1 gap-8 lg:grid-cols-3", className)}>
@@ -91,7 +121,9 @@ export function ComponentCustomizer({
           Customize
         </h3>
 
-        {Object.entries(controls).map(([key, config]) => (
+        {Object.entries(controls).map(([key, control]) => {
+          const currentValue = getValue(control.path || key, props)
+          return (
           <div key={key} className="space-y-2">
             <div className="flex items-baseline justify-between gap-2">
               <label
@@ -101,27 +133,27 @@ export function ComponentCustomizer({
                 {humanize(key)}
               </label>
               <span className="font-mono text-[11px] text-dead-400">
-                {formatValue(props[key])}
-                {config.type === "slider" && config.unit ? config.unit : ""}
+                {formatValue(currentValue)}
+                {control.type === "slider" && control.unit ? control.unit : ""}
               </span>
             </div>
 
-            {config.type === "slider" && (
+            {control.type === "slider" && (
               <Slider
                 id={`control-${key}`}
-                min={config.min}
-                max={config.max}
-                step={config.step}
-                value={[Number(props[key] ?? config.min)]}
-                onValueChange={([value]) => updateProp(key, value)}
+                min={control.min}
+                max={control.max}
+                step={control.step}
+                value={[Number(currentValue ?? control.min)]}
+                onValueChange={([value]) => updateProp(key, value, control.path)}
                 aria-label={humanize(key)}
               />
             )}
 
-            {config.type === "select" && (
+            {control.type === "select" && (
               <Select
-                value={typeof props[key] === "string" ? (props[key] as string) : ""}
-                onValueChange={(value) => updateProp(key, value)}
+                value={typeof currentValue === "string" ? currentValue : ""}
+                onValueChange={(value) => updateProp(key, value, control.path)}
               >
                 <SelectTrigger
                   id={`control-${key}`}
@@ -130,7 +162,7 @@ export function ComponentCustomizer({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {config.options.map((option) => (
+                  {control.options.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>
@@ -139,21 +171,22 @@ export function ComponentCustomizer({
               </Select>
             )}
 
-            {config.type === "color" && (
+            {control.type === "color" && (
               <input
                 id={`control-${key}`}
                 type="color"
                 aria-label={humanize(key)}
                 value={
-                  typeof props[key] === "string" ? (props[key] as string) : "#000000"
+                  typeof currentValue === "string" ? currentValue : "#000000"
                 }
-                onChange={(event) => updateProp(key, event.target.value)}
+                onChange={(event) => updateProp(key, event.target.value, control.path)}
                 className="h-10 w-full cursor-pointer rounded-md border border-dead-800 bg-dead-900 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dead-red"
               />
             )}
 
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   );

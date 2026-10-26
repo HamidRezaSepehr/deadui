@@ -1,0 +1,88 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { NeedleField } from "@/registry/needle-field"
+
+export const metadata = {
+  title: "Needle Field",
+  description:
+    "An interactive canvas grid of needles that align to the cursor like iron filings in a magnetic field.",
+}
+
+# Needle Field
+
+An interactive canvas grid of small "needles" (lines) that rotate to point towards the user's cursor. Needles closer to the cursor become thicker and change color, simulating a magnetic field effect. When idle, an invisible attractor moves autonomously to keep the animation engaging.
+
+## Preview
+
+<ComponentCustomizer
+  component={NeedleField}
+  defaultProps={{
+    spacing: 28,
+    lengthRatio: 0.7,
+    radius: 220,
+    autoAnimate: true,
+    colorBase: "#2f6f6a",
+    colorHighlight: "#ff8a3d",
+  }}
+  controls={{
+    spacing: { type: "slider", min: 14, max: 50, step: 1 },
+    lengthRatio: { type: "slider", min: 0.3, max: 1.0, step: 0.1 },
+    radius: { type: "slider", min: 100, max: 400, step: 20 },
+    autoAnimate: { type: "boolean" },
+    colorBase: { type: "color" },
+    colorHighlight: { type: "color" },
+  }}
+  className="not-prose my-8"
+/>
+
+Move your mouse (or finger) across the canvas to see the needles align to the magnetic field. When the pointer leaves, the invisible attractor takes over after ~2.6 seconds.
+
+## How it works
+
+The component generates a perfect grid of needles on resize. Each needle calculates its distance to the cursor, determines its target angle with `Math.atan2`, and smoothly rotates toward it using `lerpAngle` — a helper that normalizes angular differences to `[-π, π]` so rotation never spins the long way around. Proximity determines a bucket, and each bucket is drawn with a single `beginPath()` / `stroke()` call for performance.
+
+## Installation
+
+<InstallTabs componentName="needle-field" tier="free" />
+
+No external dependencies.
+
+## Usage
+
+```tsx
+import { NeedleField } from "@/components/ui/needle-field"
+
+export default function Hero() {
+  return (
+    <NeedleField className="h-[60vh] w-full bg-neutral-950">
+      <h1 className="text-5xl font-extrabold tracking-tight">Magnetic Field</h1>
+    </NeedleField>
+  )
+}
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `spacing` | `number` | `28` | Distance between needles in pixels. |
+| `lengthRatio` | `number` | `0.7` | Needle length relative to spacing (`0.3` – `1.0`). |
+| `radius` | `number` | `220` | Radius of influence around the cursor. |
+| `autoAnimate` | `boolean` | `true` | Animate an invisible attractor when idle. |
+| `colorBase` | `string` | `"#2f6f6a"` | Color of distant needles. |
+| `colorHighlight` | `string` | `"#ff8a3d"` | Color of nearby needles. |
+| `className` | `string` | — | Merged onto the root container. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the root `div`. |
+
+## Performance
+
+- **Bucketing**: Needles are grouped by proximity into 4 arrays before drawing. Each group gets one `beginPath()` / `stroke()` call, which minimizes GPU state changes when there are hundreds of elements.
+- **Canvas 2D**: Pure `CanvasRenderingContext2D` — no WebGL, no Three.js, no DOM nodes per needle.
+- **ResizeObserver**: The grid is rebuilt only when the container resizes.
+- **IntersectionObserver**: The animation loop pauses when the component scrolls off-screen.
+
+## Accessibility
+
+- The canvas is marked `aria-hidden="true"` since it is purely decorative.
+- The effect respects `prefers-reduced-motion`: if enabled, needles jump instantly to their target angles (`lerpFactor = 1`) and the idle attractor stops moving.
+- Content placed inside the component remains fully interactive because the canvas has `pointer-events-none`.
