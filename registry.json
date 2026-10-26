@@ -734,6 +734,20 @@
       "variants": []
     },
     {
+      "name": "reactive-dot-grid",
+      "title": "Reactive Dot Grid",
+      "description": "A card component with an interactive dot grid background that reacts to cursor proximity with repulsion and glow effects.",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/reactive-dot-grid/reactive-dot-grid.tsx",
+          "target": "components/ui/reactive-dot-grid.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "cursor-trail",
       "title": "Cursor Trail",
       "description": "A colorful SVG cursor trail effect with configurable trails, lengths, colors, easing, stroke width, opacity, and blend modes.",

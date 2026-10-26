@@ -1,0 +1,84 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { ReactiveDotGrid } from "@/components/ui/reactive-dot-grid"
+
+export const metadata = {
+  title: "Reactive Dot Grid",
+  description:
+    "A card component with an interactive dot grid background that reacts to cursor proximity with repulsion and glow effects.",
+}
+
+# Reactive Dot Grid
+
+A card with a pure Canvas dot grid background. Dots near the cursor are repelled outward, increase in size, and shift to an active color. When the pointer leaves, energy decays smoothly so dots glide back to their original positions rather than snapping instantly.
+
+## Preview
+
+<ComponentCustomizer
+  component={ReactiveDotGrid}
+  defaultProps={{
+    spacing: 22,
+    radius: 110,
+    colorActive: "#4d8dff",
+    colorBase: "rgba(160,190,240,.22)",
+  }}
+  controls={{
+    spacing: { type: "slider", min: 14, max: 40, step: 1 },
+    radius: { type: "slider", min: 60, max: 200, step: 10 },
+    colorActive: { type: "color" },
+    colorBase: { type: "text" },
+  }}
+  className="not-prose my-8"
+/>
+
+Move your pointer over the card. Dots inside the `radius` are pushed away and glow; when you leave, the `currentForce` decays at `0.12` per frame so the grid breathes back smoothly.
+
+## How it works
+
+Each dot calculates its distance to the cursor. If within `radius`, a squared falloff `(1 - d/radius)^2` produces the interaction intensity `t`. Repulsion pushes the dot along the `dx/dy` vector scaled by `t`, and the dot grows from `1.2px` to `3.8px`. The energy system (`currentForce` vs `targetForce`) ensures the animation stops cleanly when idle (`> 0.004` delta) and resumes instantly on pointer events.
+
+## Installation
+
+<InstallTabs componentName="reactive-dot-grid" tier="free" />
+
+No external dependencies.
+
+## Usage
+
+```tsx
+import { ReactiveDotGrid } from "@/components/ui/reactive-dot-grid"
+
+export default function Card() {
+  return (
+    <ReactiveDotGrid className="h-80 w-full max-w-md">
+      <h2 className="text-2xl font-bold">Interactive Card</h2>
+      <p className="text-sm opacity-70">Dots react to your cursor.</p>
+    </ReactiveDotGrid>
+  )
+}
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `spacing` | `number` | `22` | Distance between dots in pixels. |
+| `radius` | `number` | `110` | Radius of influence around the cursor. |
+| `colorActive` | `string` | `"#4d8dff"` | Active/nearby dot color. |
+| `colorBase` | `string` | `"rgba(160,190,240,.22)"` | Inactive/faraway dot color. |
+| `borderRadius` | `string` | `"18px"` | CSS `border-radius` for the card container. |
+| `className` | `string` | — | Merged onto the root card. |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Spread onto the root `div`. |
+
+## Performance
+
+- **Energy decay optimization**: The `requestAnimationFrame` loop pauses when `Math.abs(targetForce - currentForce) < 0.004`, reducing CPU usage when the card is idle.
+- **Pure Canvas 2D**: Each frame redraws the grid with a single `clearRect()` and individual `arc()` calls — no DOM nodes per dot.
+- **ResizeObserver**: Grid rebuilt only on container resize.
+- **IntersectionObserver**: Animation pauses when off-screen and resumes on entry.
+
+## Accessibility
+
+- The canvas is `aria-hidden="true"` since it is purely decorative.
+- Respects `prefers-reduced-motion`: interaction is disabled (`effectiveForce = 0`) when reduced motion is preferred.
+- The card container accepts any React children, which remain fully interactive above the decorative background.

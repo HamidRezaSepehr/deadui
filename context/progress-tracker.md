@@ -5,11 +5,16 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 55 (Fluid Simulation)
+Phase 1: Component Implementation — Feature 56 (Needle Field)
 
 ## Current Goal
 
-**Feature 55: Fluid Simulation (Free) — an interactive WebGL fluid dynamics effect where users can stir colourful ink trails with their cursor** — complete.
+**Feature 56: Needle Field (Free) — pure Canvas interactive effect** — complete.
+`registry/needle-field/needle-field.tsx` uses pure `CanvasRenderingContext2D` with efficient bucketing (4 arrays by proximity), `lerpAngle` interpolation, idle attractor via sine waves, `ResizeObserver`, `IntersectionObserver`, and `prefers-reduced-motion` support.
+`registry.json` updated (`tier: "free"`, `dependencies: []`).
+Test page at `app/test-needle-field/page.tsx` (3 variations: default, dense monochrome, wide vibrant).
+Docs page at `app/docs/components/needle-field/page.mdx`.
+`packages/cli` `0.1.42` → **`0.1.33`**. Tag `v0.1.33` created and pushed.
 `registry/fluid-simulation/fluid-simulation.tsx` exposes a zero-dep WebGL fluid simulation with full GLSL shaders embedded, configurable physics parameters, and touch/mouse support.
 `registry.json` updated with the new entry (`tier: "free"`, `dependencies: []`).
 Test page at `app/test-fluid-simulation/page.tsx` (3 variations: default, high turbulence, soft smoke).
