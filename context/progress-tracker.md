@@ -5,11 +5,14 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 56 (Needle Field)
+Phase 1: Component Implementation — Feature 57 (Reactive Dot Grid)
 
 ## Current Goal
 
-**Feature 56: Needle Field (Free) — pure Canvas interactive effect** — complete.
+**Feature 57: Reactive Dot Grid (Free) — pure Canvas interactive card effect** — complete.
+`registry/reactive-dot-grid/reactive-dot-grid.tsx` implements energy decay (`currentForce += (targetForce - currentForce) * 0.12`), repulsion physics (`t = Math.pow(1 - dist / radius, 2) * effectiveForce`), optimization (stops RAF when delta < 0.004), `ResizeObserver`, `IntersectionObserver`, and `prefers-reduced-motion`. `registry.json` updated. Test page (`3 variations: default blue, dense green, sparse purple`), docs page, and `components/ui/reactive-dot-grid.tsx` all created.
+
+`packages/cli` `0.1.33` → **`0.1.34`**. Tag `v0.1.34` created and pushed.
 `registry/needle-field/needle-field.tsx` uses pure `CanvasRenderingContext2D` with efficient bucketing (4 arrays by proximity), `lerpAngle` interpolation, idle attractor via sine waves, `ResizeObserver`, `IntersectionObserver`, and `prefers-reduced-motion` support.
 `registry.json` updated (`tier: "free"`, `dependencies: []`).
 Test page at `app/test-needle-field/page.tsx` (3 variations: default, dense monochrome, wide vibrant).

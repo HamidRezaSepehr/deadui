@@ -1,0 +1,84 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { GooeyCursor } from "@/components/ui/gooey-cursor"
+
+export const metadata = {
+  title: "Gooey Cursor",
+  description:
+    "A grid-based liquid cursor effect with 8 visual variants, SVG filters, and optional click explosions.",
+}
+
+# Gooey Cursor
+
+A full-viewport grid of invisible cells that light up under the cursor, merged by an SVG `gooey` filter into a cohesive liquid blob. Supports 8 distinct visual variants and an optional click explosion effect.
+
+## Preview
+
+<ComponentCustomizer
+  component={GooeyCursor}
+  defaultProps={{
+    variant: "standard",
+    columns: 30,
+    ttl: 0.2,
+    enableClickEffect: true,
+  }}
+  controls={{
+    variant: { type: "select", options: ["standard", "blurry", "noise", "outline", "displaced", "shadowed", "multicolor", "radial"] },
+    ttl: { type: "slider", min: 0.1, max: 1, step: 0.05 },
+    enableClickEffect: { type: "boolean" },
+  }}
+  className="not-prose my-8 h-[80vh]"
+/>
+
+Move your mouse across the viewport. Click anywhere to trigger the staggered explosion (if enabled).
+
+## How it works
+
+The component creates a grid of `div` cells sized to `window.innerWidth / columns`. Each cell fades in and out via the native Web Animations API (`element.animate()`). An SVG `<filter>` with `feGaussianBlur`, `feColorMatrix`, and `feComposite` merges adjacent active cells into a blob. Firefox receives a graceful fallback: no `filter` applied, but opacity animations still work.
+
+## Installation
+
+<InstallTabs componentName="gooey-cursor" tier="free" />
+
+No external dependencies. Uses native `element.animate()` and SVG filters only.
+
+## Usage
+
+```tsx
+import { GooeyCursor } from "@/components/ui/gooey-cursor"
+
+export default function Page() {
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-neutral-950">
+      <GooeyCursor variant="noise" columns={40} ttl={0.3} enableClickEffect />
+      <div className="relative z-10 p-16">
+        <h1 className="text-5xl font-bold">Liquid Cursor</h1>
+      </div>
+    </main>
+  )
+}
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `variant` | `GooeyVariant` | `"standard"` | Visual style: standard, blurry, noise, outline, displaced, shadowed, multicolor, radial. |
+| `columns` | `number` | `30` | Grid density (columns based on viewport width). |
+| `ttl` | `number` | `0.2` | Time-to-live (seconds) for cell visibility animation. |
+| `enableClickEffect` | `boolean` | `true` | Enables staggered pulse on click and neighbors. |
+| `customColors` | `string[]` | Random array | Colors for the `multicolor` variant. |
+| `className` | `string` | — | Merged onto the root fixed container. |
+
+## Performance
+
+- **Native Web Animations API**: No GSAP dependency; animations use `element.animate()` which runs on the compositor.
+- **Throttled interaction**: Mouse events only trigger when the cell index changes (`lastCellIndex` guard), reducing animation overhead.
+- **RAF optimization**: Grid regenerated only on `resize` events; no continuous RAF loop needed.
+- **Firefox guard**: `navigator.userAgent` checked; filter disabled for Firefox but opacity changes preserved.
+
+## Accessibility
+
+- The component is fixed and `pointer-events-none` by default; it never intercepts clicks or keyboard focus.
+- All visual effects are purely decorative; no semantic content is conveyed by the grid.
+- The hidden SVG filter definitions (`aria-hidden="true"`) are invisible to assistive technology.

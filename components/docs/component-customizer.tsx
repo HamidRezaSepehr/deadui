@@ -109,14 +109,14 @@ export function ComponentCustomizer({
   }
 
   return (
-    <div className={cn("grid grid-cols-1 gap-8 lg:grid-cols-3", className)}>
+    <div className={cn("grid grid-cols-1 gap-8 lg:grid-cols-4", className)}>
       {/* Preview Area */}
-      <div className="bg-preview-grid relative col-span-1 flex min-h-[400px] items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900 p-8 lg:col-span-2">
+      <div className="bg-preview-grid relative col-span-1 flex h-[75vh] w-full items-center justify-center overflow-hidden rounded-xl border border-dead-800 bg-dead-900 p-8 lg:col-span-3">
         <Preview {...props} />
       </div>
 
       {/* Controls Area */}
-      <div className="h-fit space-y-6 rounded-xl border border-dead-800 bg-dead-800 p-6">
+      <div className="h-fit space-y-6 rounded-xl border border-dead-800 bg-dead-800 p-6 lg:col-span-1">
         <h3 className="font-mono text-xs font-semibold uppercase tracking-widest text-dead-50">
           Customize
         </h3>

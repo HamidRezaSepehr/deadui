@@ -21,6 +21,7 @@ A card with a pure Canvas dot grid background. Dots near the cursor are repelled
     radius: 110,
     colorActive: "#4d8dff",
     colorBase: "rgba(160,190,240,.22)",
+    className: "h-full w-full",
   }}
   controls={{
     spacing: { type: "slider", min: 14, max: 40, step: 1 },
@@ -28,7 +29,7 @@ A card with a pure Canvas dot grid background. Dots near the cursor are repelled
     colorActive: { type: "color" },
     colorBase: { type: "text" },
   }}
-  className="not-prose my-8"
+  className="not-prose my-8 h-[80vh]"
 />
 
 Move your pointer over the card. Dots inside the `radius` are pushed away and glow; when you leave, the `currentForce` decays at `0.12` per frame so the grid breathes back smoothly.

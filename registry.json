@@ -734,6 +734,20 @@
       "variants": []
     },
     {
+      "name": "gooey-cursor",
+      "title": "Gooey Cursor",
+      "description": "A grid-based liquid cursor effect with 8 visual variants, SVG filters, and optional click explosions.",
+      "tier": "free",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/gooey-cursor/gooey-cursor.tsx",
+          "target": "components/ui/gooey-cursor.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "reactive-dot-grid",
       "title": "Reactive Dot Grid",
       "description": "A card component with an interactive dot grid background that reacts to cursor proximity with repulsion and glow effects.",
