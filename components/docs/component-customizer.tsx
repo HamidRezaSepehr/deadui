@@ -34,9 +34,14 @@ export type ColorControl = {
   path?: string;
 };
 
+export type BooleanControl = {
+  type: "boolean";
+  path?: string;
+};
+
 export type ControlConfig = Record<
   string,
-  SliderControl | SelectControl | ColorControl
+  SliderControl | SelectControl | ColorControl | BooleanControl
 >;
 
 export interface ComponentCustomizerProps {
@@ -169,6 +174,20 @@ export function ComponentCustomizer({
                   ))}
                 </SelectContent>
               </Select>
+            )}
+
+            {control.type === "boolean" && (
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  id={`control-${key}`}
+                  type="checkbox"
+                  aria-label={humanize(key)}
+                  checked={!!currentValue}
+                  onChange={(event) => updateProp(key, event.target.checked, control.path)}
+                  className="h-5 w-5 rounded border border-dead-700 bg-dead-950 text-dead-red focus-visible:ring-2 focus-visible:ring-dead-red"
+                />
+                <span className="text-xs text-dead-300">{currentValue ? "On" : "Off"}</span>
+              </label>
             )}
 
             {control.type === "color" && (

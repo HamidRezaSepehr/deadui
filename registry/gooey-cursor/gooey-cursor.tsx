@@ -13,6 +13,8 @@ export interface GooeyCursorProps {
   ttl?: number // Time-to-live in seconds for cell visibility
   enableClickEffect?: boolean
   customColors?: string[] // Used primarily for 'multicolor' variant
+  color?: string // Override cell background color (ignored for multicolor)
+  mixBlendMode?: string // Override blend mode
   className?: string
 }
 
@@ -74,7 +76,7 @@ const STYLES: Record<GooeyVariant, Partial<CSSStyleDeclaration>> = {
   outline: { mixBlendMode: 'exclusion', borderRadius: '0px', background: '#f3d006' },
   displaced: { mixBlendMode: 'normal', borderRadius: '0px', background: 'rgba(234,91,42,0.8)' },
   shadowed: { mixBlendMode: 'none', borderRadius: '50%', background: '#c54733' },
-  multicolor: { mixBlendMode: 'color-burn', borderRadius: '50%', background: 'transparent' },
+  multicolor: { mixBlendMode: 'normal', borderRadius: '50%', background: '#fff' },
   radial: { mixBlendMode: 'overlay', borderRadius: '0px', background: 'radial-gradient(#fddc6d 10%, transparent)' },
 }
 
@@ -84,6 +86,8 @@ export function GooeyCursor({
   ttl = 0.2,
   enableClickEffect = true,
   customColors = ['#f8b369', '#64a196', '#db2715', '#ec7a49'],
+  color,
+  mixBlendMode,
   className,
 }: GooeyCursorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -122,10 +126,17 @@ export function GooeyCursor({
         div.className = 'absolute opacity-0 transition-none will-change-[opacity]'
         
         // Base styles
+        const colIndex = i % cols
+        const rowIndex = Math.floor(i / cols)
+        // Override color if provided (skip for multicolor which uses customColors)
+        const cellBackground = (color && variant !== 'multicolor') ? color : (STYLES[variant].background || '#fff')
         Object.assign(div.style, {
+          position: 'absolute',
+          left: `${colIndex * cellSize}px`,
+          top: `${rowIndex * cellSize}px`,
           width: `${cellSize}px`,
           height: `${cellSize}px`,
-          backgroundColor: STYLES[variant].background || '#fff',
+          background: cellBackground,
           borderRadius: STYLES[variant].borderRadius || '0',
         })
 
@@ -174,26 +185,35 @@ export function GooeyCursor({
       
       const centerIdx = getCellIndex(e.clientX, e.clientY)
       if (centerIdx === -1) return
+      const centerCol = centerIdx % cols
+      const centerRow = Math.floor(centerIdx / cols)
 
-      const neighbors = [
-        centerIdx,
-        centerIdx - 1, centerIdx + 1,
-        centerIdx - cols, centerIdx + cols,
-      ]
+      // Ripple wave: animate all cells sorted by distance from click point
+      const indexedCells = cells.map((cell, idx) => {
+        const col = idx % cols
+        const row = Math.floor(idx / cols)
+        const dx = col - centerCol
+        const dy = row - centerRow
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        return { cell, idx, dist }
+      })
 
-      neighbors.forEach((nIdx, i) => {
-        const cell = cells[nIdx]
-        if (cell) {
-          cell.animate([
-            { opacity: 0, transform: 'scale(1)' },
-            { opacity: 1, transform: 'scale(1.5)', offset: 0.2 },
-            { opacity: 0, transform: 'scale(1)' }
-          ], {
-            duration: 600,
-            delay: i * 50,
-            easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-          })
-        }
+      // Sort by distance for outward wave effect
+      indexedCells.sort((a, b) => a.dist - b.dist)
+
+      indexedCells.forEach(({ cell, idx, dist }) => {
+        if (!cell) return
+        const maxDist = Math.sqrt(cols * cols + rows * rows)
+        const normalizedDist = maxDist > 0 ? dist / maxDist : 0
+        cell.animate([
+          { opacity: 0, transform: 'scale(1)' },
+          { opacity: 1, transform: 'scale(1.8)', offset: 0.15 },
+          { opacity: 0, transform: 'scale(1.2)' }
+        ], {
+          duration: 900,
+          delay: normalizedDist * 400, // Wave delay based on distance
+          easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        })
       })
     }
 
@@ -212,7 +232,7 @@ export function GooeyCursor({
         window.removeEventListener('click', handleClick)
       }
     }
-  }, [variant, columns, ttl, enableClickEffect, customColors])
+  }, [variant, columns, ttl, enableClickEffect, customColors, color, mixBlendMode])
 
   return (
     <>
@@ -231,7 +251,7 @@ export function GooeyCursor({
           className
         )}
         style={{
-          mixBlendMode: STYLES[variant].mixBlendMode as any,
+          mixBlendMode: (mixBlendMode || STYLES[variant].mixBlendMode) as any,
         }}
       >
         <div

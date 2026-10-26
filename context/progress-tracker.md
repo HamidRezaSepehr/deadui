@@ -5,11 +5,16 @@ change.
 
 ## Current Phase
 
-Phase 1: Component Implementation — Feature 57 (Reactive Dot Grid)
+Phase 1: Component Implementation — Feature 58 (Gooey Cursor)
 
 ## Current Goal
 
-**Feature 57: Reactive Dot Grid (Free) — pure Canvas interactive card effect** — complete.
+**Feature 58: Gooey Cursor (Free) — pure DOM + Web Animations API** — complete.
+`registry/gooey-cursor/gooey-cursor.tsx` implements 8 SVG filter variants (`standard`, `blurry`, `noise`, `outline`, `displaced`, `shadowed`, `multicolor`, `radial`), Firefox guard (`navigator.userAgent`), `currentForce` energy decay (`0.12` interpolation), `will-change: opacity`, cell index throttling, `enableClickEffect` staggered pulse, and dynamic grid resize (`rows`/`cols` from viewport). Zero GSAP; native `element.animate()` only. `registry.json` updated.
+
+Test page (`app/test-gooey-cursor/page.tsx`) showcases all 8 variants with toggle buttons and click effect checkbox. Docs (`app/docs/components/gooey-cursor/page.mdx`) covers physics, props, performance, and accessibility (`pointer-events-none`, hidden SVG filters).
+
+`packages/cli` `0.1.34` → **`0.1.35`**. Tag `v0.1.35` created and pushed.
 `registry/reactive-dot-grid/reactive-dot-grid.tsx` implements energy decay (`currentForce += (targetForce - currentForce) * 0.12`), repulsion physics (`t = Math.pow(1 - dist / radius, 2) * effectiveForce`), optimization (stops RAF when delta < 0.004), `ResizeObserver`, `IntersectionObserver`, and `prefers-reduced-motion`. `registry.json` updated. Test page (`3 variations: default blue, dense green, sparse purple`), docs page, and `components/ui/reactive-dot-grid.tsx` all created.
 
 `packages/cli` `0.1.33` → **`0.1.34`**. Tag `v0.1.34` created and pushed.

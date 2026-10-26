@@ -734,6 +734,20 @@
       "variants": []
     },
     {
+      "name": "unwoven-slider",
+      "title": "Unwoven Slider",
+      "description": "An infinite image slider where photos unravel into loose threads at the edges, powered by Three.js and custom GLSL shaders.",
+      "tier": "free",
+      "dependencies": ["three", "@react-three/fiber", "gsap"],
+      "files": [
+        {
+          "path": "registry/unwoven-slider/unwoven-slider.tsx",
+          "target": "components/ui/unwoven-slider.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
       "name": "gooey-cursor",
       "title": "Gooey Cursor",
       "description": "A grid-based liquid cursor effect with 8 visual variants, SVG filters, and optional click explosions.",

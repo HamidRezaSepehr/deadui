@@ -1,0 +1,89 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
+import { InstallTabs } from "@/components/docs/install-tabs"
+import { UnwovenSlider } from "@/components/ui/unwoven-slider"
+
+export const metadata = {
+  title: "Unwoven Slider",
+  description:
+    "An infinite image slider where photos unravel into loose threads at the edges, powered by Three.js and custom GLSL shaders.",
+}
+
+# Unwoven Slider
+
+An infinite horizontal strip of images rendered as horizontal ribbons. As cards approach the edges of the viewport, the threads unravel, splay apart, and dissolve — a loom-like tearing effect driven by custom GLSL vertex and fragment shaders.
+
+## Preview
+
+<ComponentCustomizer
+  component={UnwovenSlider}
+  defaultProps={{
+    images: [
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80",
+      "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=800&q=80",
+      "https://images.unsplash.com/photo-1531746020798-e6948c51b64f?w=800&q=80",
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&q=80",
+    ],
+  }}
+  controls={{
+    threads: { type: "slider", min: 10, max: 60, step: 5 },
+    tearZoneRatio: { type: "slider", min: 0.05, max: 0.5, step: 0.05 },
+    scrollSpeed: { type: "slider", min: 20, max: 200, step: 10 },
+    flingMax: { type: "slider", min: 500, max: 6000, step: 500 },
+  }}
+  className="not-prose my-8 h-[80vh]"
+/>
+
+Drag horizontally to fling the strip. Click and drag to control momentum. Release applies a damped spring back.
+
+## How it works
+
+Images are loaded as `THREE.Texture` and mapped onto a custom `BufferGeometry` (`buildRibbonGeometry`). Each ribbon is split into `threads` vertical strips, with `segments` horizontal subdivisions. The vertex shader applies a tear displacement based on distance from viewport center (`smoothstep` over `uZone`), and the fragment shader shrinks visible width (`coreWidth`) and bleaches color (`fade`) as tear intensity increases. GSAP handles velocity interpolation for drag/fling physics.
+
+## Installation
+
+<InstallTabs componentName="unwoven-slider" tier="free" />
+
+Requires `three`, `@react-three/fiber`, and `gsap`.
+
+## Usage
+
+```tsx
+import { UnwovenSlider } from "@/components/ui/unwoven-slider"
+
+const IMAGES = [
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80",
+  "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=800&q=80",
+]
+
+export default function Page() {
+  return (
+    <main className="min-h-screen bg-neutral-950">
+      <UnwovenSlider 
+        images={IMAGES}
+        config={{ threads: 26, tearZoneRatio: 0.26, scrollSpeed: 95 }}
+      />
+    </main>
+  )
+}
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `images` | `string[]` | — | Image URLs loaded as WebGL textures. |
+| `config` | `UnwovenConfig` | `{}` | Full configuration object (threads, segments, cardMaxHeight, etc.). |
+| `className` | `string` | — | Merged onto the root stage container. |
+
+## Performance
+
+- **Shared Uniforms**: `useMemo` creates a single uniform object (`uTime`, `uStrength`, etc.) shared across all shader materials. Updates happen once per frame in `useFrame` rather than per material.
+- **Geometry Reuse**: `buildRibbonGeometry` creates one `BufferGeometry` reused for all cards; only position updates vary.
+- **Cleanup**: `useEffect` disposes `ShaderMaterial`, `BufferGeometry`, and `TextureLoader` on unmount or when `images`/`config` change.
+- **Reduced Motion**: `prefers-reduced-motion` disables `uWobble` (flutter) via the `uWobble` uniform.
+
+## Accessibility
+
+- The component captures pointer events (`pointerdown`, `pointermove`) for drag interaction; no keyboard interaction required.
+- Visual tearing is purely decorative; no semantic content relies on the ribbon layout.
+- The `id="unwoven-stage"` element captures events; it does not interfere with focusable elements outside the viewport.

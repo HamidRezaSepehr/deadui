@@ -24,8 +24,11 @@ A full-viewport grid of invisible cells that light up under the cursor, merged b
   }}
   controls={{
     variant: { type: "select", options: ["standard", "blurry", "noise", "outline", "displaced", "shadowed", "multicolor", "radial"] },
+    columns: { type: "slider", min: 10, max: 60, step: 5 },
     ttl: { type: "slider", min: 0.1, max: 1, step: 0.05 },
     enableClickEffect: { type: "boolean" },
+    color: { type: "color" },
+    mixBlendMode: { type: "select", options: ["normal", "overlay", "exclusion", "none", "color-burn"] },
   }}
   className="not-prose my-8 h-[80vh]"
 />
@@ -68,6 +71,8 @@ export default function Page() {
 | `ttl` | `number` | `0.2` | Time-to-live (seconds) for cell visibility animation. |
 | `enableClickEffect` | `boolean` | `true` | Enables staggered pulse on click and neighbors. |
 | `customColors` | `string[]` | Random array | Colors for the `multicolor` variant. |
+| `color` | `string` | — | Override cell background color (ignored for `multicolor`). |
+| `mixBlendMode` | `string` | — | Override blend mode (`normal`, `overlay`, `exclusion`, `none`, `color-burn`). |
 | `className` | `string` | — | Merged onto the root fixed container. |
 
 ## Performance
