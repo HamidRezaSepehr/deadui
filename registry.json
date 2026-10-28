@@ -776,6 +776,26 @@
         }
       ],
       "variants": []
+    },
+    {
+      "name": "sphere-gallery",
+      "title": "Sphere Gallery",
+      "description": "An immersive 3D image gallery where photos are mapped onto a draggable sphere with cinematic focus and dissolve effects.",
+      "tier": "free",
+      "dependencies": [
+        "three",
+        "@react-three/fiber",
+        "@react-three/drei",
+        "@react-three/postprocessing",
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "registry/sphere-gallery/sphere-gallery.tsx",
+          "target": "components/ui/sphere-gallery.tsx"
+        }
+      ],
+      "variants": []
     }
   ]
 }

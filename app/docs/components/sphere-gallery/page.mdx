@@ -1,0 +1,65 @@
+import { InstallTabs } from "@/components/docs/install-tabs"
+
+# Sphere Gallery
+
+An immersive 3D image gallery where photos are mapped onto a draggable sphere with cinematic focus and dissolve effects.
+
+## Installation
+
+<InstallTabs componentName="sphere-gallery" />
+
+## Usage
+
+```tsx
+import { SphereGallery } from "@/components/ui/sphere-gallery"
+
+const items = [
+  { src: "/image-1.jpg", alt: "Image 1" },
+  { src: "/image-2.jpg", alt: "Image 2" },
+]
+
+export function Demo() {
+  return <SphereGallery items={items} />
+}
+```
+
+## Requirements
+
+This component relies on the global WebGL infrastructure. Wrap your application (or the section containing the gallery) in a `WebglProvider` from `@/components/ui/webgl-provider`.
+
+```tsx
+import { WebglProvider } from "@/components/ui/webgl-provider"
+
+export default function Layout({ children }) {
+  return <WebglProvider>{children}</WebglProvider>
+}
+```
+
+## Props
+
+### `items`
+Array of `{ src, alt }` objects representing the gallery images.
+
+### Configuration
+- `rows` (default `7`): Number of latitude bands.
+- `columns` (default `12`): Number of longitude columns.
+- `latitudeRange` (default `85`): Vertical angular span in degrees.
+- `gap` (default `0.01`): Spacing between tiles.
+- `padding` (default `0.03`): Inner padding around the image.
+- `cornerRadius` (default `0.02`): Rounded corner radius.
+- `lensBlur` (default `0.4`): Lens blur strength during motion.
+- `fov` (default `70`): Camera field of view.
+- `tileColor` (default `"#F8F8F8"`): Background color behind images.
+- `sphereColor` (default `"#ffffff"`): Sphere tint.
+- `reveal` (default `true`): Enable reveal animation on mount.
+- `revealDuration` (default `2`): Reveal animation duration.
+- `focusDuration` (default `1`): Focus transition duration.
+- `focusScale` (default `1.7`): Scale applied to focused tile.
+- `mouseParallax` (default `0.2`): Mouse parallax intensity.
+
+## Interaction
+
+- Drag to rotate the sphere.
+- Click a tile to focus it (zooms in, flattens, dissolves others).
+- Press `Escape` or click outside to dismiss focus.
+- Peek tiles on either side allow navigating to adjacent images.

@@ -7159,3 +7159,7 @@ CLI bumped `0.1.32` → `0.1.37`; tag `v0.1.37` created and pushed.
 ## Feature 59: Unwoven Image Slider (Free) — REMOVED/CANCELLED
 
 Feature 59 (Unwoven Slider) was removed entirely because it failed to implement correctly. All related files deleted: `registry/unwoven-slider/`, `app/test-unwoven-slider/page.tsx`, `app/docs/components/unwoven-slider/page.mdx`, `components/ui/unwoven-slider.tsx`, `context/feature-specs/59-unwoven-slider.md`. Registry entry removed from `registry.json`. `three`, `@react-three/fiber`, and `gsap` remain in use by other components and were left installed.
+
+## Feature 60: Sphere Gallery (Free) — v0.1.43
+
+**Part 1:** Added `registry/webgl-provider/webgl-portal.tsx`, `webgl-provider.tsx`, `webgl-scene.tsx` (global canvas, teleport, scene wrapper). Motion `frame.postRender` drives R3F. **Part 2:** Added `registry/sphere-gallery/sphere-gallery.tsx` with `TileMaterial`/`LensBlurMaterial` shaders, sphere layout, drag/focus logic, post-processing lens blur. Created `app/test-sphere-gallery/page.tsx`, `app/docs/components/sphere-gallery/page.mdx`, barrel `index.ts`. Updated `registry.json` (+ sphere-gallery entry, 40 components). Bumped `packages/cli/package.json` to `0.1.37`. `npm run build` passes.
