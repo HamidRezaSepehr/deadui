@@ -7163,3 +7163,5 @@ Feature 59 (Unwoven Slider) was removed entirely because it failed to implement 
 ## Feature 60: Sphere Gallery (Free) — v0.1.43
 
 **Part 1:** Added `registry/webgl-provider/webgl-portal.tsx`, `webgl-provider.tsx`, `webgl-scene.tsx` (global canvas, teleport, scene wrapper). Motion `frame.postRender` drives R3F. **Part 2:** Added `registry/sphere-gallery/sphere-gallery.tsx` with `TileMaterial`/`LensBlurMaterial` shaders, sphere layout, drag/focus logic, post-processing lens blur. Created `app/test-sphere-gallery/page.tsx`, `app/docs/components/sphere-gallery/page.mdx`, barrel `index.ts`. Updated `registry.json` (+ sphere-gallery entry, 40 components). Bumped `packages/cli/package.json` to `0.1.37`. `npm run build` passes.
+
+**Follow-up fix:** Test page now wraps in `WebglProvider` with working image URLs; docs page adds `ComponentCustomizer` preview via `SphereGalleryPreview`.
