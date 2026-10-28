@@ -7154,3 +7154,10 @@ CLI bumped `0.1.32` → `0.1.37`; tag `v0.1.37` created and pushed.
   **ACCESSIBILITY.** SVG is `pointer-events-none` + `aria-hidden="true"` — purely decorative, never blocks clicks/taps/scroll.
 
   **DOCS PREVIEW PANEL ADDED.** Added `CursorTrailPreview` to `components/docs/preview-wrappers.tsx` with full `ComponentCustomizer` controls (color, length, ease, strokeWidth, linecap, opacity, blendMode) and instructional text.
+
+
+## Feature 59: Unwoven Image Slider (Free) — v0.1.36
+
+**Added:** `registry/unwoven-slider/unwoven-slider.tsx` implementing the full UnwovenSlider with exact shaders (hash, smoothstep, SDF rounding) from spec, `buildRibbonGeometry` with per-thread vertices, shared uniforms via `useMemo`, GSAP velocity/fling with infinite wrap via modulo, pointer drag + momentum, reduced-motion support, and proper Three.js cleanup.
+
+**Updated:** `registry.json` (added `unwoven-slider` with deps `three`, `@react-three/fiber`, `gsap`). **Created:** `app/test-unwoven-slider/page.tsx` (3 variations), `app/docs/components/unwoven-slider/page.mdx`. **Bumped:** `packages/cli/package.json` to `0.1.36`. **Git:** committed, pushed to main, attempted tag `v0.1.36` (already exists).

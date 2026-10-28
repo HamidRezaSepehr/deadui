@@ -185,9 +185,10 @@ function buildRibbonGeometry(width: number, height: number, threads: number, seg
 interface SceneProps {
   images: string[]
   config: Required<UnwovenConfig>
+  stageRef: React.RefObject<HTMLDivElement | null>
 }
 
-function UnwovenScene({ images, config }: SceneProps) {
+function UnwovenScene({ images, config, stageRef }: SceneProps) {
   const { size } = useThree()
   const groupRef = useRef<THREE.Group>(null)
   
@@ -248,7 +249,6 @@ function UnwovenScene({ images, config }: SceneProps) {
     
     return () => {
       mats.forEach(m => m.dispose())
-      loader.dispose()
     }
   }, [images, sharedUniforms])
 
@@ -283,7 +283,7 @@ function UnwovenScene({ images, config }: SceneProps) {
     if (s.geometry) s.geometry.dispose()
     s.geometry = buildRibbonGeometry(cardWidth, cardHeight, config.threads, config.segments)
 
-    const count = Math.max(8, Math.ceil((vw + pitch * 3) / pitch))
+    const count = Math.max(12, Math.ceil((vw + pitch * 6) / pitch))
     s.stripSpan = count * pitch
 
     for (let i = 0; i < count; i++) {
@@ -322,7 +322,7 @@ function UnwovenScene({ images, config }: SceneProps) {
 
   // Pointer Events for Dragging
   useEffect(() => {
-    const el = document.getElementById("unwoven-stage")
+    const el = stageRef.current
     if (!el) return
 
     const onPointerDown = (e: PointerEvent) => {
@@ -394,14 +394,16 @@ export interface UnwovenSliderProps extends React.HTMLAttributes<HTMLDivElement>
 export function UnwovenSlider({ images, config = {}, className, ...props }: UnwovenSliderProps) {
   const mergedConfig = { ...DEFAULT_CONFIG, ...config }
 
+  const stageRef = React.useRef<HTMLDivElement>(null)
+  
   return (
     <div
-      id="unwoven-stage"
+      ref={stageRef}
       className={cn("relative w-full h-[60vh] cursor-grab active:cursor-grabbing touch-none overflow-hidden bg-black", className)}
       {...props}
     >
       <Canvas orthographic camera={{ position: [0, 0, 100], zoom: 1 }} gl={{ antialias: true, alpha: true }}>
-        <UnwovenScene images={images} config={mergedConfig} />
+        <UnwovenScene images={images} config={mergedConfig} stageRef={stageRef} />
       </Canvas>
     </div>
   )
