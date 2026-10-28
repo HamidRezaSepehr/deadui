@@ -34,6 +34,7 @@ import {
   TextAnnotationGroup,
   type AnnotationType,
 } from "@/registry/text-annotation";
+import { WebglProvider } from "@/registry/webgl-provider/webgl-provider";
 
 /**
  * Preview adapters for `<ComponentCustomizer>`.
@@ -1035,4 +1036,48 @@ export function CursorTrailPreview(props: Record<string, unknown>) {
       </div>
     </div>
   )
+}
+
+const LazySphereGallery = dynamic(
+  () => import("@/registry/sphere-gallery").then((module) => module.SphereGallery),
+  {
+    ssr: false,
+    loading: () => <div className="h-[360px] w-full rounded-xl bg-dead-900" />,
+  },
+);
+
+const SPHERE_DEMO_ITEMS = [
+  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80",
+  "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&q=80",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
+  "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&q=80",
+  "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&q=80",
+].map((src, i) => ({ src, alt: `Image ${i + 1}` }));
+
+export function SphereGalleryPreview(props: Record<string, unknown>) {
+  return (
+    <div className="relative h-[360px] w-full overflow-hidden rounded-xl bg-dead-900">
+      <WebglProvider contained className="h-full w-full">
+        <LazySphereGallery
+          items={SPHERE_DEMO_ITEMS}
+          rows={Number(props.rows) || 7}
+          columns={Number(props.columns) || 12}
+          latitudeRange={Number(props.latitudeRange) || 85}
+          gap={Number(props.gap) || 0.01}
+          padding={Number(props.padding) || 0.03}
+          cornerRadius={Number(props.cornerRadius) || 0.02}
+          tileColor={(props.tileColor as string) || "#F8F8F8"}
+          sphereColor={(props.sphereColor as string) || "#ffffff"}
+          lensBlur={Number(props.lensBlur) || 0.4}
+          fov={Number(props.fov) || 70}
+          revealDuration={Number(props.revealDuration) || 2}
+          focusDuration={Number(props.focusDuration) || 1}
+          focusScale={Number(props.focusScale) || 1.7}
+          mouseParallax={Number(props.mouseParallax) || 0.2}
+          className="h-full w-full"
+        />
+      </WebglProvider>
+    </div>
+  );
 }

@@ -1,27 +1,35 @@
-import { SphereGallery } from "@/registry/sphere-gallery"
+"use client"
+
+import dynamic from "next/dynamic"
+import { WebglProvider } from "@/registry/webgl-provider/webgl-provider"
+
+const SphereGallery = dynamic(
+  () => import("@/registry/sphere-gallery").then((mod) => mod.SphereGallery),
+  { ssr: false },
+)
 
 const ITEMS = [
-  { src: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80", alt: "Portrait 1" },
-  { src: "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=800&q=80", alt: "Portrait 2" },
-  { src: "https://images.unsplash.com/photo-1531746020798-e6948c51b64f?w=800&q=80", alt: "Portrait 3" },
-  { src: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&q=80", alt: "Portrait 4" },
-  { src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80", alt: "Portrait 5" },
-  { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80", alt: "Portrait 6" },
-]
+  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80",
+  "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=800&q=80",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+  "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80",
+  "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&q=80",
+].map((src, i) => ({ src, alt: `Image ${i + 1}` }))
 
 export default function TestSphereGalleryPage() {
   return (
     <main className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl h-[80vh]">
-        <SphereGallery 
-          items={ITEMS} 
-          rows={6} 
-          columns={10} 
-          tileColor="#111" 
+      <WebglProvider contained className="relative w-full max-w-4xl h-[80vh]">
+        <SphereGallery
+          items={ITEMS}
+          rows={6}
+          columns={10}
+          tileColor="#111"
           sphereColor="#222"
-          className="h-full w-full rounded-3xl overflow-hidden border border-white/10"
+          className="absolute inset-0"
         />
-      </div>
+      </WebglProvider>
     </main>
   )
 }

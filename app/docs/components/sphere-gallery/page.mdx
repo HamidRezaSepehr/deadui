@@ -1,8 +1,48 @@
+import { ComponentCustomizer } from "@/components/docs/component-customizer"
 import { InstallTabs } from "@/components/docs/install-tabs"
+import { SphereGalleryPreview } from "@/components/docs/preview-wrappers"
 
 # Sphere Gallery
 
 An immersive 3D image gallery where photos are mapped onto a draggable sphere with cinematic focus and dissolve effects.
+
+## Preview
+
+<ComponentCustomizer
+  component={SphereGalleryPreview}
+  defaultProps={{
+    rows: 7,
+    columns: 12,
+    latitudeRange: 85,
+    gap: 0.01,
+    padding: 0.03,
+    cornerRadius: 0.02,
+    tileColor: "#F8F8F8",
+    sphereColor: "#ffffff",
+    lensBlur: 0.4,
+    fov: 70,
+    revealDuration: 2,
+    focusDuration: 1,
+    focusScale: 1.7,
+    mouseParallax: 0.2,
+  }}
+  controls={{
+    rows: { type: "slider", min: 2, max: 10, step: 1, label: "Rows" },
+    columns: { type: "slider", min: 4, max: 30, step: 1, label: "Columns" },
+    latitudeRange: { type: "slider", min: 10, max: 90, step: 5, label: "Latitude Range" },
+    gap: { type: "slider", min: 0, max: 0.3, step: 0.01, label: "Gap" },
+    padding: { type: "slider", min: 0, max: 0.5, step: 0.01, label: "Padding" },
+    cornerRadius: { type: "slider", min: 0, max: 0.6, step: 0.01, label: "Corner Radius" },
+    tileColor: { type: "color", label: "Tile Color" },
+    sphereColor: { type: "color", label: "Sphere Color" },
+    lensBlur: { type: "slider", min: 0, max: 0.5, step: 0.01, label: "Lens Blur" },
+    fov: { type: "slider", min: 25, max: 100, step: 1, label: "FOV" },
+    revealDuration: { type: "slider", min: 0, max: 4, step: 0.1, label: "Reveal Duration" },
+    focusDuration: { type: "slider", min: 0, max: 4, step: 0.1, label: "Focus Duration" },
+    focusScale: { type: "slider", min: 1, max: 3, step: 0.1, label: "Focus Scale" },
+    mouseParallax: { type: "slider", min: 0, max: 1, step: 0.05, label: "Mouse Parallax" },
+  }}
+/>
 
 ## Installation
 
