@@ -1,3 +1,42 @@
+# Feature 59: Unwoven Image Slider Component
+
+## Overview
+Add a free `UnwovenSlider` component that displays an infinite horizontal strip of images where each image is composed of multiple horizontal "threads." As images approach the left or right edges of the viewport, the threads unravel, splay apart, and dissolve, creating a mesmerizing loom-like effect. Supports mouse/touch dragging with momentum-based flinging.
+
+## Goals
+1. Create `registry/unwoven-slider/unwoven-slider.tsx` using Three.js (`@react-three/fiber`) and GSAP for physics.
+2. Implement the custom GLSL Vertex/Fragment shaders exactly as provided in the reference code to handle the ribbon displacement and tearing logic.
+3. Expose full configuration props: `threads`, `segments`, `cardMaxHeight`, `cardAspect`, `cardGapRatio`, `cardRadius`, `scrollSpeed`, `flingMax`, `tearZoneRatio`, `tearZoneMax`.
+4. Support dynamic image loading via an `images` prop array.
+5. Create a test page `app/test-unwoven-slider/page.tsx` demonstrating the slider with various configurations.
+6. Create MDX documentation explaining the "loom" metaphor and performance considerations.
+7. Execute the 4-step Release Workflow for `v0.1.36` and provide manual npm publish instructions.
+
+## Technical Specifications
+
+### 1. Dependencies
+The component relies on:
+- `three`
+- `@react-three/fiber`
+- `@react-three/drei` (for texture loading helpers if needed, though raw Three.js textures are preferred for control)
+- `gsap` (essential for the springy drag/fling velocity interpolation)
+
+### 2. Shader Logic (Critical Implementation Detail)
+The visual effect is entirely driven by two shaders. You must include these strings verbatim in the component file.
+
+**Vertex Shader Highlights:**
+- Attributes: `aThread` (ribbon index), `aRim` (-1 to +1 across ribbon height).
+- Uniforms: `uHalfWidth` (viewport half-width), `uZone` (tear zone depth), `uStrength` (global toggle), `uWobble` (reduced motion flag).
+- Logic: Calculates distance from center. If within `uZone`, applies horizontal displacement based on a hash of the thread ID (so each ribbon moves differently) and vertical drift. Adds sine-wave flutter over time.
+
+**Fragment Shader Highlights:**
+- Uses Signed Distance Fields (SDF) for rounded corners (`sdRoundBox`).
+- Shrinks the visible width of each ribbon (`coreWidth`) as it tears, creating gaps between threads.
+- Bleaches color towards white as tear intensity increases (`fade`).
+
+### 3. Component Implementation (`registry/unwoven-slider/unwoven-slider.tsx`)
+
+```tsx
 "use client"
 
 import React, { useEffect, useRef, useMemo } from "react"
@@ -310,6 +349,8 @@ function UnwovenScene({ images, config }: SceneProps) {
     // Physics Integration
     if (!s.isDragging) {
       s.offset += s.velocity * delta
+      // Friction/Damping back to base speed if desired, or just constant velocity
+      // For simplicity, we keep velocity constant unless dragged
     }
 
     const halfSpan = s.stripSpan / 2
@@ -406,13 +447,11 @@ export function UnwovenSlider({ images, config = {}, className, ...props }: Unwo
     </div>
   )
 }
-`
 ```
 
 (Note: Ensure Canvas is imported from @react-three/fiber)
 ### 4. Registry Update (registry.json)
 
-```
 {
   "name": "unwoven-slider",
   "title": "Unwoven Slider",
@@ -426,7 +465,6 @@ export function UnwovenSlider({ images, config = {}, className, ...props }: Unwo
     }
   ]
 }
-```
 
 ### 5. Test Page (app/test-unwoven-slider/page.tsx)
 Showcase 3 variations:
@@ -434,7 +472,6 @@ Standard: Default settings, portrait images.
 High Density: More threads (50), faster tear zone.
 Minimalist: Fewer threads (10), wider cards, slower scroll.
 
-```
 import { UnwovenSlider } from "@/components/ui/unwoven-slider"
 
 const IMAGES = [
@@ -480,7 +517,6 @@ export default function TestUnwovenPage() {
     </main>
   )
 }
-```
 
 ### 6. Documentation (app/docs/components/unwoven-slider/page.mdx)
 Explain the concept: Images are sliced into horizontal ribbons that behave like fabric threads.

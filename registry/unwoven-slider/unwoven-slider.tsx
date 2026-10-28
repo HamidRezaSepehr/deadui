@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useMemo } from "react"
 import * as THREE from "three"
-import { useFrame, useThree } from "@react-three/fiber"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import gsap from "gsap"
 import { cn } from "@/lib/utils"
 
@@ -188,7 +188,7 @@ interface SceneProps {
 }
 
 function UnwovenScene({ images, config }: SceneProps) {
-  const { size, camera } = useThree()
+  const { size } = useThree()
   const groupRef = useRef<THREE.Group>(null)
   
   // Shared Uniforms
@@ -197,11 +197,11 @@ function UnwovenScene({ images, config }: SceneProps) {
     uHalfWidth: { value: size.width / 2 },
     uZone: { value: Math.min(size.width * config.tearZoneRatio, config.tearZoneMax) },
     uStrength: { value: 0 }, // Starts at 0, tweens to 1
-    uWobble: { value: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1 },
+    uWobble: { value: typeof window !== 'undefined' && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1 },
     uCardSize: { value: new THREE.Vector2(1, 1) },
     uRadius: { value: config.cardRadius },
   }), [size.width, config])
-
+ 
   // State Refs for Physics
   const state = useRef({
     offset: 0,

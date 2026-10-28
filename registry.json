@@ -129,38 +129,38 @@
       "dependencies": [
         "gsap"
       ],
-"files": [
-    {
-      "path": "registry/cinematic-text/cinematic-text.tsx",
-      "target": "components/ui/cinematic-text.tsx"
-    },
-    {
-      "path": "registry/cinematic-text/cinematic-text.module.css",
-      "target": "components/ui/cinematic-text.module.css"
-    },
-    {
-      "path": "registry/cinematic-text/noise.png",
-      "target": "components/ui/noise.png"
-    }
-  ],
-"variants": [
-    "blur-in",
-    "fade-up",
-    "slide-stagger",
-    "scale-pop",
-    "rise-color",
-    "slide-left-color",
-    "scale-blur-color",
-    "diagonal-blur-color",
-    "flip-x-color",
-    "heavy-flip-color",
-    "flip-top-color",
-    "mask-reveal",
-    "blur-grain",
-    "blur-grain-bright",
-    "scale-blur-grain",
-    "skew-blur-grain"
-  ]
+      "files": [
+        {
+          "path": "registry/cinematic-text/cinematic-text.tsx",
+          "target": "components/ui/cinematic-text.tsx"
+        },
+        {
+          "path": "registry/cinematic-text/cinematic-text.module.css",
+          "target": "components/ui/cinematic-text.module.css"
+        },
+        {
+          "path": "registry/cinematic-text/noise.png",
+          "target": "components/ui/noise.png"
+        }
+      ],
+      "variants": [
+        "blur-in",
+        "fade-up",
+        "slide-stagger",
+        "scale-pop",
+        "rise-color",
+        "slide-left-color",
+        "scale-blur-color",
+        "diagonal-blur-color",
+        "flip-x-color",
+        "heavy-flip-color",
+        "flip-top-color",
+        "mask-reveal",
+        "blur-grain",
+        "blur-grain-bright",
+        "scale-blur-grain",
+        "skew-blur-grain"
+      ]
     },
     {
       "name": "marquee",
@@ -682,7 +682,9 @@
       "title": "Mask Cursor",
       "description": "A cursor-following circular mask effect that reveals a differently styled overlay layer inside the circle, with card activation and hotspot expansion.",
       "tier": "free",
-      "dependencies": ["motion"],
+      "dependencies": [
+        "motion"
+      ],
       "files": [
         {
           "path": "registry/mask-cursor/mask-cursor.tsx",
@@ -694,7 +696,7 @@
     {
       "name": "drawing-cursor",
       "title": "Drawing Cursor",
-      "description": "A canvas-based trailing cursor with spring/friction physics, a tapering Bézier stroke, optional head-to-tail gradient, idle intro motion, and viewport or contained (parent) fit modes.",
+      "description": "A canvas-based trailing cursor with spring/friction physics, a tapering B\u00e9zier stroke, optional head-to-tail gradient, idle intro motion, and viewport or contained (parent) fit modes.",
       "tier": "free",
       "dependencies": [],
       "files": [
@@ -729,20 +731,6 @@
         {
           "path": "registry/needle-field/needle-field.tsx",
           "target": "components/ui/needle-field.tsx"
-        }
-      ],
-      "variants": []
-    },
-    {
-      "name": "unwoven-slider",
-      "title": "Unwoven Slider",
-      "description": "An infinite image slider where photos unravel into loose threads at the edges, powered by Three.js and custom GLSL shaders.",
-      "tier": "free",
-      "dependencies": ["three", "@react-three/fiber", "gsap"],
-      "files": [
-        {
-          "path": "registry/unwoven-slider/unwoven-slider.tsx",
-          "target": "components/ui/unwoven-slider.tsx"
         }
       ],
       "variants": []
@@ -785,6 +773,24 @@
         {
           "path": "registry/cursor-trail/cursor-trail.tsx",
           "target": "components/ui/cursor-trail.tsx"
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "unwoven-slider",
+      "title": "Unwoven Slider",
+      "description": "An infinite image slider where photos unravel into loose threads at the edges, powered by Three.js and custom GLSL shaders.",
+      "tier": "free",
+      "dependencies": [
+        "three",
+        "@react-three/fiber",
+        "gsap"
+      ],
+      "files": [
+        {
+          "path": "registry/unwoven-slider/unwoven-slider.tsx",
+          "target": "components/ui/unwoven-slider.tsx"
         }
       ],
       "variants": []
